@@ -739,9 +739,21 @@ class GoldApp {
 
       let calcDesc = '';
       if (item.isFixedPrice) {
-        calcDesc = `Bán món niêm yết: ${item.thanhTien.toLocaleString('vi-VN')} đ`;
+        calcDesc = `
+          <div class="cart-item-calc" onclick="app.openCartItemPriceModal(${idx})" title="Bấm vào để tùy chỉnh giá bán món này">
+            <span>🏷️ Bán món niêm yết: <b>${item.thanhTien.toLocaleString('vi-VN')} đ</b></span>
+            <span class="cart-calc-edit-badge">✏️ Sửa</span>
+          </div>
+        `;
       } else {
-        calcDesc = `(${item.tlVang}c × ${(item.donGiaVang / 1000).toLocaleString('vi-VN')}k) + Công ${item.congBan.toLocaleString('vi-VN')}đ`;
+        const rateK = (item.donGiaVang / 1000).toLocaleString('vi-VN');
+        const laborVnd = item.congBan.toLocaleString('vi-VN');
+        calcDesc = `
+          <div class="cart-item-calc" onclick="app.openCartItemPriceModal(${idx})" title="Bấm vào đây để tùy chỉnh giá vàng hoặc tiền công của món này">
+            <span>(${item.tlVang}c × <b>${rateK}k</b>) + Công <b>${laborVnd}đ</b></span>
+            <span class="cart-calc-edit-badge">✏️ Sửa giá/công</span>
+          </div>
+        `;
       }
 
       const thumbHtml = p.anhSanPham ? `<img src="${p.anhSanPham}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px; margin-right: 10px; border: 1px solid #E2E8F0;">` : '';
@@ -753,10 +765,13 @@ class GoldApp {
               ${thumbHtml}
               <span>${p.tenHang || 'Món hàng'} (${p.loaiVang || ''})</span>
             </div>
-            <button class="cart-item-remove" onclick="app.removeFromCart(${idx})" title="Xóa món">✖</button>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <button type="button" class="cart-item-edit-btn" onclick="app.openCartItemPriceModal(${idx})" title="Chỉnh sửa giá vàng & tiền công">✏️</button>
+              <button type="button" class="cart-item-remove" onclick="app.removeFromCart(${idx})" title="Xóa món">✖</button>
+            </div>
           </div>
           <div class="cart-item-desc">Mã tem: <b>${p.maHang}</b> | TL: ${item.tlVang} chỉ | Ni: ${p.ni || '0'}</div>
-          <div class="cart-item-calc">${calcDesc}</div>
+          ${calcDesc}
           <div class="cart-item-footer">
             <span style="font-size: 11px; color: #64748B;">Thành tiền:</span>
             <span class="cart-item-price">${item.thanhTien.toLocaleString('vi-VN')} đ</span>
@@ -770,8 +785,305 @@ class GoldApp {
     grandTotalEl.textContent = grandTotal.toLocaleString('vi-VN') + ' đ';
   }
 
-  // Thanh toán đơn hàng & Xuất hóa đơn
+  // ================= TÙY CHỈNH GIÁ VÀNG & TIỀN CÔNG MÓN HÀNG TRONG ĐƠN =================
+
+  openCartItemPriceModal(idx) {
+    const item = this.cart[idx];
+    if (!item) return;
+
+    this.editingCartIndex = idx;
+    const p = item.product;
+
+    const idxInp = document.getElementById('cartItemEditIndex');
+    const titleEl = document.getElementById('cartItemEditTitle');
+    const subEl = document.getElementById('cartItemEditSub');
+    if (idxInp) idxInp.value = idx;
+    if (titleEl) titleEl.textContent = `${p.tenHang || 'Món hàng'} (${p.loaiVang || ''})`;
+    if (subEl) subEl.textContent = `Mã tem: ${p.maHang} | TL Vàng: ${item.tlVang} chỉ | Ni: ${p.ni || '0'}`;
+
+    const goldSec = document.getElementById('cartItemEditGoldSection');
+    const fixedSec = document.getElementById('cartItemEditFixedSection');
+
+    if (item.isFixedPrice) {
+      if (goldSec) goldSec.style.display = 'none';
+      if (fixedSec) fixedSec.style.display = 'block';
+      const fInp = document.getElementById('cartItemEditFixedPrice');
+      if (fInp) fInp.value = item.thanhTien;
+    } else {
+      if (goldSec) goldSec.style.display = 'flex';
+      if (fixedSec) fixedSec.style.display = 'none';
+      const gInp = document.getElementById('cartItemEditGoldRate');
+      const lInp = document.getElementById('cartItemEditLabor');
+      if (gInp) gInp.value = Math.round(item.donGiaVang / 1000);
+      if (lInp) lInp.value = item.congBan;
+
+      const applyLabel = document.getElementById('cartItemEditApplyLabel');
+      if (applyLabel) {
+        applyLabel.textContent = `Áp dụng giá vàng này cho tất cả món "${p.loaiVang || 'cùng loại'}" trong đơn`;
+      }
+      const chk = document.getElementById('cartItemEditApplySameType');
+      if (chk) chk.checked = false;
+    }
+
+    this.calcCartItemEditPreview();
+    const modal = document.getElementById('cartItemPriceModal');
+    if (modal) modal.classList.add('active');
+  }
+
+  closeCartItemPriceModal() {
+    const modal = document.getElementById('cartItemPriceModal');
+    if (modal) modal.classList.remove('active');
+  }
+
+  calcCartItemEditPreview() {
+    const idx = this.editingCartIndex;
+    if (idx === undefined || idx < 0 || !this.cart[idx]) return;
+    const item = this.cart[idx];
+
+    if (item.isFixedPrice) {
+      const fixed = Number(document.getElementById('cartItemEditFixedPrice')?.value) || 0;
+      const previewEl = document.getElementById('cartItemEditPreviewTotal');
+      if (previewEl) previewEl.textContent = fixed.toLocaleString('vi-VN') + ' đ';
+    } else {
+      const rateK = Number(document.getElementById('cartItemEditGoldRate')?.value) || 0;
+      const rateVnd = rateK * 1000;
+      const labor = Number(document.getElementById('cartItemEditLabor')?.value) || 0;
+      const total = Math.round((item.tlVang || 0) * rateVnd) + labor;
+
+      const rateVndEl = document.getElementById('cartItemEditGoldRateVnd');
+      if (rateVndEl) rateVndEl.textContent = rateVnd.toLocaleString('vi-VN');
+
+      const laborVndEl = document.getElementById('cartItemEditLaborVnd');
+      if (laborVndEl) laborVndEl.textContent = labor.toLocaleString('vi-VN');
+
+      const previewEl = document.getElementById('cartItemEditPreviewTotal');
+      if (previewEl) previewEl.textContent = total.toLocaleString('vi-VN') + ' đ';
+    }
+  }
+
+  resetCartItemGoldRateToDefault() {
+    const idx = this.editingCartIndex;
+    if (idx === undefined || idx < 0 || !this.cart[idx]) return;
+    const item = this.cart[idx];
+    const rateObj = this.goldPrices.find(g => this.isMatchingGoldType(item.product.loaiVang, g.loaiVang));
+    const defaultRateK = rateObj ? Number(rateObj.giaBan) : 7850;
+    const gInp = document.getElementById('cartItemEditGoldRate');
+    if (gInp) gInp.value = defaultRateK;
+    this.calcCartItemEditPreview();
+  }
+
+  setCartItemEditLabor(val) {
+    const inp = document.getElementById('cartItemEditLabor');
+    if (inp) inp.value = val;
+    this.calcCartItemEditPreview();
+  }
+
+  adjustCartItemEditLabor(delta) {
+    const inp = document.getElementById('cartItemEditLabor');
+    const current = Number(inp?.value) || 0;
+    const nextVal = Math.max(0, current + delta);
+    if (inp) inp.value = nextVal;
+    this.calcCartItemEditPreview();
+  }
+
+  saveCartItemPrice() {
+    const idx = this.editingCartIndex;
+    if (idx === undefined || idx < 0 || !this.cart[idx]) return;
+    const item = this.cart[idx];
+    const p = item.product;
+
+    if (item.isFixedPrice) {
+      const fixed = Number(document.getElementById('cartItemEditFixedPrice')?.value) || 0;
+      item.thanhTien = fixed;
+    } else {
+      const rateK = Number(document.getElementById('cartItemEditGoldRate')?.value) || 0;
+      const rateVnd = rateK * 1000;
+      const labor = Number(document.getElementById('cartItemEditLabor')?.value) || 0;
+
+      item.donGiaVang = rateVnd;
+      item.congBan = labor;
+      item.thanhTien = Math.round(item.tlVang * rateVnd) + labor;
+
+      const applyAll = document.getElementById('cartItemEditApplySameType')?.checked;
+      if (applyAll) {
+        this.cart.forEach(other => {
+          if (!other.isFixedPrice && this.isMatchingGoldType(other.product.loaiVang, p.loaiVang)) {
+            other.donGiaVang = rateVnd;
+            other.thanhTien = Math.round(other.tlVang * rateVnd) + other.congBan;
+          }
+        });
+      }
+    }
+
+    this.closeCartItemPriceModal();
+    this.renderCart();
+    this.showToast(`Đã cập nhật giá bán món "${p.tenHang}"!`, 'success');
+  }
+
+  // ================= QUY TRÌNH THANH TOÁN & IN HÓA ĐƠN =================
+
+  // Khi nhấn nút "Thanh Toán" hoặc "In Hóa Đơn" từ giỏ hàng
+  requestCheckout(isPrint = false) {
+    if (this.cart.length === 0) {
+      alert('Vui lòng chọn ít nhất 1 sản phẩm vào đơn hàng để thanh toán!');
+      return;
+    }
+
+    this.pendingCheckoutIsPrint = !!isPrint;
+
+    // Kiểm tra xem đơn hàng có món vàng tính theo chỉ không
+    const hasGoldItems = this.cart.some(item => !item.isFixedPrice && (Number(item.tlVang) > 0));
+
+    if (hasGoldItems) {
+      // Mở hộp thoại hỏi và cho phép thay đổi giá vàng trước khi chốt thanh toán
+      this.openCheckoutGoldRateModal();
+    } else {
+      // Chỉ có hàng bán theo món niêm yết -> Thanh toán trực tiếp
+      this.executeCheckout(this.pendingCheckoutIsPrint);
+    }
+  }
+
+  // Mở modal xác nhận / thay đổi giá vàng trước khi thanh toán
+  openCheckoutGoldRateModal() {
+    const listEl = document.getElementById('checkoutGoldRateList');
+    const submitBtn = document.getElementById('checkoutModalSubmitBtn');
+    if (!listEl) return;
+
+    if (submitBtn) {
+      if (this.pendingCheckoutIsPrint) {
+        submitBtn.innerHTML = '<span>🖨️</span> <span>Xác Nhận & In Hóa Đơn</span>';
+        submitBtn.className = 'btn btn-primary';
+      } else {
+        submitBtn.innerHTML = '<span>💳</span> <span>Xác Nhận & Thanh Toán</span>';
+        submitBtn.className = 'btn btn-success';
+      }
+    }
+
+    // Nhóm các món theo loại vàng
+    const goldTypeMap = new Map();
+    this.cart.forEach(item => {
+      if (item.isFixedPrice || !(Number(item.tlVang) > 0)) return;
+      const key = item.product.loaiVang || 'Vàng';
+      if (!goldTypeMap.has(key)) {
+        goldTypeMap.set(key, {
+          loaiVang: key,
+          count: 0,
+          totalWeight: 0,
+          rateK: Math.round(item.donGiaVang / 1000)
+        });
+      }
+      const g = goldTypeMap.get(key);
+      g.count += 1;
+      g.totalWeight += item.tlVang;
+    });
+
+    listEl.innerHTML = Array.from(goldTypeMap.values()).map(g => `
+      <div style="background: #F8FAFC; border: 1px solid #CBD5E1; border-radius: 8px; padding: 10px 14px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <b style="font-size: 13.5px; color: #0F172A;">💎 ${g.loaiVang}</b>
+          <span style="font-size: 12px; color: #64748B;">${g.count} món | TL: <b>${g.totalWeight.toFixed(3)} chỉ</b></span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <label style="font-size: 12px; font-weight: 600; color: #334155; white-space: nowrap;">Giá bán ra:</label>
+          <div style="position: relative; flex: 1;">
+            <input type="number" class="form-control checkout-gold-rate-input" data-gold-type="${g.loaiVang}" value="${g.rateK}" style="font-size: 15px; font-weight: 700; color: #B45309; padding-right: 55px;" placeholder="Ví dụ: 7850" oninput="app.onCheckoutRateInput()">
+            <span style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 11.5px; color: #64748B; pointer-events: none;">k/chỉ</span>
+          </div>
+        </div>
+        <div class="checkout-rate-vnd-hint" data-gold-type="${g.loaiVang}" style="font-size: 11.5px; color: #0284C7; margin-top: 3px; text-align: right;">
+          = ${(g.rateK * 1000).toLocaleString('vi-VN')} đ / chỉ
+        </div>
+      </div>
+    `).join('');
+
+    this.updateCheckoutModalTotals();
+    const modal = document.getElementById('checkoutGoldRateModal');
+    if (modal) modal.classList.add('active');
+  }
+
+  closeCheckoutGoldRateModal() {
+    const modal = document.getElementById('checkoutGoldRateModal');
+    if (modal) modal.classList.remove('active');
+  }
+
+  onCheckoutRateInput() {
+    const inputs = document.querySelectorAll('.checkout-gold-rate-input');
+    inputs.forEach(inp => {
+      const type = inp.getAttribute('data-gold-type');
+      const valK = Number(inp.value) || 0;
+      const hint = document.querySelector(`.checkout-rate-vnd-hint[data-gold-type="${type}"]`);
+      if (hint) {
+        hint.textContent = `= ${(valK * 1000).toLocaleString('vi-VN')} đ / chỉ`;
+      }
+    });
+    this.updateCheckoutModalTotals();
+  }
+
+  updateCheckoutModalTotals() {
+    const rateMap = new Map();
+    document.querySelectorAll('.checkout-gold-rate-input').forEach(inp => {
+      const type = inp.getAttribute('data-gold-type');
+      const valK = Number(inp.value) || 0;
+      rateMap.set(type, valK * 1000);
+    });
+
+    let totalWeight = 0;
+    let totalLabor = 0;
+    let grandTotal = 0;
+
+    this.cart.forEach(item => {
+      totalWeight += item.tlVang;
+      totalLabor += item.congBan;
+      if (item.isFixedPrice) {
+        grandTotal += item.thanhTien;
+      } else {
+        const key = item.product.loaiVang || 'Vàng';
+        const rate = rateMap.has(key) ? rateMap.get(key) : item.donGiaVang;
+        grandTotal += Math.round(item.tlVang * rate) + item.congBan;
+      }
+    });
+
+    const wEl = document.getElementById('checkoutModalTotalWeight');
+    const lEl = document.getElementById('checkoutModalTotalLabor');
+    const gEl = document.getElementById('checkoutModalGrandTotal');
+    if (wEl) wEl.textContent = totalWeight.toFixed(3) + ' chỉ';
+    if (lEl) lEl.textContent = totalLabor.toLocaleString('vi-VN') + ' đ';
+    if (gEl) gEl.textContent = grandTotal.toLocaleString('vi-VN') + ' đ';
+  }
+
+  // Áp dụng giá vàng đã nhập trong modal và thực hiện thanh toán
+  applyRatesAndExecuteCheckout() {
+    const rateMap = new Map();
+    document.querySelectorAll('.checkout-gold-rate-input').forEach(inp => {
+      const type = inp.getAttribute('data-gold-type');
+      const valK = Number(inp.value) || 0;
+      rateMap.set(type, valK * 1000);
+    });
+
+    // Cập nhật giá vàng mới vào giỏ hàng
+    this.cart.forEach(item => {
+      if (!item.isFixedPrice) {
+        const key = item.product.loaiVang || 'Vàng';
+        if (rateMap.has(key)) {
+          const newRate = rateMap.get(key);
+          item.donGiaVang = newRate;
+          item.thanhTien = Math.round(item.tlVang * newRate) + item.congBan;
+        }
+      }
+    });
+
+    this.renderCart();
+    this.closeCheckoutGoldRateModal();
+    this.executeCheckout(this.pendingCheckoutIsPrint);
+  }
+
+  // Tương thích ngược nếu modal hoặc code cũ gọi checkoutOrder
   async checkoutOrder() {
+    await this.requestCheckout(true);
+  }
+
+  // Thực hiện lưu đơn hàng, trừ tồn kho, in hóa đơn nếu được chọn
+  async executeCheckout(isPrint = false) {
     if (this.cart.length === 0) {
       alert('Vui lòng chọn ít nhất 1 sản phẩm vào đơn hàng để thanh toán!');
       return;
@@ -841,8 +1153,8 @@ class GoldApp {
 
     // 5. Cập nhật lại giao diện
     this.cart = [];
-    document.getElementById('cartCustomerName').value = '';
-    document.getElementById('cartCustomerPhone').value = '';
+    if (document.getElementById('cartCustomerName')) document.getElementById('cartCustomerName').value = '';
+    if (document.getElementById('cartCustomerPhone')) document.getElementById('cartCustomerPhone').value = '';
     this.renderCart();
     this.filterPosProducts();
     this.filterInventory();
@@ -850,13 +1162,15 @@ class GoldApp {
 
     this.hideGlobalLoading();
 
-    // 6. Hỏi in hóa đơn
-    setTimeout(() => {
-
-      if (confirm(`Thanh toán thành công đơn hàng ${maHD} (${grandTotal.toLocaleString('vi-VN')} đ)!\n\nBạn có muốn IN GIẤY ĐẢM BẢO VÀNG / HÓA ĐƠN ngay bây giờ?`)) {
+    // 6. Xử lý sau thanh toán
+    if (isPrint) {
+      this.showToast(`✅ Đã thanh toán và đang mở in hóa đơn ${maHD}!`, 'success');
+      setTimeout(() => {
         window.print();
-      }
-    }, 150);
+      }, 250);
+    } else {
+      this.showToast(`✅ Đã thanh toán đơn hàng ${maHD} (${grandTotal.toLocaleString('vi-VN')} đ) thành công!`, 'success');
+    }
   }
 
   // Điền thông tin vào mẫu in Giấy Đảm Bảo Vàng

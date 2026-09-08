@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>PMQLV - Phần Mềm Quản Lý & Bán Hàng Vàng Bạc Đá Quý</title>
-  <link rel="stylesheet" href="css/style.css?v=60">
+  <link rel="stylesheet" href="css/style.css?v=61">
   <!-- HTML5 QR Code & Barcode Scanner for Camera -->
     <script>
     window.onerror = function(msg, src, line, col, err) {
@@ -238,9 +238,16 @@
                 <span>TỔNG CỘNG:</span>
                 <span id="cartGrandTotal">0 đ</span>
               </div>
-              <button class="btn btn-primary btn-lg btn-block" style="margin-top: 10px; font-weight: 800;" onclick="app.checkoutOrder()">
-                💰 THANH TOÁN & IN HÓA ĐƠN
-              </button>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px;">
+                <button type="button" class="btn btn-success btn-lg" style="font-weight: 800; font-size: 13.5px; padding: 12px 6px; display: flex; align-items: center; justify-content: center; gap: 5px; border-radius: 8px; box-shadow: 0 2px 6px rgba(16,185,129,0.25);" onclick="app.requestCheckout(false)">
+                  <span>💳</span>
+                  <span>THANH TOÁN</span>
+                </button>
+                <button type="button" class="btn btn-primary btn-lg" style="font-weight: 800; font-size: 13.5px; padding: 12px 6px; display: flex; align-items: center; justify-content: center; gap: 5px; border-radius: 8px; box-shadow: 0 2px 6px rgba(217,119,6,0.25);" onclick="app.requestCheckout(true)">
+                  <span>🖨️</span>
+                  <span>IN HÓA ĐƠN</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1500,6 +1507,141 @@
     </div>
   </div>
 
+  <!-- ================= MODAL: TÙY CHỈNH GIÁ VÀNG & TIỀN CÔNG MÓN HÀNG TRONG ĐƠN ================= -->
+  <div class="modal-overlay" id="cartItemPriceModal">
+    <div class="modal-content" style="max-width: 440px;">
+      <div class="modal-header">
+        <h3 class="modal-title">✏️ Tùy Chỉnh Giá & Tiền Công</h3>
+        <button type="button" class="modal-close" onclick="app.closeCartItemPriceModal()">&times;</button>
+      </div>
+      <div class="modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 18px 20px;">
+        <!-- Thông tin món -->
+        <div style="background: #F1F5F9; border: 1px solid #CBD5E1; border-radius: 8px; padding: 10px 12px;">
+          <div id="cartItemEditTitle" style="font-weight: 700; color: #0F172A; font-size: 14px;">Dây 14N1 (Vàng 14K)</div>
+          <div id="cartItemEditSub" style="font-size: 12px; color: #64748B; margin-top: 2px;">Mã: HC500003 | TL Vàng: 2.422 chỉ</div>
+        </div>
+
+        <input type="hidden" id="cartItemEditIndex" value="-1">
+
+        <!-- Phần hàng bán theo trọng lượng vàng -->
+        <div id="cartItemEditGoldSection" style="display: flex; flex-direction: column; gap: 14px;">
+          <!-- Giá vàng -->
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <label style="font-size: 12.5px; font-weight: 700; color: #1E293B;">
+                Giá Vàng Bán Ra (x1.000đ/chỉ):
+              </label>
+              <button type="button" class="btn btn-outline btn-xs" onclick="app.resetCartItemGoldRateToDefault()" style="font-size: 11px; padding: 2px 6px;">
+                🔄 Lấy giá niêm yết
+              </button>
+            </div>
+            <div style="position: relative;">
+              <input type="number" id="cartItemEditGoldRate" class="form-control" style="font-size: 16px; font-weight: 700; color: #B45309; padding-right: 55px;" placeholder="Ví dụ: 4450" oninput="app.calcCartItemEditPreview()">
+              <span style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 11.5px; color: #64748B; pointer-events: none;">k/chỉ</span>
+            </div>
+            <div style="font-size: 11.5px; color: #0284C7; margin-top: 3px;">
+              = <span id="cartItemEditGoldRateVnd">0</span> đ / chỉ
+            </div>
+          </div>
+
+          <!-- Tiền công -->
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <label style="font-size: 12.5px; font-weight: 700; color: #1E293B;">
+                Tiền Công Bán Ra (VNĐ):
+              </label>
+              <div style="display: flex; gap: 4px;">
+                <button type="button" class="btn btn-outline btn-xs" onclick="app.setCartItemEditLabor(0)" style="font-size: 11px; padding: 2px 5px;">Công 0đ</button>
+                <button type="button" class="btn btn-outline btn-xs" onclick="app.adjustCartItemEditLabor(-50000)" style="font-size: 11px; padding: 2px 5px;">-50k</button>
+                <button type="button" class="btn btn-outline btn-xs" onclick="app.adjustCartItemEditLabor(50000)" style="font-size: 11px; padding: 2px 5px;">+50k</button>
+              </div>
+            </div>
+            <input type="number" id="cartItemEditLabor" class="form-control" style="font-size: 16px; font-weight: 700; color: #0369A1;" placeholder="Ví dụ: 350000" oninput="app.calcCartItemEditPreview()">
+            <div style="font-size: 11.5px; color: #0369A1; margin-top: 3px;">
+              = <span id="cartItemEditLaborVnd">0</span> đ
+            </div>
+          </div>
+
+          <!-- Tùy chọn áp dụng đồng loạt -->
+          <label style="display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: #334155; cursor: pointer; user-select: none; background: #F8FAFC; border: 1px solid #E2E8F0; padding: 8px 10px; border-radius: 6px;">
+            <input type="checkbox" id="cartItemEditApplySameType" style="width: 16px; height: 16px; accent-color: #D97706; cursor: pointer;">
+            <span id="cartItemEditApplyLabel">Áp dụng giá vàng này cho tất cả món cùng loại trong đơn</span>
+          </label>
+        </div>
+
+        <!-- Phần hàng bán theo món cố định -->
+        <div id="cartItemEditFixedSection" style="display: none;">
+          <label style="font-size: 12.5px; font-weight: 700; color: #1E293B; margin-bottom: 4px; display: block;">
+            Giá Bán Món Niêm Yết (VNĐ):
+          </label>
+          <input type="number" id="cartItemEditFixedPrice" class="form-control" style="font-size: 16px; font-weight: 700; color: #B45309;" oninput="app.calcCartItemEditPreview()">
+        </div>
+
+        <!-- Xem trước thành tiền -->
+        <div style="background: #FEF3C7; border: 1px solid #FCD34D; border-radius: 8px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 12.5px; font-weight: 700; color: #92400E;">THÀNH TIỀN MÓN:</span>
+          <span id="cartItemEditPreviewTotal" style="font-size: 17px; font-weight: 900; color: #B45309;">0 đ</span>
+        </div>
+      </div>
+      <div class="modal-footer" style="display: flex; gap: 8px; justify-content: flex-end; padding: 12px 20px;">
+        <button type="button" class="btn btn-secondary" onclick="app.closeCartItemPriceModal()">Hủy</button>
+        <button type="button" class="btn btn-primary" onclick="app.saveCartItemPrice()" style="font-weight: 700; padding: 8px 18px;">
+          💾 Xác Nhận Thay Đổi
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: XÁC NHẬN / THAY ĐỔI GIÁ VÀNG TRƯỚC KHI THANH TOÁN ================= -->
+  <div class="modal-overlay" id="checkoutGoldRateModal">
+    <div class="modal-content" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3 class="modal-title">💰 Xác Nhận Giá Vàng Đơn Hàng</h3>
+        <button type="button" class="modal-close" onclick="app.closeCheckoutGoldRateModal()">&times;</button>
+      </div>
+      <div class="modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 18px 20px;">
+        <div style="background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 8px; padding: 12px 14px;">
+          <div style="font-size: 13.5px; font-weight: 700; color: #1E40AF; display: flex; align-items: center; gap: 6px;">
+            <span>❓</span>
+            <span>Bạn có muốn thay đổi giá vàng trước khi thanh toán?</span>
+          </div>
+          <p style="font-size: 12px; color: #475569; margin: 5px 0 0 0;">
+            Bạn có thể chỉnh sửa nhanh giá vàng bán ra cho từng loại vàng dưới đây hoặc giữ nguyên giá để tiếp tục thanh toán.
+          </p>
+        </div>
+
+        <!-- Danh sách loại vàng trong đơn -->
+        <div id="checkoutGoldRateList" style="display: flex; flex-direction: column; gap: 10px;">
+          <!-- Rendered dynamically -->
+        </div>
+
+        <!-- Tóm tắt tổng tiền thanh toán mới nhất -->
+        <div style="background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 8px; padding: 12px 14px;">
+          <div style="display: flex; justify-content: space-between; font-size: 12.5px; color: #78350F; margin-bottom: 4px;">
+            <span>Tổng Trọng Lượng Vàng:</span>
+            <b id="checkoutModalTotalWeight">0.000 chỉ</b>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 12.5px; color: #78350F; margin-bottom: 6px;">
+            <span>Tổng Tiền Công:</span>
+            <b id="checkoutModalTotalLabor">0 đ</b>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #FCD34D; padding-top: 6px;">
+            <span style="font-size: 13px; font-weight: 800; color: #92400E;">TỔNG CỘNG:</span>
+            <span id="checkoutModalGrandTotal" style="font-size: 18px; font-weight: 900; color: #B45309;">0 đ</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="display: flex; gap: 8px; justify-content: space-between; padding: 12px 20px; flex-wrap: wrap;">
+        <button type="button" class="btn btn-secondary" onclick="app.closeCheckoutGoldRateModal()">
+          Đóng / Xem lại
+        </button>
+        <button type="button" id="checkoutModalSubmitBtn" class="btn btn-success" onclick="app.applyRatesAndExecuteCheckout()" style="font-weight: 800; padding: 9px 20px;">
+          💳 Xác Nhận & Thanh Toán
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- ================= PRINTABLE INVOICE (ẨN, CHỈ HIỆN KHI IN) ================= -->
   <div id="printable-invoice">
     <div class="invoice-header">
@@ -1565,6 +1707,6 @@
   <script src="js/googleSheetService.js?v=51"></script>
   <script src="js/cloudinaryService.js?v=51"></script>
   <script src="js/barcodeLabel.js?v=51"></script>
-  <script src="js/app.js?v=60"></script>
+  <script src="js/app.js?v=61"></script>
 </body>
 </html>
