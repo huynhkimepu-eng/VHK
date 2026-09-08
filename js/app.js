@@ -457,20 +457,6 @@ class GoldApp {
 
   // ================= 1. NGHIỆP VỤ BÁN HÀNG (POS) =================
 
-  // Tính giá bán chuẩn ngành vàng của 1 sản phẩm
-  calcProductPrice(product) {
-    const multiplier = this.storeConfig.currencyUnitMultiplier || 1000;
-
-    // Nếu có giá bán theo món niêm yết (vd đồ phong thủy, bạc theo món)
-    if (product.giaBanMon && Number(product.giaBanMon) > 0) {
-      return {
-        unitPrice: 0,
-        laborCost: 0,
-        total: Number(product.giaBanMon) * multiplier,
-        isFixedPrice: true
-      };
-    }
-
   isMatchingGoldType(productLoaiVang, filterLoaiVang) {
     if (!filterLoaiVang || filterLoaiVang === 'ALL') return true;
     if (!productLoaiVang) return false;
@@ -515,18 +501,17 @@ class GoldApp {
     return false;
   }
 
-  // Nếu tính theo trọng lượng vàng: (TL Vàng * Giá Vàng Bán Ra) + Tiền Công Bán
-  getGoldRate(product) {
+  // Tính giá bán chuẩn ngành vàng của 1 sản phẩm
+  calcProductPrice(product) {
     const multiplier = this.storeConfig.currencyUnitMultiplier || 1000;
 
-    // Nếu là hàng bán theo món cố định
-    if (Number(product.giaBanMon) > 0) {
-      const fixedVnd = Number(product.giaBanMon) * multiplier;
+    // Nếu có giá bán theo món niêm yết (vd đồ phong thủy, bạc theo món)
+    if (product.giaBanMon && Number(product.giaBanMon) > 0) {
       return {
         unitPrice: 0,
         laborCost: 0,
         goldPricePart: 0,
-        total: fixedVnd,
+        total: Number(product.giaBanMon) * multiplier,
         isFixedPrice: true
       };
     }
@@ -548,6 +533,11 @@ class GoldApp {
       total: total,
       isFixedPrice: false
     };
+  }
+
+  // Tương thích ngược nếu gọi getGoldRate
+  getGoldRate(product) {
+    return this.calcProductPrice(product);
   }
 
   // Lọc sản phẩm tại màn hình POS
@@ -4037,102 +4027,113 @@ class GoldApp {
   }
 
   handleAuthGateLogin() {
-    const uInp = document.getElementById('authGateUsername');
-    const pInp = document.getElementById('authGatePassword');
-    const remCheck = document.getElementById('authGateRemember');
-    const errEl = document.getElementById('authGateErrorMsg');
+    try {
+      const uInp = document.getElementById('authGateUsername');
+      const pInp = document.getElementById('authGatePassword');
+      const remCheck = document.getElementById('authGateRemember');
+      const errEl = document.getElementById('authGateErrorMsg');
 
-    const u = (uInp?.value || '').trim().toLowerCase();
-    const p = (pInp?.value || '').trim();
+      const u = (uInp?.value || '').trim().toLowerCase();
+      const p = (pInp?.value || '').trim();
 
-    if (errEl) errEl.style.display = 'none';
-    if (uInp) uInp.style.borderColor = '#CBD5E1';
-    if (pInp) pInp.style.borderColor = '#CBD5E1';
+      if (errEl) errEl.style.display = 'none';
+      if (uInp) uInp.style.borderColor = '#CBD5E1';
+      if (pInp) pInp.style.borderColor = '#CBD5E1';
 
-    if (!u || !p) {
-      if (errEl) {
-        errEl.textContent = 'Vui lòng nhập đầy đủ Tên đăng nhập và Mật khẩu!';
-        errEl.style.display = 'block';
+      if (!u || !p) {
+        if (errEl) {
+          errEl.textContent = 'Vui lòng nhập đầy đủ Tên đăng nhập và Mật khẩu!';
+          errEl.style.display = 'block';
+        }
+        if (!u && uInp) uInp.style.borderColor = '#DC2626';
+        if (!p && pInp) pInp.style.borderColor = '#DC2626';
+        return;
       }
-      if (!u && uInp) uInp.style.borderColor = '#DC2626';
-      if (!p && pInp) pInp.style.borderColor = '#DC2626';
-      return;
-    }
 
-    if (!this.users || this.users.length === 0) {
-      this.users = window.DEFAULT_USERS || [];
-    }
-
-    let found = this.users.find(user => 
-      String(user.username || '').trim().toLowerCase() === u && 
-      String(user.password || '').trim() === p
-    );
-
-    // Hỗ trợ alias cũ
-    if (!found) {
-      const aliasMap = {
-        'nhanvien1': 'chinhanh1',
-        'nhanvien2': 'chinhanh2',
-        'nhanvien': 'chinhanh1'
-      };
-      const mapped = aliasMap[u];
-      if (mapped) {
-        found = this.users.find(user => 
-          String(user.username || '').trim().toLowerCase() === mapped && 
-          String(user.password || '').trim() === p
-        );
+      if (!this.users || this.users.length === 0) {
+        this.users = window.DEFAULT_USERS || [];
       }
-    }
 
-    // Fallback nếu có trong DEFAULT_USERS
-    if (!found && window.DEFAULT_USERS) {
-      found = window.DEFAULT_USERS.find(user =>
-        String(user.username || '').trim().toLowerCase() === u &&
+      let found = this.users.find(user => 
+        String(user.username || '').trim().toLowerCase() === u && 
         String(user.password || '').trim() === p
       );
-      if (found && !this.users.some(x => String(x.username || '').toLowerCase() === u)) {
-        this.users.push(found);
-        localStorage.setItem('pmqlv_users', JSON.stringify(this.users));
-      }
-    }
 
-    if (!found) {
+      // Hỗ trợ alias cũ
+      if (!found) {
+        const aliasMap = {
+          'nhanvien1': 'chinhanh1',
+          'nhanvien2': 'chinhanh2',
+          'nhanvien': 'chinhanh1'
+        };
+        const mapped = aliasMap[u];
+        if (mapped) {
+          found = this.users.find(user => 
+            String(user.username || '').trim().toLowerCase() === mapped && 
+            String(user.password || '').trim() === p
+          );
+        }
+      }
+
+      // Fallback nếu có trong DEFAULT_USERS
+      if (!found && window.DEFAULT_USERS) {
+        found = window.DEFAULT_USERS.find(user =>
+          String(user.username || '').trim().toLowerCase() === u &&
+          String(user.password || '').trim() === p
+        );
+        if (found && !this.users.some(x => String(x.username || '').toLowerCase() === u)) {
+          this.users.push(found);
+          localStorage.setItem('pmqlv_users', JSON.stringify(this.users));
+        }
+      }
+
+      if (!found) {
+        if (errEl) {
+          errEl.textContent = 'Tên đăng nhập hoặc mật khẩu không chính xác! Vui lòng thử lại.';
+          errEl.style.display = 'block';
+        }
+        if (pInp) {
+          pInp.style.borderColor = '#DC2626';
+          pInp.value = '';
+          pInp.focus();
+        }
+        return;
+      }
+
+      // Xác thực thành công
+      this.currentUser = found;
+      const isRemember = remCheck ? remCheck.checked : true;
+      if (isRemember) {
+        localStorage.setItem('pmqlv_current_user', JSON.stringify(found));
+        sessionStorage.removeItem('pmqlv_current_user');
+      } else {
+        sessionStorage.setItem('pmqlv_current_user', JSON.stringify(found));
+        localStorage.removeItem('pmqlv_current_user');
+      }
+
+      this.updateAuthGateUI();
+      try { this.renderGoldRatesTable(); } catch(e) { console.error('renderGoldRatesTable error:', e); }
+      try { this.filterPosProducts(); } catch(e) { console.error('filterPosProducts error:', e); }
+      try { this.filterInventory(); } catch(e) { console.error('filterInventory error:', e); }
+      try { this.updateReportStats(); } catch(e) { console.error('updateReportStats error:', e); }
+
+      let roleTitle = 'QUẢN LÝ CHUNG (ADMIN)';
+      if (found.role === 'chinhanh') {
+        roleTitle = `QUẢN LÝ ${found.chiNhanh ? found.chiNhanh.toUpperCase() : ''}`;
+      } else if (found.role === 'nhanvien') {
+        roleTitle = 'NHÂN VIÊN THU NGÂN';
+      }
+      this.showToast(`Chào mừng ${found.fullName || found.username} (${roleTitle}) đã đăng nhập!`, 'success');
+    } catch (err) {
+      console.error('handleAuthGateLogin error:', err);
+      const errEl = document.getElementById('authGateErrorMsg');
       if (errEl) {
-        errEl.textContent = 'Tên đăng nhập hoặc mật khẩu không chính xác! Vui lòng thử lại.';
+        errEl.textContent = 'Lỗi hệ thống khi đăng nhập: ' + err.message;
         errEl.style.display = 'block';
+      } else {
+        alert('Lỗi đăng nhập: ' + err.message);
       }
-      if (pInp) {
-        pInp.style.borderColor = '#DC2626';
-        pInp.value = '';
-        pInp.focus();
-      }
-      return;
     }
-
-    // Xác thực thành công
-    this.currentUser = found;
-    const isRemember = remCheck ? remCheck.checked : true;
-    if (isRemember) {
-      localStorage.setItem('pmqlv_current_user', JSON.stringify(found));
-      sessionStorage.removeItem('pmqlv_current_user');
-    } else {
-      sessionStorage.setItem('pmqlv_current_user', JSON.stringify(found));
-      localStorage.removeItem('pmqlv_current_user');
-    }
-
-    this.updateAuthGateUI();
-    this.renderGoldRatesTable();
-    this.filterPosProducts();
-    this.filterInventory();
-    this.updateReportStats();
-
-    let roleTitle = 'QUẢN LÝ CHUNG (ADMIN)';
-    if (found.role === 'chinhanh') {
-      roleTitle = `QUẢN LÝ ${found.chiNhanh ? found.chiNhanh.toUpperCase() : ''}`;
-    } else if (found.role === 'nhanvien') {
-      roleTitle = 'NHÂN VIÊN THU NGÂN';
-    }
-    this.showToast(`Chào mừng ${found.fullName || found.username} (${roleTitle}) đã đăng nhập!`, 'success');
   }
 
   toggleAuthPasswordVisibility() {
