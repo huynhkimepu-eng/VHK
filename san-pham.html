@@ -1774,14 +1774,16 @@
       }
 
       // Nhà sản xuất / Cung cấp & TCCS
-      const nccName = (product.ncc === 'HK' || (product.ncc && product.ncc.toUpperCase().includes('HOÀNG KIM')))
-        ? 'CTTNHH VB&TS HOÀNG KIM'
-        : (product.ncc || 'CTTNHH VB&TS HOÀNG KIM');
+      const rawNCC = (product.nhaCungCap || product.ncc || '').trim();
+      const isHK = !rawNCC || rawNCC.toUpperCase() === 'HK' || rawNCC.toUpperCase().includes('HOÀNG KIM') || rawNCC.toUpperCase().includes('HOANG KIM');
+      const nccName = isHK ? 'CTTNHH VB&TS HOÀNG KIM' : rawNCC;
       document.getElementById('specNCC').textContent = nccName;
 
-      const tccsText = product.tccs || 'tccs 01:2025/ HK';
-      const xuatXuText = product.xuatXu || 'Việt Nam';
-      document.getElementById('specTCCS').textContent = `${tccsText} • Nơi sản xuất: ${xuatXuText}`;
+      const tccsText = product.tccs || (isHK ? 'TCCS: 01:2025/ HK' : '');
+      const xuatXuText = product.xuatXu || product.nhaSanXuat || 'Việt Nam';
+      document.getElementById('specTCCS').textContent = tccsText 
+        ? `${tccsText} • Nơi sản xuất: ${xuatXuText}` 
+        : `Nơi sản xuất: ${xuatXuText}`;
 
       // Nút liên hệ
       const phone = storeConfig.phone || '0988.888.888';
