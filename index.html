@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>PMQLV - Phần Mềm Quản Lý & Bán Hàng Vàng Bạc Đá Quý</title>
-  <link rel="stylesheet" href="css/style.css?v=36">
+  <link rel="stylesheet" href="css/style.css?v=52">
   <!-- HTML5 QR Code & Barcode Scanner for Camera -->
     <script>
     window.onerror = function(msg, src, line, col, err) {
@@ -21,46 +21,48 @@
   <!-- ================= APP HEADER ================= -->
   <header class="app-header">
     <div class="header-inner">
-      <div class="brand-box">
-        <div class="brand-logo-icon">👑</div>
-        <div class="brand-text">
-          <h1 id="headerStoreName">TIỆM VÀNG HOÀNG KIM</h1>
-          <p id="headerSlogan">Quản Lý Kho & Bán Hàng Vàng Bạc Đá Quý</p>
+      <div class="header-brand-row">
+        <div class="brand-box">
+          <div class="brand-logo-icon">👑</div>
+          <div class="brand-text">
+            <h1 id="headerStoreName">TIỆM VÀNG HOÀNG KIM</h1>
+            <p id="headerSlogan">Quản Lý Kho & Bán Hàng Vàng Bạc Đá Quý</p>
+          </div>
+        </div>
+
+        <!-- Trạng thái kết nối & User phân quyền -->
+        <div class="header-user-meta">
+          <div class="sync-status-badge" id="syncBadge" title="Bấm để kiểm tra đồng bộ Google Sheet" onclick="app.showSyncModal()">
+            <span class="status-dot" id="syncDot"></span>
+            <span class="text" id="syncText">Đang kiểm tra...</span>
+          </div>
+          <div class="user-badge" id="userBadge">
+            <span id="userRoleText">Admin</span>: <b id="userFullName">Chủ Tiệm</b>
+            <button class="btn-logout" onclick="app.logout()" title="Đăng xuất / Chuyển tài khoản">Đổi</button>
+          </div>
         </div>
       </div>
 
-      <div class="header-right">
-        <!-- Bảng Giá TV -->
-        <a href="bang-gia-vang.html" target="_blank" style="display: flex; align-items: center; gap: 6px; background: linear-gradient(135deg, #F59E0B, #D97706); color: #000; padding: 5px 12px; border-radius: 6px; margin-right: 8px; text-decoration: none; font-size: 12.5px; font-weight: 700; box-shadow: 0 2px 6px rgba(0,0,0,0.2);" title="Mở Màn Hình Bảng Giá Điện Tử Chiếu TV">
-          <span>📺</span> Bảng Giá TV
-        </a>
-
-        <!-- Trang Giới Thiệu Khách Xem -->
-        <a href="san-pham.html" target="_blank" style="display: flex; align-items: center; gap: 6px; background: linear-gradient(135deg, #10B981, #047857); color: #FFF; padding: 5px 12px; border-radius: 6px; margin-right: 12px; text-decoration: none; font-size: 12.5px; font-weight: 700; box-shadow: 0 2px 6px rgba(0,0,0,0.2);" title="Mở Trang Giới Thiệu Sản Phẩm Cho Khách Hàng">
-          <span>💎</span> Trang Khách Xem
-        </a>
-
+      <div class="header-actions-row">
         <!-- Chọn Chi Nhánh -->
-        <div style="display: flex; align-items: center; background: rgba(255,255,255,0.15); padding: 4px 10px; border-radius: 6px; margin-right: 15px;">
-          <label style="font-size: 11px; margin-right: 6px; opacity: 0.9;">CHI NHÁNH:</label>
-          <select id="globalBranchSelector" onchange="app.changeBranch()" style="background: transparent; color: white; border: none; font-size: 13px; font-weight: bold; outline: none; cursor: pointer;">
-            <option value="Chi nhánh 1" style="color: black;">Chi nhánh 1</option>
-            <option value="Chi nhánh 2" style="color: black;">Chi nhánh 2</option>
-            <option value="ALL" style="color: black;" id="optAllBranches">Tất cả chi nhánh (Xem Báo Cáo)</option>
+        <div class="header-branch-box">
+          <label>KHO:</label>
+          <select id="globalBranchSelector" onchange="app.changeBranch()">
+            <option value="Chi nhánh 1">Chi nhánh 1</option>
+            <option value="Chi nhánh 2">Chi nhánh 2</option>
+            <option value="ALL" id="optAllBranches">Tất cả chi nhánh</option>
           </select>
         </div>
 
-        <!-- Trạng thái kết nối Google Sheet -->
-        <div class="sync-status-badge" id="syncBadge" title="Bấm để kiểm tra đồng bộ Google Sheet" onclick="app.showSyncModal()">
-          <span class="status-dot" id="syncDot"></span>
-          <span class="text" id="syncText">Đang kiểm tra...</span>
-        </div>
+        <!-- Bảng Giá TV -->
+        <a href="bang-gia-vang.html" target="_blank" class="header-btn-link btn-tv" title="Mở Màn Hình Bảng Giá Điện Tử Chiếu TV">
+          <span>📺</span> <span>Bảng Giá TV</span>
+        </a>
 
-        <!-- Người dùng hiện tại & Phân quyền -->
-        <div class="user-badge" id="userBadge">
-          <span id="userRoleText">Admin</span>: <b id="userFullName">Chủ Tiệm</b>
-          <button class="btn-logout" onclick="app.logout()" title="Đăng xuất / Chuyển tài khoản">Đổi</button>
-        </div>
+        <!-- Trang Giới Thiệu Khách Xem -->
+        <a href="san-pham.html" target="_blank" class="header-btn-link btn-showcase" title="Mở Trang Giới Thiệu Sản Phẩm Cho Khách Hàng">
+          <span>💎</span> <span>Trang Khách Xem</span>
+        </a>
       </div>
     </div>
   </header>
@@ -343,7 +345,7 @@
           </button>
         </div>
         <div class="card-body">
-          <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px;">
+          <div class="tags-layout-grid">
             
             <!-- Tag Configuration -->
             <div style="background: #F8FAFC; padding: 16px; border-radius: var(--radius-sm); border: 1px solid #E2E8F0;">

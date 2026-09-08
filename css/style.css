@@ -35,6 +35,13 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+html, body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  position: relative;
+}
+
 body {
   background-color: var(--bg-app);
   color: var(--text-main);
@@ -47,12 +54,14 @@ body {
 .app-header {
   background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
   color: var(--white);
-  padding: 10px 20px;
+  padding: 8px 16px;
   border-bottom: 3px solid var(--primary-gold);
   position: sticky;
   top: 0;
   z-index: 100;
   box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .header-inner {
@@ -62,6 +71,25 @@ body {
   justify-content: space-between;
   align-items: center;
   gap: 15px;
+  width: 100%;
+}
+
+.header-brand-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-user-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .brand-box {
@@ -82,6 +110,7 @@ body {
   font-weight: 900;
   font-size: 20px;
   box-shadow: 0 0 10px rgba(212,175,55,0.4);
+  flex-shrink: 0;
 }
 
 .brand-text h1 {
@@ -94,6 +123,58 @@ body {
 .brand-text p {
   font-size: 11px;
   color: #94A3B8;
+}
+
+.header-btn-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 12.5px;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  white-space: nowrap;
+  transition: transform 0.15s;
+}
+.header-btn-link:active {
+  transform: scale(0.97);
+}
+.header-btn-link.btn-tv {
+  background: linear-gradient(135deg, #F59E0B, #D97706);
+  color: #000;
+}
+.header-btn-link.btn-showcase {
+  background: linear-gradient(135deg, #10B981, #047857);
+  color: #FFF;
+}
+
+.header-branch-box {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(255,255,255,0.15);
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+.header-branch-box label {
+  font-size: 11px;
+  margin-right: 6px;
+  opacity: 0.9;
+  white-space: nowrap;
+  font-weight: 700;
+}
+.header-branch-box select {
+  background: transparent;
+  color: white;
+  border: none;
+  font-size: 13px;
+  font-weight: bold;
+  outline: none;
+  cursor: pointer;
+}
+.header-branch-box select option {
+  color: #000;
 }
 
 .header-right {
@@ -1089,39 +1170,307 @@ body {
   }
 }
 
+/* ================= TAGS LAYOUT GRID ================= */
+.tags-layout-grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 20px;
+}
+
 /* ================= RESPONSIVE DESIGN (MOBILE & TABLET) ================= */
 @media (max-width: 900px) {
-  .pos-layout {
-    grid-template-columns: 1fr;
-  }
-
-  .pos-cart {
-    height: auto;
-    max-height: 420px;
-    position: static;
-  }
-
-  .nav-tabs-wrapper {
-    display: none; /* Hide top desktop tabs on mobile */
-  }
-
-  .mobile-bottom-nav {
-    display: block; /* Show bottom thumb navigation */
+  /* Khóa triệt để tràn viền ngang trên toàn bộ trang */
+  html, body {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    position: relative;
   }
 
   .main-wrapper {
-    padding-bottom: 75px; /* Space for bottom nav */
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 8px !important;
+    padding-bottom: 80px !important; /* Khoảng trống cho thanh menu đáy */
+    overflow-x: hidden !important;
   }
 
+  /* 1. Header trên điện thoại: Tinh gọn 2 tầng rõ ràng */
   .app-header {
-    padding: 8px 12px;
+    padding: 6px 8px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
   }
 
-  .header-right .sync-status-badge span.text {
-    display: none; /* Hide extra text on small screens */
+  .header-inner {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+    align-items: stretch !important;
+    width: 100% !important;
+  }
+
+  /* Tầng 1: Tên tiệm bên trái, Phân quyền & Sync bên phải */
+  .header-brand-row {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    width: 100% !important;
+  }
+
+  .brand-box {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    min-width: 0 !important;
+  }
+
+  .brand-logo-icon {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 16px !important;
   }
 
   .brand-text h1 {
-    font-size: 15px;
+    font-size: 13.5px !important;
+    letter-spacing: 0 !important;
+    white-space: nowrap !important;
+  }
+
+  .brand-text p {
+    display: none !important; /* Ẩn câu slogan dài để tiết kiệm chiều cao */
+  }
+
+  .header-user-meta {
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .sync-status-badge {
+    padding: 4px 6px !important;
+    font-size: 11px !important;
+  }
+  .sync-status-badge .text {
+    display: none !important; /* Chỉ hiện chấm tròn trạng thái */
+  }
+
+  .user-badge {
+    padding: 3px 8px !important;
+    font-size: 11px !important;
+    max-width: 130px !important;
+  }
+  .user-badge b {
+    display: none !important; /* Ẩn tên dài, chỉ giữ vai trò Admin/Chi nhánh */
+  }
+
+  /* Tầng 2: Chi nhánh + Bảng Giá TV + Trang Khách Xem chia 3 cột đều */
+  .header-actions-row {
+    display: grid !important;
+    grid-template-columns: 1.2fr 1fr 1fr !important;
+    gap: 5px !important;
+    width: 100% !important;
+  }
+
+  .header-branch-box {
+    padding: 3px 6px !important;
+    min-width: 0 !important;
+  }
+  .header-branch-box label {
+    font-size: 9.5px !important;
+    margin-right: 3px !important;
+  }
+  .header-branch-box select {
+    font-size: 11.5px !important;
+    width: 100% !important;
+  }
+
+  .header-btn-link {
+    justify-content: center !important;
+    padding: 5px 3px !important;
+    font-size: 11px !important;
+    text-align: center !important;
+  }
+
+  /* 2. Ẩn thanh tab máy tính, bật thanh menu đáy */
+  .nav-tabs-wrapper {
+    display: none !important;
+  }
+
+  .mobile-bottom-nav {
+    display: block !important;
+    z-index: 999 !important;
+    padding-bottom: env(safe-area-inset-bottom, 8px) !important;
+  }
+
+  /* 3. Card chung */
+  .card {
+    border-radius: 8px !important;
+    margin-bottom: 10px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .card-body {
+    padding: 10px !important;
+  }
+
+  /* 4. Tab Bán Hàng (POS) */
+  .pos-layout {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+
+  .pos-search-bar {
+    display: flex !important;
+    gap: 6px !important;
+    width: 100% !important;
+  }
+
+  .pos-search-bar input {
+    font-size: 12.5px !important;
+    padding: 7px 8px !important;
+    min-width: 0 !important;
+  }
+
+  .pos-scan-btn {
+    padding: 7px 10px !important;
+    font-size: 12px !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+  }
+
+  .pos-grid-products {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    max-height: calc(100vh - 320px) !important;
+    padding-right: 0 !important;
+  }
+
+  .product-card-pos {
+    padding: 8px 10px !important;
+    min-height: auto !important;
+  }
+
+  .product-card-pos .card-thumb-container,
+  .product-card-pos .pos-thumb-wrap {
+    width: 52px !important;
+    height: 52px !important;
+  }
+
+  .pos-cart {
+    height: auto !important;
+    max-height: none !important;
+    position: static !important;
+  }
+
+  /* 5. Tab Kho Hàng (Inventory) */
+  .card-header {
+    padding: 10px 12px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+
+  .card-header > div:last-child {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 5px !important;
+  }
+
+  .card-header .btn {
+    font-size: 11.5px !important;
+    padding: 5px 8px !important;
+  }
+
+  .inventory-filters {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 6px !important;
+    padding: 8px !important;
+  }
+
+  .inventory-filters label {
+    font-size: 10px !important;
+  }
+
+  .inventory-filters .form-control,
+  .inventory-filters .form-select {
+    font-size: 12px !important;
+    padding: 5px 8px !important;
+    height: 34px !important;
+  }
+
+  #recentModifiedBanner {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+    padding: 10px 12px !important;
+  }
+
+  #recentModifiedBanner > div:last-child {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+    width: 100% !important;
+  }
+
+  #recentModifiedBanner button {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 7px !important;
+    font-size: 12px !important;
+  }
+
+  .table-responsive {
+    border: 1px solid #E2E8F0 !important;
+    border-radius: 6px !important;
+    margin-bottom: 8px !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    width: 100% !important;
+  }
+
+  .table-custom {
+    min-width: 750px !important; /* Cho phép bảng cuộn ngang riêng bên trong khung mà không làm phình toàn màn hình */
+  }
+
+  .pagination-bar {
+    flex-direction: column !important;
+    gap: 8px !important;
+    text-align: center !important;
+    align-items: center !important;
+  }
+
+  /* 6. Tab In Tem (Tags) */
+  .tags-layout-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  /* 7. Modals & Hộp thoại */
+  .modal-overlay {
+    padding: 8px !important;
+  }
+
+  .modal-content {
+    max-width: 100% !important;
+    max-height: 94vh !important;
+    border-radius: 10px !important;
+  }
+
+  .modal-header {
+    padding: 10px 14px !important;
+  }
+
+  .modal-body {
+    padding: 12px !important;
+  }
+
+  .modal-footer {
+    padding: 10px 14px !important;
   }
 }
