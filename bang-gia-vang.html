@@ -38,124 +38,115 @@
       overflow-x: hidden;
     }
 
-    /* Nút Toàn Màn Hình đặt dưới Đồng Hồ */
-    .btn-fullscreen-tv {
-      margin-top: 10px;
-      width: 100%;
-      background: var(--gold-gradient);
-      color: #0b0f19;
-      border: none;
-      font-size: 13px;
-      font-weight: 800;
-      letter-spacing: 0.5px;
-      padding: 7px 14px;
-      border-radius: 8px;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
-      transition: all 0.2s ease;
-    }
-
-    .btn-fullscreen-tv:hover {
-      filter: brightness(1.15);
-      transform: translateY(-1px);
-      box-shadow: 0 6px 18px rgba(245, 158, 11, 0.5);
-    }
-
-    .btn-fullscreen-tv:active {
-      transform: translateY(0);
-    }
-
     /* Main Container */
     .tv-container {
       flex: 1;
       width: 100%;
       max-width: 1600px;
       margin: 0 auto;
-      padding: 24px 30px;
+      padding: 16px 28px;
       display: flex;
       flex-direction: column;
     }
 
     /* Header Section */
     .tv-header {
-      display: grid;
-      grid-template-columns: auto 1fr auto;
+      display: flex;
       align-items: center;
-      gap: 25px;
-      padding-bottom: 20px;
+      gap: 20px;
+      padding-bottom: 14px;
       border-bottom: 2px solid var(--border-gold);
-      margin-bottom: 25px;
+      margin-bottom: 16px;
     }
 
     .brand-logo-badge {
-      width: 76px;
-      height: 76px;
+      width: 68px;
+      height: 68px;
       background: var(--gold-gradient);
-      border-radius: 16px;
+      border-radius: 14px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 42px;
+      font-size: 38px;
       box-shadow: 0 0 25px rgba(245, 158, 11, 0.4);
+      flex-shrink: 0;
+    }
+
+    .brand-titles {
+      flex: 1;
+    }
+
+    .brand-title-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
     }
 
     .brand-titles h1 {
       font-family: 'Cinzel', serif;
-      font-size: 38px;
+      font-size: 34px;
       font-weight: 900;
       letter-spacing: 2px;
       background: linear-gradient(135deg, #FFFBEB 0%, #FDE68A 40%, #F59E0B 80%, #D97706 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       text-transform: uppercase;
-      margin-bottom: 4px;
+      margin-bottom: 0;
       text-shadow: 0 0 30px rgba(245, 158, 11, 0.3);
+      line-height: 1.15;
+    }
+
+    /* Thời gian hiển thị nho nhỏ sau chữ Hoàng Kim */
+    .header-clock-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      padding: 5px 14px;
+      border-radius: 20px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+    }
+
+    .header-clock-pill .clock-icon {
+      font-size: 15px;
+    }
+
+    .header-clock-pill .clock-time-inline {
+      font-family: 'Montserrat', monospace;
+      font-size: 20px;
+      font-weight: 800;
+      color: #FFFFFF;
+      letter-spacing: 1px;
+    }
+
+    .header-clock-pill .clock-sep {
+      color: var(--border-gold);
+      font-size: 13px;
+      opacity: 0.7;
+    }
+
+    .header-clock-pill .clock-date-inline {
+      font-size: 14px;
+      color: var(--gold-light);
+      font-weight: 600;
     }
 
     .brand-titles .slogan {
-      font-size: 15px;
+      font-size: 14px;
       color: var(--gold-light);
       letter-spacing: 1px;
       font-weight: 500;
       display: flex;
       align-items: center;
       gap: 15px;
+      margin-top: 4px;
     }
 
     .brand-titles .slogan span.contact {
       color: var(--text-muted);
-      font-size: 13.5px;
-    }
-
-    /* Clock Widget */
-    .clock-widget {
-      text-align: right;
-      background: rgba(15, 23, 42, 0.7);
-      padding: 12px 22px;
-      border-radius: 14px;
-      border: 1px solid rgba(245, 158, 11, 0.3);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-    }
-
-    .clock-time {
-      font-family: 'Montserrat', sans-serif;
-      font-size: 34px;
-      font-weight: 800;
-      color: var(--gold-light);
-      letter-spacing: 2px;
-      line-height: 1.1;
-    }
-
-    .clock-date {
-      font-size: 14px;
-      color: var(--text-muted);
-      font-weight: 600;
-      margin-top: 4px;
-      text-transform: capitalize;
+      font-size: 13px;
     }
 
     /* Rates Table Card */
@@ -342,28 +333,24 @@
 
     /* Responsive for TV / Tablet / Mobile */
     @media (max-width: 1024px) {
-      .tv-header {
-        grid-template-columns: auto 1fr;
-      }
-      .clock-widget {
-        grid-column: 1 / -1;
-        text-align: center;
-      }
-      .gold-title { font-size: 18px; }
-      .price-cell { font-size: 21px; }
-      .purity-badge { font-size: 14px; }
-      .rates-table thead th { font-size: 14px; padding: 14px 16px; }
-      .rates-table td { padding: 14px 16px; font-size: 16px; }
+      .brand-titles h1 { font-size: 28px; }
+      .header-clock-pill .clock-time-inline { font-size: 17px; }
+      .gold-title { font-size: 20px; }
+      .price-cell { font-size: 24px; }
+      .purity-badge { font-size: 15px; }
+      .rates-table thead th { font-size: 15px; padding: 14px 16px; }
+      .rates-table td { padding: 14px 16px; font-size: 17px; }
     }
 
     @media (max-width: 640px) {
       .tv-container { padding: 12px; }
+      .tv-header { flex-direction: column; align-items: flex-start; gap: 12px; }
       .brand-titles h1 { font-size: 24px; }
-      .clock-time { font-size: 24px; }
-      .price-cell { font-size: 17px; }
-      .gold-title { font-size: 15px; }
+      .header-clock-pill .clock-time-inline { font-size: 16px; }
+      .price-cell { font-size: 18px; }
+      .gold-title { font-size: 16px; }
       .rates-table thead th { font-size: 12px; padding: 10px; }
-      .rates-table td { padding: 10px; }
+      .rates-table td { padding: 10px; font-size: 14px; }
     }
   </style>
 </head>
@@ -374,18 +361,19 @@
     <header class="tv-header">
       <div class="brand-logo-badge">👑</div>
       <div class="brand-titles">
-        <h1 id="tvStoreName">TIỆM VÀNG HOÀNG KIM</h1>
+        <div class="brand-title-row">
+          <h1 id="tvStoreName">TIỆM VÀNG HOÀNG KIM</h1>
+          <div class="header-clock-pill">
+            <span class="clock-icon">⏰</span>
+            <span class="clock-time-inline" id="liveClock">00:00:00</span>
+            <span class="clock-sep">•</span>
+            <span class="clock-date-inline" id="liveDate">Đang tải thời gian...</span>
+          </div>
+        </div>
         <div class="slogan">
           <span id="tvStoreSlogan">Uy Tín Trọn Niềm Tin - Vàng Chuẩn Tuổi</span>
           <span class="contact" id="tvStoreContact">| Hotline: 0988.888.888</span>
         </div>
-      </div>
-      <div class="clock-widget">
-        <div class="clock-time" id="liveClock">00:00:00</div>
-        <div class="clock-date" id="liveDate">Đang tải thời gian...</div>
-        <button class="btn-fullscreen-tv" id="btnTvFullscreen" onclick="toggleFullScreen()" title="Bật/Tắt chế độ toàn màn hình">
-          <span id="fsIcon">⛶</span> <span id="fsText">Toàn Màn Hình</span>
-        </button>
       </div>
     </header>
 
@@ -423,8 +411,8 @@
   </div>
 
   <!-- Scripts -->
-  <script src="js/defaultData.js"></script>
-  <script src="js/googleSheetService.js"></script>
+  <script src="js/defaultData.js?v=36"></script>
+  <script src="js/googleSheetService.js?v=36"></script>
   <script>
     // State
     let goldPrices = [];
@@ -454,15 +442,12 @@
         }
       });
 
-      // Lắng nghe thay đổi toàn màn hình
-      document.addEventListener('fullscreenchange', () => {
-        updateFsButton(!!document.fullscreenElement);
-      });
+      // Lắng nghe nhấp đúp để bật/tắt toàn màn hình nếu cần
+      document.addEventListener('dblclick', toggleFullScreen);
 
       // Kiểm tra cập nhật bộ nhớ cục bộ mỗi 2 giây
       setInterval(() => {
         const currentSaved = localStorage.getItem(STORAGE_KEY_PRICES);
-        const currentVisible = localStorage.getItem(STORAGE_KEY_VISIBLE);
         if (currentSaved && currentSaved !== JSON.stringify(goldPrices)) {
           loadData();
           renderTVDisplay();
@@ -504,46 +489,86 @@
       goldPrices = loaded;
     }
 
-    // Lấy danh sách loại vàng hiển thị theo đúng cấu hình Admin đã lưu
-    function getVisibleTypes() {
-      const saved = localStorage.getItem(STORAGE_KEY_VISIBLE);
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed)) return parsed;
-        } catch (e) {}
+    // Danh sách 5 loại cố định hiển thị trên Bảng Giá TV theo yêu cầu
+    const FIXED_TV_ITEMS = [
+      {
+        title: 'Vàng 24k',
+        sub: 'Chuẩn tuổi 99.99%',
+        hamLuongDefault: '99.99%',
+        donViDefault: 'chỉ',
+        defaultMua: 7600,
+        defaultBan: 7850,
+        matcher: (g) => {
+          const n = (g.loaiVang || '').toLowerCase();
+          return n.includes('24') || n.includes('9999');
+        }
+      },
+      {
+        title: 'Vàng Trang Sức 23k',
+        sub: 'Chuẩn tuổi 95.8%',
+        hamLuongDefault: '95.8%',
+        donViDefault: 'chỉ',
+        defaultMua: 7200,
+        defaultBan: 7500,
+        matcher: (g) => {
+          const n = (g.loaiVang || '').toLowerCase();
+          return n.includes('23') || n.includes('vang23k');
+        }
+      },
+      {
+        title: 'Vàng 18k',
+        sub: 'Chuẩn tuổi 75.0%',
+        hamLuongDefault: '75.0%',
+        donViDefault: 'chỉ',
+        defaultMua: 5400,
+        defaultBan: 5750,
+        matcher: (g) => {
+          const n = (g.loaiVang || '').toLowerCase();
+          return n.includes('18');
+        }
+      },
+      {
+        title: 'Vàng Ý 10k',
+        sub: 'Chuẩn tuổi 41.6%',
+        hamLuongDefault: '41.6%',
+        donViDefault: 'chỉ',
+        defaultMua: 2850,
+        defaultBan: 3200,
+        matcher: (g) => {
+          const n = (g.loaiVang || '').toLowerCase();
+          return n.includes('10k ý') || n.includes('ý 10') || (n.includes('10') && n.includes('ý')) || n.includes('10k') || n.includes('10');
+        }
+      },
+      {
+        title: 'Bạc',
+        sub: 'Chuẩn tuổi 92.5%',
+        hamLuongDefault: '92.5%',
+        donViDefault: 'chỉ',
+        defaultMua: 90,
+        defaultBan: 140,
+        matcher: (g) => {
+          const n = (g.loaiVang || '').trim().toLowerCase();
+          return n === 'bạc' || n.startsWith('bạc') || n.includes('bac');
+        }
       }
-      if (storeConfig && Array.isArray(storeConfig.tvVisibleTypes)) {
-        return storeConfig.tvVisibleTypes;
-      }
-      return goldPrices
-        .filter(g => Number(g.giaBan) > 0 || g.loaiVang.includes('Vàng') || g.loaiVang.includes('VANG') || g.loaiVang.includes('Bạc'))
-        .map(g => g.loaiVang);
-    }
+    ];
 
-    // 3. Render bảng hiển thị TV
+    // 3. Render bảng hiển thị TV: Luôn hiển thị cố định đúng 5 loại vàng
     function renderTVDisplay() {
       const tbody = document.getElementById('ratesTableBody');
       const emptyMsg = document.getElementById('emptyRatesMessage');
       if (!tbody) return;
 
-      const visibleTypes = getVisibleTypes();
-      // Lọc danh sách theo đúng lựa chọn của Admin
-      const filtered = goldPrices.filter(g => visibleTypes.includes(g.loaiVang));
-
-      if (filtered.length === 0) {
-        tbody.innerHTML = '';
-        if (emptyMsg) emptyMsg.style.display = 'block';
-        return;
-      }
-
       if (emptyMsg) emptyMsg.style.display = 'none';
 
       const multiplier = storeConfig.currencyUnitMultiplier || 1000;
 
-      tbody.innerHTML = filtered.map(g => {
-        const mua = Number(g.giaMua) || 0;
-        const ban = Number(g.giaBan) || 0;
+      tbody.innerHTML = FIXED_TV_ITEMS.map(fixed => {
+        const found = goldPrices.find(g => fixed.matcher(g));
+        const mua = found ? (Number(found.giaMua) || 0) : fixed.defaultMua;
+        const ban = found ? (Number(found.giaBan) || 0) : fixed.defaultBan;
+        const hamLuong = (found && found.hamLuong) ? found.hamLuong : fixed.hamLuongDefault;
+        const donVi = (found && found.donVi) ? found.donVi : fixed.donViDefault;
 
         // Quy đổi VNĐ
         const muaVndStr = (mua * multiplier).toLocaleString('vi-VN') + ' đ';
@@ -555,16 +580,16 @@
               <div class="gold-name-box">
                 <span class="gold-bullet"></span>
                 <div>
-                  <div class="gold-title">${g.loaiVang}</div>
-                  <div class="gold-sub">${g.hamLuong ? 'Chuẩn tuổi ' + g.hamLuong : 'Trang sức kim hoàn'}</div>
+                  <div class="gold-title">${fixed.title}</div>
+                  <div class="gold-sub">${fixed.sub}</div>
                 </div>
               </div>
             </td>
             <td style="text-align: center;">
-              <span class="purity-badge">${g.hamLuong || '--'}</span>
+              <span class="purity-badge">${hamLuong}</span>
             </td>
             <td style="text-align: center;">
-              <span class="unit-tag">${g.donVi || 'chỉ'}</span>
+              <span class="unit-tag">${donVi}</span>
             </td>
             <td class="price-cell price-buy">
               ${muaVndStr}
@@ -594,9 +619,6 @@
             if (data.config && typeof data.config === 'object') {
               storeConfig = { ...storeConfig, ...data.config };
               localStorage.setItem(STORAGE_KEY_CONFIG, JSON.stringify(storeConfig));
-              if (Array.isArray(data.config.tvVisibleTypes)) {
-                localStorage.setItem(STORAGE_KEY_VISIBLE, JSON.stringify(data.config.tvVisibleTypes));
-              }
               hasChanged = true;
             }
             if (hasChanged) {
@@ -628,39 +650,21 @@
         const d = String(now.getDate()).padStart(2, '0');
         const mo = String(now.getMonth() + 1).padStart(2, '0');
         const y = now.getFullYear();
-        dateEl.textContent = `${dayName}, ngày ${d}/${mo}/${y}`;
+        dateEl.textContent = `${dayName}, ${d}/${mo}/${y}`;
       }
     }
 
-    // 6. Toàn màn hình
+    // 6. Toàn màn hình (khi nhấp đúp)
     function toggleFullScreen() {
       if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().then(() => {
-          updateFsButton(true);
-        }).catch(err => {
+        document.documentElement.requestFullscreen().catch(err => {
           console.warn('Lỗi toàn màn hình:', err);
         });
       } else {
         if (document.exitFullscreen) {
-          document.exitFullscreen().then(() => {
-            updateFsButton(false);
-          }).catch(err => {
+          document.exitFullscreen().catch(err => {
             console.warn('Lỗi thoát toàn màn hình:', err);
           });
-        }
-      }
-    }
-
-    function updateFsButton(isFs) {
-      const fsIcon = document.getElementById('fsIcon');
-      const fsText = document.getElementById('fsText');
-      if (fsIcon && fsText) {
-        if (isFs) {
-          fsIcon.textContent = '🗗';
-          fsText.textContent = 'Thu Nhỏ';
-        } else {
-          fsIcon.textContent = '⛶';
-          fsText.textContent = 'Toàn Màn Hình';
         }
       }
     }

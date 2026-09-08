@@ -221,16 +221,17 @@ const BarcodeLabel = {
     if (showMfg && hasMfg) {
       // Khi có nhà cung cấp: Thay thế tên sản phẩm, loại vàng, TLT, TLV, TLH, công bằng thông tin nhà CC + Loại vàng (bỏ tên quầy) + TLV
       const isHK = nhaCC.toUpperCase() === 'HK' || nhaCC.toUpperCase().includes('HOÀNG KIM') || nhaCC.toUpperCase().includes('HOANG KIM');
-      const sxText = 'SX: Việt Nam';
-      const nccText = isHK ? 'NCC: CTTNHH VB&TS HOÀNG KIM' : `NCC: ${nhaCC}`;
+      const sxNccText = 'SX: Việt Nam - NCC:';
+      const companyName = isHK ? 'CTTNHH VB&TS HOÀNG KIM' : nhaCC;
       const tccsText = isHK ? 'TCCS: 01:2025/HK' : '';
       const loaiVangText = product.loaiVang || '';
       const tlvText = showTLV ? `TLV:${this.formatWeight(product.tlVang)}` : '';
+      const companyFontSize = Math.min(Number((fontSize * 0.60).toFixed(1)), 4.0);
 
       wing2Html = `
-        <div class="tag-wing tag-wing-2 tag-wing-mfg" style="width: ${layout.wing2Width}mm; font-size: ${(fontSize * 0.72).toFixed(1)}pt; font-family: 'Arial Narrow', Arial, sans-serif; letter-spacing: -0.15px; justify-content: space-evenly; line-height: 1.15;">
-          <div class="mfg-line"><b>${sxText}</b></div>
-          <div class="mfg-line" style="letter-spacing: -0.25px; font-size: ${(fontSize * 0.65).toFixed(1)}pt;"><b>${nccText}</b></div>
+        <div class="tag-wing tag-wing-2 tag-wing-mfg" style="width: ${layout.wing2Width}mm; font-size: ${(fontSize * 0.70).toFixed(1)}pt; font-family: 'Arial Narrow', Arial, sans-serif; letter-spacing: -0.15px; justify-content: space-evenly; line-height: 1.15;">
+          <div class="mfg-line"><b>${sxNccText}</b></div>
+          <div class="mfg-line mfg-company-name" style="letter-spacing: -0.25px; font-size: ${companyFontSize}pt; white-space: nowrap;"><b>${companyName}</b></div>
           ${tccsText ? `<div class="mfg-line"><b>${tccsText}</b></div>` : ''}
           <div class="tag-weight-row" style="font-size: ${(fontSize * 0.78).toFixed(1)}pt; justify-content: space-between; width: 100%;">
             <b>${loaiVangText}</b>
@@ -488,6 +489,13 @@ const BarcodeLabel = {
             overflow: hidden;
             text-overflow: ellipsis;
             line-height: 1.1;
+          }
+
+          .mfg-company-name {
+            white-space: nowrap;
+            letter-spacing: -0.25px;
+            line-height: 1.1;
+            font-weight: 700;
           }
 
           .tail-line {

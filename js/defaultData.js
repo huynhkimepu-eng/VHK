@@ -3,18 +3,14 @@ window.DEFAULT_PRODUCTS = [{"maHang":"I6600001","tenHang":"Vỉ  0.5c","loaiHang
 var DEFAULT_PRODUCTS = window.DEFAULT_PRODUCTS;
 
 window.DEFAULT_GOLD_PRICES = [
-  { loaiVang: "\u0056\u00e0\u006e\u0067 24K", hamLuong: "99.99%", giaMua: 7600, giaBan: 7850, donVi: "ch\u1ec9" },
-  { loaiVang: "VANG23K", hamLuong: "95.8%", giaMua: 7200, giaBan: 7500, donVi: "ch\u1ec9" },
-  { loaiVang: "\u0056\u00e0\u006e\u0067 \u00dd 18K", hamLuong: "75.0%", giaMua: 5400, giaBan: 5750, donVi: "ch\u1ec9" },
-  { loaiVang: "\u0056\u00e0\u006e\u0067 Korea 18k", hamLuong: "75.0%", giaMua: 5400, giaBan: 5750, donVi: "ch\u1ec9" },
-  { loaiVang: "\u0056\u00e0\u006e\u0067 14K", hamLuong: "58.5%", giaMua: 4100, giaBan: 4450, donVi: "ch\u1ec9" },
-  { loaiVang: "\u0056\u00e0\u006e\u0067 10K", hamLuong: "41.6%", giaMua: 2800, giaBan: 3150, donVi: "ch\u1ec9" },
-  { loaiVang: "\u0056\u00e0\u006e\u0067 10k \u00dd", hamLuong: "41.6%", giaMua: 2850, giaBan: 3200, donVi: "ch\u1ec9" },
-  { loaiVang: "\u0056\u00e0\u006e\u0067 Korea 10K", hamLuong: "41.6%", giaMua: 2850, giaBan: 3200, donVi: "ch\u1ec9" },
+  { loaiVang: "Vàng 24k", hamLuong: "99.99%", giaMua: 7600, giaBan: 7850, donVi: "chỉ" },
+  { loaiVang: "Vàng Trang Sức 23k", hamLuong: "95.8%", giaMua: 7200, giaBan: 7500, donVi: "chỉ" },
+  { loaiVang: "Vàng 18k", hamLuong: "75.0%", giaMua: 5400, giaBan: 5750, donVi: "chỉ" },
+  { loaiVang: "Vàng Ý 10k", hamLuong: "41.6%", giaMua: 2850, giaBan: 3200, donVi: "chỉ" },
   { loaiVang: "Bạc", hamLuong: "92.5%", giaMua: 90, giaBan: 140, donVi: "chỉ" },
+  { loaiVang: "Vàng 14K", hamLuong: "58.5%", giaMua: 4100, giaBan: 4450, donVi: "chỉ" },
+  { loaiVang: "Vàng 10K", hamLuong: "41.6%", giaMua: 2800, giaBan: 3150, donVi: "chỉ" },
   { loaiVang: "Bạc Ý", hamLuong: "92.5%", giaMua: 95, giaBan: 150, donVi: "chỉ" },
-  { loaiVang: "Bạc Ancarat", hamLuong: "99.9%", giaMua: 115, giaBan: 145, donVi: "chỉ" },
-  { loaiVang: "Bạc Phú Quý", hamLuong: "99.9%", giaMua: 118, giaBan: 148, donVi: "chỉ" },
   { loaiVang: "Đá Phong Thuỷ", hamLuong: "100%", giaMua: 0, giaBan: 0, donVi: "món" }
 ];
 var DEFAULT_GOLD_PRICES = window.DEFAULT_GOLD_PRICES;
