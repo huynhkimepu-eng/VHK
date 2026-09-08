@@ -79,7 +79,8 @@ function doPost(e) {
       const headers = [
         'maHang', 'tenHang', 'loaiHang', 'loaiVang', 'nhomHang', 'trangThai',
         'tlTong', 'tlHot', 'tlVang', 'ni', 'congBan', 'congVon', 'giaBanMon',
-        'giaVon', 'cuaHang', 'quayLon', 'quayNho', 'ngayNhap', 'nhaSanXuat', 'nhaCungCap'
+        'giaVon', 'cuaHang', 'quayLon', 'quayNho', 'ngayNhap',
+        'chiNhanh', 'anhSanPham', 'nhaSanXuat', 'nhaCungCap'
       ];
 
       const rows = [headers];
@@ -103,6 +104,8 @@ function doPost(e) {
           p.quayLon || '',
           p.quayNho || '',
           p.ngayNhap || '',
+          p.chiNhanh || '',
+          p.anhSanPham || '',
           p.nhaSanXuat || '',
           p.nhaCungCap || ''
         ]);
@@ -122,20 +125,57 @@ function doPost(e) {
       const data = sheet.getDataRange().getValues();
       let rowIndex = -1;
 
+      // Tìm dòng chứa mã hàng (so sánh không phân biệt hoa thường và khoảng trắng)
+      const targetCode = String(p.maHang || '').trim().toUpperCase();
       for (let i = 1; i < data.length; i++) {
-        if (String(data[i][0]) === String(p.maHang)) {
+        if (String(data[i][0]).trim().toUpperCase() === targetCode) {
           rowIndex = i + 1;
           break;
         }
       }
 
-      const rowValues = [
-        p.maHang, p.tenHang, p.loaiHang, p.loaiVang, p.nhomHang, p.trangThai || 'Còn tồn',
-        Number(p.tlTong) || 0, Number(p.tlHot) || 0, Number(p.tlVang) || 0, p.ni || 0,
-        Number(p.congBan) || 0, Number(p.congVon) || 0, Number(p.giaBanMon) || 0,
-        Number(p.giaVon) || 0, p.cuaHang, p.quayLon, p.quayNho, p.ngayNhap || '',
-        p.nhaSanXuat || '', p.nhaCungCap || ''
-      ];
+      // Lấy danh sách cột thực tế của Sheet
+      const headers = data[0].map(h => String(h).trim());
+      
+      // Tự động bổ sung các cột mới nếu Sheet chưa có
+      const checkAndAddCol = (colName) => {
+        if (headers.indexOf(colName) === -1) {
+          headers.push(colName);
+          sheet.getRange(1, headers.length).setValue(colName);
+          formatHeaderRow(sheet, headers.length);
+        }
+      };
+      checkAndAddCol('chiNhanh');
+      checkAndAddCol('anhSanPham');
+      checkAndAddCol('nhaSanXuat');
+      checkAndAddCol('nhaCungCap');
+
+      const fieldMap = {
+        maHang: p.maHang || '',
+        tenHang: p.tenHang || '',
+        loaiHang: p.loaiHang || '',
+        loaiVang: p.loaiVang || '',
+        nhomHang: p.nhomHang || '',
+        trangThai: p.trangThai || 'Còn tồn',
+        tlTong: Number(p.tlTong) || 0,
+        tlHot: Number(p.tlHot) || 0,
+        tlVang: Number(p.tlVang) || 0,
+        ni: p.ni || 0,
+        congBan: Number(p.congBan) || 0,
+        congVon: Number(p.congVon) || 0,
+        giaBanMon: Number(p.giaBanMon) || 0,
+        giaVon: Number(p.giaVon) || 0,
+        cuaHang: p.cuaHang || '',
+        quayLon: p.quayLon || '',
+        quayNho: p.quayNho || '',
+        ngayNhap: p.ngayNhap || '',
+        chiNhanh: p.chiNhanh || '',
+        anhSanPham: p.anhSanPham || '',
+        nhaSanXuat: p.nhaSanXuat || '',
+        nhaCungCap: p.nhaCungCap || ''
+      };
+
+      const rowValues = headers.map(h => fieldMap[h] !== undefined ? fieldMap[h] : '');
 
       if (rowIndex > 0) {
         sheet.getRange(rowIndex, 1, 1, rowValues.length).setValues([rowValues]);
@@ -302,7 +342,8 @@ function initSheetsIfNotExist() {
     const headers = [
       'maHang', 'tenHang', 'loaiHang', 'loaiVang', 'nhomHang', 'trangThai',
       'tlTong', 'tlHot', 'tlVang', 'ni', 'congBan', 'congVon', 'giaBanMon',
-      'giaVon', 'cuaHang', 'quayLon', 'quayNho', 'ngayNhap', 'nhaSanXuat', 'nhaCungCap'
+      'giaVon', 'cuaHang', 'quayLon', 'quayNho', 'ngayNhap',
+      'chiNhanh', 'anhSanPham', 'nhaSanXuat', 'nhaCungCap'
     ];
     s.appendRow(headers);
     formatHeaderRow(s, headers.length);

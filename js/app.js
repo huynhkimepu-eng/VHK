@@ -2128,26 +2128,33 @@ class GoldApp {
 
       if (existingIndex >= 0) {
         productData.trangThai = this.products[existingIndex].trangThai || 'Còn tồn';
+        productData.ngayNhap = this.products[existingIndex].ngayNhap || productData.ngayNhap;
       }
 
       const btn = document.querySelector('#productModal button[type="submit"]');
       const origText = btn ? btn.textContent : 'Lưu Sản Phẩm';
       if (btn) {
         btn.disabled = true;
-        btn.textContent = '⏳ Đang lưu...';
+        btn.textContent = '⏳ Đang lưu & đồng bộ...';
       }
 
       // Lưu lên Google Sheet nếu có kết nối
+      let sheetStatusMsg = '';
       if (GoogleSheetService.isConfigured()) {
         try {
           const res = await GoogleSheetService.saveProduct(productData);
-          if (!res || !res.success) {
+          if (res && res.success) {
+            sheetStatusMsg = '\n☁️ Google Sheet: Đã cập nhật thành công!';
+          } else {
+            sheetStatusMsg = '\n⚠️ Google Sheet: ' + (res?.message || res?.error || 'Không đồng bộ được! Kiểm tra mạng.');
             console.warn('Lỗi lưu Google Sheet:', res);
-            alert('Lưu máy thành công, nhưng Google Sheet bị lỗi: ' + (res?.message || res?.error || 'Kiểm tra mạng!'));
           }
         } catch (sheetErr) {
+          sheetStatusMsg = '\n⚠️ Google Sheet: Lỗi kết nối (' + sheetErr.message + ')';
           console.error('Lỗi khi gọi GoogleSheetService.saveProduct:', sheetErr);
         }
+      } else {
+        sheetStatusMsg = '\nℹ️ Google Sheet: Chưa kết nối URL Web App (dữ liệu chỉ lưu trên máy này).';
       }
 
       if (btn) {
@@ -2167,7 +2174,7 @@ class GoldApp {
       this.filterPosProducts();
       this.updateReportStats();
 
-      alert('Đã lưu sản phẩm thành công!');
+      alert('Đã lưu sản phẩm thành công!' + sheetStatusMsg);
     } catch (err) {
       console.error('Lỗi khi lưu sản phẩm:', err);
       alert('Có lỗi xảy ra khi lưu: ' + err.message);

@@ -11,11 +11,12 @@ const GoogleSheetService = {
   STORAGE_KEY: 'pmqlv_google_script_url',
 
   getUrl() {
-    let url = this.HARDCODED_URL.trim();
-    if (!url || url.includes('...')) {
-      url = localStorage.getItem(this.STORAGE_KEY) || '';
+    let customUrl = localStorage.getItem(this.STORAGE_KEY);
+    if (customUrl && customUrl.trim() && this.validateUrl(customUrl).valid) {
+      return customUrl.trim();
     }
-    return url.trim();
+    let url = this.HARDCODED_URL.trim();
+    return url;
   },
 
   setUrl(url) {
@@ -213,7 +214,7 @@ const GoogleSheetService = {
     }
   },
   async saveProduct(product) {
-    if (!this.isConfigured()) return { success: true, localOnly: true };
+    if (!this.isConfigured()) return { success: false, notConfigured: true, message: 'Chưa cấu hình URL Google Sheet' };
 
     try {
       const url = this.getUrl();
@@ -227,7 +228,22 @@ const GoogleSheetService = {
         })
       });
       const text = await response.text();
-      return JSON.parse(text);
+      let res;
+      try {
+        res = JSON.parse(text);
+      } catch (jsonErr) {
+        if (text.includes('accounts.google.com') || text.includes('ServiceLogin')) {
+          return {
+            success: false,
+            message: 'LỖI PHÂN QUYỀN: Web App cần được chọn quyền "Bất kỳ ai" (Anyone) khi Triển khai!'
+          };
+        }
+        return {
+          success: false,
+          message: 'Lỗi phản hồi Google Sheet: ' + text.slice(0, 150)
+        };
+      }
+      return res;
     } catch (err) {
       return { success: false, message: err.toString() };
     }
