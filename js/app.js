@@ -25,8 +25,9 @@ class GoldApp {
     this.selectedMaHangSet = new Set();
 
     // Mặt hàng vừa thêm mới hoặc vừa sửa (tiện in tem)
-    this.recentModifiedItems = []; // [{ maHang: string, type: 'new' | 'edit', timestamp: number }]
+    this.recentModifiedItems = []; // [{ maHang: string, type: 'new' | 'edit', timestamp: number, timeFormatted: string, fullTime: string, user: string }]
     this.isFilteringRecentOnly = false;
+    this.recentSubFilter = 'all'; // 'all' | 'new' | 'edit'
 
     // Camera Scanner
     this.html5QrCode = null;
@@ -153,6 +154,11 @@ class GoldApp {
         if (data.storeConfig && typeof data.storeConfig === 'object') {
           this.storeConfig = Object.assign({}, this.storeConfig, data.storeConfig);
           localStorage.setItem('pmqlv_store_config', JSON.stringify(this.storeConfig));
+          if (Array.isArray(data.storeConfig.recentModifiedItems)) {
+            this.recentModifiedItems = data.storeConfig.recentModifiedItems;
+            localStorage.setItem('pmqlv_recent_modified_items', JSON.stringify(this.recentModifiedItems));
+            this.updateRecentModifiedUI();
+          }
           this.applyStoreConfig();
         }
         this.saveProductsToLocal();
@@ -257,16 +263,20 @@ class GoldApp {
       }
     });
 
-    // 7. Mặt hàng vừa thêm mới hoặc vừa sửa (để tiện in tem)
-    const savedRecent = localStorage.getItem('pmqlv_recent_modified_items');
-    if (savedRecent) {
-      try {
-        this.recentModifiedItems = JSON.parse(savedRecent) || [];
-      } catch(e) {
+    // 7. Mặt hàng vừa thêm mới hoặc vừa sửa (để tiện in tem, đồng bộ đa thiết bị)
+    if (this.storeConfig && Array.isArray(this.storeConfig.recentModifiedItems)) {
+      this.recentModifiedItems = this.storeConfig.recentModifiedItems;
+    } else {
+      const savedRecent = localStorage.getItem('pmqlv_recent_modified_items');
+      if (savedRecent) {
+        try {
+          this.recentModifiedItems = JSON.parse(savedRecent) || [];
+        } catch(e) {
+          this.recentModifiedItems = [];
+        }
+      } else {
         this.recentModifiedItems = [];
       }
-    } else {
-      this.recentModifiedItems = [];
     }
   }
 
@@ -840,10 +850,19 @@ class GoldApp {
 
   // ================= 2. QUẢN LÝ KHO HÀNG (INVENTORY) =================
 
-  // Quản lý danh sách mặt hàng vừa thêm mới hoặc vừa sửa (tiện in tem)
-  saveRecentModifiedItems() {
+  // Quản lý danh sách mặt hàng vừa thêm mới hoặc vừa sửa (tiện in tem, đồng bộ đa thiết bị)
+  saveRecentModifiedItems(syncCloud = true) {
     try {
       localStorage.setItem('pmqlv_recent_modified_items', JSON.stringify(this.recentModifiedItems || []));
+      if (syncCloud && typeof GoogleSheetService !== 'undefined' && GoogleSheetService.isConfigured()) {
+        if (!this.storeConfig) this.storeConfig = {};
+        this.storeConfig.recentModifiedItems = this.recentModifiedItems || [];
+        localStorage.setItem('pmqlv_store_config', JSON.stringify(this.storeConfig));
+        // Gọi lưu ngầm lên Google Sheet không chặn giao diện để mọi máy tự động nhận
+        GoogleSheetService.saveStoreConfig(this.storeConfig).catch(err => {
+          console.warn('Lỗi đồng bộ danh sách vừa sửa lên Google Sheet:', err);
+        });
+      }
     } catch (e) {
       console.warn('Lỗi lưu pmqlv_recent_modified_items:', e);
     }
@@ -852,23 +871,33 @@ class GoldApp {
   addRecentModifiedProduct(maHang, type = 'new', autoSave = true) {
     if (!maHang) return;
     if (!this.recentModifiedItems) this.recentModifiedItems = [];
+
+    const now = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    const timeFormatted = `${pad(now.getHours())}:${pad(now.getMinutes())} ${pad(now.getDate())}/${pad(now.getMonth() + 1)}`;
+    const fullTime = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())} ${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()}`;
+
     // Loại bỏ mục cũ nếu có để đưa lên đầu danh sách với timestamp mới nhất
-    this.recentModifiedItems = this.recentModifiedItems.filter(item => item.maHang !== maHang);
+    this.recentModifiedItems = this.recentModifiedItems.filter(item => (typeof item === 'object' ? item.maHang : item) !== maHang);
     this.recentModifiedItems.unshift({
       maHang: maHang,
       type: type, // 'new' | 'edit'
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      timeFormatted: timeFormatted,
+      fullTime: fullTime,
+      user: (this.currentUser && this.currentUser.username) || ''
     });
+
     if (autoSave) {
-      this.saveRecentModifiedItems();
+      this.saveRecentModifiedItems(true);
       this.updateRecentModifiedUI();
     }
   }
 
   removeRecentModifiedProduct(maHang) {
     if (!maHang || !this.recentModifiedItems) return;
-    this.recentModifiedItems = this.recentModifiedItems.filter(item => item.maHang !== maHang);
-    this.saveRecentModifiedItems();
+    this.recentModifiedItems = this.recentModifiedItems.filter(item => (typeof item === 'object' ? item.maHang : item) !== maHang);
+    this.saveRecentModifiedItems(true);
     this.updateRecentModifiedUI();
   }
 
@@ -878,96 +907,191 @@ class GoldApp {
       alert('Danh sách hàng vừa thêm mới/sửa đang trống!');
       return;
     }
-    if (confirm(`Bạn có chắc muốn đặt lại (làm trống) danh sách ${count} mặt hàng vừa thêm/sửa này không?\n\n(Chức năng này dùng sau khi bạn đã in tem xong để chuẩn bị cho đợt hàng tiếp theo)`)) {
+    if (confirm(`Bạn có chắc muốn đặt lại (làm trống) danh sách ${count} mặt hàng vừa thêm/sửa này trên tất cả các máy không?\n\n(Chức năng này dùng sau khi bạn đã in tem xong để chuẩn bị cho đợt hàng tiếp theo)`)) {
       this.recentModifiedItems = [];
-      this.saveRecentModifiedItems();
+      this.saveRecentModifiedItems(true);
       if (this.isFilteringRecentOnly) {
         this.isFilteringRecentOnly = false;
         const statusSelect = document.getElementById('invStatusFilter');
-        if (statusSelect && statusSelect.value === 'RECENT_MODIFIED') {
+        if (statusSelect && statusSelect.value && statusSelect.value.startsWith('RECENT_')) {
           statusSelect.value = 'Còn tồn';
         }
       }
       this.updateRecentModifiedUI();
       this.filterInventory();
-      this.showToast('Đã làm trống danh sách hàng chờ in tem!', 'success');
+      this.showToast('✅ Đã làm trống danh sách in tem trên mọi thiết bị!', 'success');
     }
+  }
+
+  setRecentSubFilter(subFilter = 'all') {
+    this.recentSubFilter = subFilter;
+    this.isFilteringRecentOnly = true;
+
+    // Cập nhật dropdown trạng thái đồng bộ
+    const statusSelect = document.getElementById('invStatusFilter');
+    if (statusSelect) {
+      if (subFilter === 'new') statusSelect.value = 'RECENT_NEW';
+      else if (subFilter === 'edit') statusSelect.value = 'RECENT_EDIT';
+      else statusSelect.value = 'RECENT_ALL';
+    }
+
+    this.updateRecentModifiedUI();
+    this.filterInventory();
+  }
+
+  onInvStatusFilterChanged() {
+    const statusSelect = document.getElementById('invStatusFilter');
+    const val = statusSelect ? statusSelect.value : 'Còn tồn';
+
+    if (val === 'RECENT_ALL') {
+      this.isFilteringRecentOnly = true;
+      this.recentSubFilter = 'all';
+    } else if (val === 'RECENT_NEW') {
+      this.isFilteringRecentOnly = true;
+      this.recentSubFilter = 'new';
+    } else if (val === 'RECENT_EDIT') {
+      this.isFilteringRecentOnly = true;
+      this.recentSubFilter = 'edit';
+    } else {
+      this.isFilteringRecentOnly = false;
+    }
+
+    this.updateRecentModifiedUI();
+    this.filterInventory();
   }
 
   toggleRecentFilter() {
-    this.isFilteringRecentOnly = !this.isFilteringRecentOnly;
-    const statusSelect = document.getElementById('invStatusFilter');
     if (this.isFilteringRecentOnly) {
-      if (statusSelect) statusSelect.value = 'RECENT_MODIFIED';
-    } else {
-      if (statusSelect && statusSelect.value === 'RECENT_MODIFIED') {
+      this.isFilteringRecentOnly = false;
+      const statusSelect = document.getElementById('invStatusFilter');
+      if (statusSelect && statusSelect.value && statusSelect.value.startsWith('RECENT_')) {
         statusSelect.value = 'Còn tồn';
       }
+    } else {
+      this.isFilteringRecentOnly = true;
+      this.recentSubFilter = 'all';
+      const statusSelect = document.getElementById('invStatusFilter');
+      if (statusSelect) statusSelect.value = 'RECENT_ALL';
     }
-    this.filterInventory();
     this.updateRecentModifiedUI();
+    this.filterInventory();
   }
 
   updateRecentModifiedUI() {
-    const count = (this.recentModifiedItems && Array.isArray(this.recentModifiedItems)) ? this.recentModifiedItems.length : 0;
+    const items = (this.recentModifiedItems && Array.isArray(this.recentModifiedItems)) ? this.recentModifiedItems : [];
+    const countTotal = items.length;
+    const countNew = items.filter(i => (typeof i === 'object' ? i.type === 'new' : true)).length;
+    const countEdit = items.filter(i => (typeof i === 'object' && i.type === 'edit')).length;
+
+    // Số lượng in tem theo phân loại hiện tại
+    let countPrint = countTotal;
+    if (this.recentSubFilter === 'new') countPrint = countNew;
+    else if (this.recentSubFilter === 'edit') countPrint = countEdit;
 
     // 1. Nút trên thanh công cụ
     const countBadge = document.getElementById('recentCountBadge');
-    if (countBadge) countBadge.textContent = count;
+    if (countBadge) countBadge.textContent = countTotal;
 
     const btnTop = document.getElementById('btnToggleRecentFilter');
     if (btnTop) {
       if (this.isFilteringRecentOnly) {
-        btnTop.innerHTML = `🔙 Xem Tất Cả Kho`;
+        btnTop.innerHTML = `🔙 Xem Toàn Bộ Kho`;
         btnTop.style.background = '#2563EB';
         btnTop.style.color = '#FFF';
         btnTop.style.borderColor = '#1D4ED8';
       } else {
-        btnTop.innerHTML = `✨ Vừa Thêm/Sửa (<span id="recentCountBadge">${count}</span>)`;
-        btnTop.style.background = count > 0 ? '#FEF3C7' : '#F1F5F9';
-        btnTop.style.color = count > 0 ? '#92400E' : '#64748B';
-        btnTop.style.borderColor = count > 0 ? '#F59E0B' : '#CBD5E1';
+        btnTop.innerHTML = `✨ Vừa Thêm/Sửa (<span id="recentCountBadge">${countTotal}</span>)`;
+        btnTop.style.background = countTotal > 0 ? '#FEF3C7' : '#F1F5F9';
+        btnTop.style.color = countTotal > 0 ? '#92400E' : '#64748B';
+        btnTop.style.borderColor = countTotal > 0 ? '#F59E0B' : '#CBD5E1';
       }
     }
 
-    // 2. Banner thông báo trên bảng
+    // 2. Cập nhật các con số trong Banner
     const banner = document.getElementById('recentModifiedBanner');
-    const bannerCount = document.getElementById('bannerRecentCount');
-    const bannerBtnPrintCount = document.getElementById('bannerBtnPrintCount');
-    const btnBannerFilter = document.getElementById('btnBannerFilterRecent');
+    const totalCountEl = document.getElementById('bannerRecentTotalCount');
+    const countAllEl = document.getElementById('countRecentAll');
+    const countNewEl = document.getElementById('countRecentNew');
+    const countEditEl = document.getElementById('countRecentEdit');
+    const countPrintEl = document.getElementById('countRecentPrint');
+    const btnPrintDynamic = document.getElementById('btnRecentPrintDynamic');
 
-    if (bannerCount) bannerCount.textContent = count;
-    if (bannerBtnPrintCount) bannerBtnPrintCount.textContent = count;
+    if (totalCountEl) totalCountEl.textContent = countTotal;
+    if (countAllEl) countAllEl.textContent = countTotal;
+    if (countNewEl) countNewEl.textContent = countNew;
+    if (countEditEl) countEditEl.textContent = countEdit;
+    if (countPrintEl) countPrintEl.textContent = countPrint;
+
+    if (btnPrintDynamic) {
+      if (this.recentSubFilter === 'new') {
+        btnPrintDynamic.innerHTML = `🖨️ In Tem Hàng Mới (<span id="countRecentPrint">${countNew}</span>)`;
+      } else if (this.recentSubFilter === 'edit') {
+        btnPrintDynamic.innerHTML = `🖨️ In Tem Hàng Vừa Sửa (<span id="countRecentPrint">${countEdit}</span>)`;
+      } else {
+        btnPrintDynamic.innerHTML = `🖨️ In Tem Tất Cả (<span id="countRecentPrint">${countTotal}</span>)`;
+      }
+    }
+
+    // Cập nhật giao diện nút phân loại
+    const btnAll = document.getElementById('btnFilterRecentAll');
+    const btnNew = document.getElementById('btnFilterRecentNew');
+    const btnEdit = document.getElementById('btnFilterRecentEdit');
+
+    const setActiveStyle = (btn, isActive, activeBg, activeColor, activeBorder) => {
+      if (!btn) return;
+      if (isActive) {
+        btn.style.background = activeBg;
+        btn.style.color = activeColor;
+        btn.style.border = `1.5px solid ${activeBorder}`;
+        btn.style.boxShadow = '0 1px 3px rgba(0,0,0,0.15)';
+      } else {
+        btn.style.background = '#F8FAFC';
+        btn.style.color = '#475569';
+        btn.style.border = '1px solid #CBD5E1';
+        btn.style.boxShadow = 'none';
+      }
+    };
+
+    if (btnAll) setActiveStyle(btnAll, this.recentSubFilter === 'all', '#2563EB', '#FFF', '#1D4ED8');
+    if (btnNew) setActiveStyle(btnNew, this.recentSubFilter === 'new', '#059669', '#FFF', '#047857');
+    if (btnEdit) setActiveStyle(btnEdit, this.recentSubFilter === 'edit', '#D97706', '#FFF', '#B45309');
 
     if (banner) {
-      if (count > 0) {
+      if (countTotal > 0) {
         banner.style.display = 'flex';
       } else {
         banner.style.display = 'none';
       }
     }
-
-    if (btnBannerFilter) {
-      if (this.isFilteringRecentOnly) {
-        btnBannerFilter.innerHTML = '🔙 Xem Toàn Bộ Kho';
-        btnBannerFilter.style.background = '#DBEAFE';
-      } else {
-        btnBannerFilter.innerHTML = '👁️ Xem Danh Sách Này';
-        btnBannerFilter.style.background = '#FFF';
-      }
-    }
   }
 
-  printAllRecentTags() {
-    if (!this.recentModifiedItems || this.recentModifiedItems.length === 0) {
+  printDynamicRecentTags() {
+    const items = (this.recentModifiedItems && Array.isArray(this.recentModifiedItems)) ? this.recentModifiedItems : [];
+    if (items.length === 0) {
       alert('Không có mặt hàng nào trong danh sách vừa thêm mới hoặc sửa để in tem!');
+      return;
+    }
+
+    let targetItems = items;
+    let labelType = 'tất cả';
+    if (this.recentSubFilter === 'new') {
+      targetItems = items.filter(i => (typeof i === 'object' ? i.type === 'new' : true));
+      labelType = 'hàng mới thêm';
+    } else if (this.recentSubFilter === 'edit') {
+      targetItems = items.filter(i => (typeof i === 'object' && i.type === 'edit'));
+      labelType = 'hàng vừa sửa';
+    }
+
+    if (targetItems.length === 0) {
+      alert(`Không có món nào thuộc nhóm "${labelType}" để in tem!`);
       return;
     }
 
     // Lấy các sản phẩm có mã trong danh sách theo đúng thứ tự
     const matchedProducts = [];
-    this.recentModifiedItems.forEach(item => {
-      const p = this.products.find(prod => prod.maHang === item.maHang);
+    targetItems.forEach(item => {
+      const code = typeof item === 'object' ? item.maHang : item;
+      const p = this.products.find(prod => prod.maHang === code);
       if (p) matchedProducts.push(p);
     });
 
@@ -983,6 +1107,10 @@ class GoldApp {
     }
   }
 
+  printAllRecentTags() {
+    this.printDynamicRecentTags();
+  }
+
   filterInventory() {
     const keyword = (document.getElementById('invSearchInput')?.value || '').trim().toLowerCase();
     const counter = document.getElementById('invCounterFilter')?.value || 'ALL';
@@ -992,8 +1120,18 @@ class GoldApp {
     const activeBranch = this.currentBranch;
     const isAdmin = this.currentUser && this.currentUser.role === 'admin';
 
-    const isFilteringRecent = (status === 'RECENT_MODIFIED') || this.isFilteringRecentOnly;
-    const recentMaMap = new Map((this.recentModifiedItems || []).map(i => [i.maHang, i]));
+    const isFilteringRecent = (status === 'RECENT_MODIFIED' || status === 'RECENT_ALL' || status === 'RECENT_NEW' || status === 'RECENT_EDIT') || this.isFilteringRecentOnly;
+    const subFilter = (status === 'RECENT_NEW') ? 'new' : (status === 'RECENT_EDIT' ? 'edit' : this.recentSubFilter || 'all');
+
+    // Tạo map danh sách recent theo subFilter
+    const recentMaMap = new Map();
+    (this.recentModifiedItems || []).forEach(i => {
+      const code = typeof i === 'object' ? i.maHang : i;
+      const type = typeof i === 'object' ? (i.type || 'new') : 'new';
+      if (subFilter === 'all' || subFilter === type) {
+        recentMaMap.set(code, typeof i === 'object' ? i : { maHang: code, type });
+      }
+    });
 
     this.filteredProducts = this.products.filter(p => {
       // Nếu đang lọc theo danh sách vừa thêm mới/sửa
@@ -1075,7 +1213,7 @@ class GoldApp {
 
     const isAdmin = this.currentUser && this.currentUser.role === 'admin';
     const multiplier = this.storeConfig.currencyUnitMultiplier || 1000;
-    const recentMaMap = new Map((this.recentModifiedItems || []).map(i => [i.maHang, i]));
+    const recentMaMap = new Map((this.recentModifiedItems || []).map(i => [(typeof i === 'object' ? i.maHang : i), i]));
 
     if (pageItems.length === 0) {
       const activeBranch = this.currentBranch;
@@ -1102,10 +1240,15 @@ class GoldApp {
       const recentInfo = recentMaMap.get(p.maHang);
       let recentBadge = '';
       if (recentInfo) {
-        if (recentInfo.type === 'new') {
-          recentBadge = ` <span style="display:inline-block; font-size:9.5px; background:#ECFDF5; color:#065F46; border:1px solid #A7F3D0; border-radius:4px; padding:1px 4px; font-weight:700; vertical-align:middle;" title="Sản phẩm mới thêm vào kho">🆕 Mới</span>`;
+        const rType = typeof recentInfo === 'object' ? (recentInfo.type || 'new') : 'new';
+        const rTime = (typeof recentInfo === 'object' && recentInfo.timeFormatted) ? recentInfo.timeFormatted : '';
+        const rFull = (typeof recentInfo === 'object' && recentInfo.fullTime) ? recentInfo.fullTime : '';
+        const titleTime = rFull ? ` (${rFull})` : '';
+
+        if (rType === 'new') {
+          recentBadge = ` <span style="display:inline-block; font-size:9.5px; background:#ECFDF5; color:#065F46; border:1px solid #A7F3D0; border-radius:4px; padding:1px 5px; font-weight:700; vertical-align:middle;" title="Mới thêm vào kho${titleTime}">🆕 Mới${rTime ? ` (${rTime})` : ''}</span>`;
         } else {
-          recentBadge = ` <span style="display:inline-block; font-size:9.5px; background:#FEF3C7; color:#92400E; border:1px solid #FDE68A; border-radius:4px; padding:1px 4px; font-weight:700; vertical-align:middle;" title="Sản phẩm vừa chỉnh sửa">✏️ Đã sửa</span>`;
+          recentBadge = ` <span style="display:inline-block; font-size:9.5px; background:#FEF3C7; color:#92400E; border:1px solid #FDE68A; border-radius:4px; padding:1px 5px; font-weight:700; vertical-align:middle;" title="Vừa chỉnh sửa thông tin${titleTime}">✏️ Sửa${rTime ? ` (${rTime})` : ''}</span>`;
         }
       }
 
@@ -3280,7 +3423,9 @@ class GoldApp {
         anhSanPham: anhSanPham,
         videoSanPham: videoSanPham,
         quayLon: '2HOANGKIM2',
-        ngayNhap: new Date().toISOString().slice(0, 10)
+        ngayNhap: new Date().toISOString().slice(0, 10),
+        ngayCapNhat: new Date().toISOString(),
+        loaiCapNhat: existingIndex >= 0 ? 'edit' : 'new'
       };
 
       if (existingIndex >= 0) {

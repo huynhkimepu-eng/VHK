@@ -203,6 +203,8 @@ function doPost(e) {
       checkAndAddCol('videoSanPham');
       checkAndAddCol('nhaSanXuat');
       checkAndAddCol('nhaCungCap');
+      checkAndAddCol('ngayCapNhat');
+      checkAndAddCol('loaiCapNhat');
 
       const fieldMap = {
         maHang: p.maHang || '',
@@ -227,7 +229,9 @@ function doPost(e) {
         anhSanPham: p.anhSanPham || '',
         videoSanPham: p.videoSanPham || '',
         nhaSanXuat: p.nhaSanXuat || '',
-        nhaCungCap: p.nhaCungCap || ''
+        nhaCungCap: p.nhaCungCap || '',
+        ngayCapNhat: p.ngayCapNhat || '',
+        loaiCapNhat: p.loaiCapNhat || ''
       };
 
       const rowValues = headers.map(h => {
