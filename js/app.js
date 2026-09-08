@@ -471,16 +471,71 @@ class GoldApp {
       };
     }
 
-    // Nếu tính theo trọng lượng vàng: (TL Vàng * Giá Vàng Bán Ra) + Tiền Công Bán
+  isMatchingGoldType(productLoaiVang, filterLoaiVang) {
+    if (!filterLoaiVang || filterLoaiVang === 'ALL') return true;
+    if (!productLoaiVang) return false;
+
+    const p = String(productLoaiVang).trim().toLowerCase();
+    const f = String(filterLoaiVang).trim().toLowerCase();
+
+    // 1. Khớp hoàn toàn
+    if (p === f) return true;
+
+    // 2. Một bên chứa bên kia (ví dụ: "Vàng 24K" và "24K")
+    if (p.includes(f) || f.includes(p)) return true;
+
+    // 3. Chuẩn hóa phân loại tuổi vàng (24K, 23K, 18K, 14K, 10K, Bạc, Đá)
+    const getKaratCategory = (str) => {
+      if (str.includes('24') || str.includes('9999') || str.includes('99.99') || str.includes('999')) return '24k';
+      if (str.includes('23') || str.includes('95.8')) return '23k';
+      if (str.includes('18') || str.includes('750') || str.includes('75.')) return '18k';
+      if (str.includes('14') || str.includes('585') || str.includes('58.5')) return '14k';
+      if (str.includes('10') || str.includes('416') || str.includes('41.6')) return '10k';
+      if (str.includes('bạc') || str.includes('bac') || str.includes('925')) return 'bac';
+      if (str.includes('đá') || str.includes('da')) return 'da';
+      return null;
+    };
+
+    const pCat = getKaratCategory(p);
+    const fCat = getKaratCategory(f);
+
+    if (pCat && fCat && pCat === fCat) {
+      if (pCat === '18k' || pCat === '10k') {
+        const pHasKorea = p.includes('korea');
+        const fHasKorea = f.includes('korea');
+        if (fHasKorea !== pHasKorea) {
+          const pHasY = p.includes('ý') || p.includes('y');
+          const fHasY = f.includes('ý') || f.includes('y');
+          if ((fHasKorea && pHasY) || (fHasY && pHasKorea)) return false;
+        }
+      }
+      return true;
+    }
+
+    return false;
+  }
+
+  // Nếu tính theo trọng lượng vàng: (TL Vàng * Giá Vàng Bán Ra) + Tiền Công Bán
+  getGoldRate(product) {
+    const multiplier = this.storeConfig.currencyUnitMultiplier || 1000;
+
+    // Nếu là hàng bán theo món cố định
+    if (Number(product.giaBanMon) > 0) {
+      const fixedVnd = Number(product.giaBanMon) * multiplier;
+      return {
+        unitPrice: 0,
+        laborCost: 0,
+        goldPricePart: 0,
+        total: fixedVnd,
+        isFixedPrice: true
+      };
+    }
+
     const tlVang = Number(product.tlVang) || 0;
     const congBanVnd = (Number(product.congBan) || 0) * multiplier;
 
-    // Tìm đơn giá vàng theo loại vàng của sản phẩm
-    let rateObj = this.goldPrices.find(g => g.loaiVang && g.loaiVang.trim().toLowerCase() === (product.loaiVang || '').trim().toLowerCase());
-    if (!rateObj) {
-      // Tìm gần đúng (ví dụ "Vàng 24K" khớp "24K")
-      rateObj = this.goldPrices.find(g => (product.loaiVang || '').includes(g.loaiVang) || g.loaiVang.includes(product.loaiVang || ''));
-    }
+    // Tìm đơn giá vàng theo loại vàng của sản phẩm (hỗ trợ so khớp thông minh)
+    let rateObj = this.goldPrices.find(g => this.isMatchingGoldType(product.loaiVang, g.loaiVang));
 
     const donGiaVangVnd = rateObj ? (Number(rateObj.giaBan) * multiplier) : (7850 * multiplier);
     const tienVangVnd = Math.round(tlVang * donGiaVangVnd);
@@ -518,10 +573,9 @@ class GoldApp {
       const branchMatch = (activeBranch === 'ALL' && isAdmin) || (p.chiNhanh === activeBranch) || (!p.chiNhanh && activeBranch === 'Chi nhánh 1');
       if (!isConTon || !branchMatch) return false;
 
-      // Lọc theo loại vàng
+      // Lọc theo loại vàng (hỗ trợ so khớp thông minh)
       if (filterType !== 'ALL') {
-        if (filterType === 'Bạc' && !(p.loaiVang && p.loaiVang.includes('Bạc'))) return false;
-        else if (filterType !== 'Bạc' && !(p.loaiVang && p.loaiVang.includes(filterType))) return false;
+        if (!this.isMatchingGoldType(p.loaiVang, filterType)) return false;
       }
 
       // Lọc từ khóa
@@ -1149,10 +1203,9 @@ class GoldApp {
       // Lọc quầy
       if (counter !== 'ALL' && p.quayNho !== counter) return false;
 
-      // Lọc loại vàng
+      // Lọc loại vàng (so khớp thông minh tên loại vàng)
       if (goldType !== 'ALL') {
-        if (goldType === 'Bạc' && !(p.loaiVang && p.loaiVang.includes('Bạc'))) return false;
-        else if (goldType !== 'Bạc' && p.loaiVang !== goldType) return false;
+        if (!this.isMatchingGoldType(p.loaiVang, goldType)) return false;
       }
 
       // Lọc từ khóa
@@ -1754,10 +1807,16 @@ class GoldApp {
 
       // Cập nhật tên trong các sản phẩm đang có nếu được đổi tên
       if (oldLoaiVang !== loaiVang) {
+        let changed = false;
         this.products.forEach(p => {
-          if (p.loaiVang === oldLoaiVang) p.loaiVang = loaiVang;
+          if (p.loaiVang === oldLoaiVang || this.isMatchingGoldType(p.loaiVang, oldLoaiVang)) {
+            p.loaiVang = loaiVang;
+            changed = true;
+          }
         });
-        this.saveProductsToLocal();
+        if (changed) {
+          this.saveProductsToLocal();
+        }
       }
     } else {
       // Kiểm tra trùng tên
@@ -3040,7 +3099,17 @@ class GoldApp {
     document.getElementById('modalMaHang').value = p.maHang;
     document.getElementById('modalMaHang').readOnly = true;
     document.getElementById('modalTenHang').value = p.tenHang || '';
-    document.getElementById('modalLoaiVang').value = p.loaiVang || 'Vàng 24K';
+    const modalLoaiVangEl = document.getElementById('modalLoaiVang');
+    if (modalLoaiVangEl) {
+      modalLoaiVangEl.value = p.loaiVang || '';
+      if (!modalLoaiVangEl.value && p.loaiVang) {
+        const matchOpt = Array.from(modalLoaiVangEl.options).find(opt => this.isMatchingGoldType(p.loaiVang, opt.value));
+        if (matchOpt) modalLoaiVangEl.value = matchOpt.value;
+      }
+      if (!modalLoaiVangEl.value && modalLoaiVangEl.options.length > 0) {
+        modalLoaiVangEl.value = modalLoaiVangEl.options[0].value;
+      }
+    }
     document.getElementById('modalQuayNho').value = p.quayNho || '2VANG24K';
     if (document.getElementById('modalChiNhanh')) {
       document.getElementById('modalChiNhanh').value = p.chiNhanh || 'Chi nhánh 1';
@@ -3143,10 +3212,7 @@ class GoldApp {
 
   onModalLoaiVangChange() {
     const loaiVang = document.getElementById('modalLoaiVang')?.value || '';
-    let rateObj = this.goldPrices.find(g => g.loaiVang && g.loaiVang.trim().toLowerCase() === loaiVang.trim().toLowerCase());
-    if (!rateObj) {
-      rateObj = this.goldPrices.find(g => (loaiVang || '').includes(g.loaiVang) || (g.loaiVang || '').includes(loaiVang));
-    }
+    let rateObj = this.goldPrices.find(g => this.isMatchingGoldType(loaiVang, g.loaiVang));
     const inpGiaVangNhap = document.getElementById('modalGiaVangNhap');
     if (inpGiaVangNhap) {
       const defaultRate = rateObj ? (Number(rateObj.giaMua) || Number(rateObj.giaBan) || 0) : 0;
@@ -3160,10 +3226,10 @@ class GoldApp {
     const quayInp = document.getElementById('modalQuayNho');
     if (quayInp) {
       const lvLower = loaiVang.toLowerCase();
-      if (lvLower.includes('24k') || lvLower.includes('23k')) quayInp.value = '2VANG24K';
-      else if (lvLower.includes('18k')) quayInp.value = '2VANG18K';
-      else if (lvLower.includes('14k')) quayInp.value = '2VANG14K';
-      else if (lvLower.includes('10k')) quayInp.value = '2VANG10K';
+      if (lvLower.includes('24k') || lvLower.includes('23k') || lvLower.includes('9999') || lvLower.includes('99.99') || lvLower.includes('999')) quayInp.value = '2VANG24K';
+      else if (lvLower.includes('18k') || lvLower.includes('750')) quayInp.value = '2VANG18K';
+      else if (lvLower.includes('14k') || lvLower.includes('585')) quayInp.value = '2VANG14K';
+      else if (lvLower.includes('10k') || lvLower.includes('416')) quayInp.value = '2VANG10K';
       else if (lvLower.includes('bạc') || lvLower.includes('bac')) quayInp.value = '2BAC';
       else if (lvLower.includes('phong')) quayInp.value = '2PHONGTHUY';
       else quayInp.value = '2VANG24K';
