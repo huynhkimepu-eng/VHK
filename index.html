@@ -619,7 +619,45 @@
     <!-- ================= TAB 6: GOOGLE SHEET & CÀI ĐẶT ================= -->
     <section id="tab-settings" class="tab-content-panel">
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
-        
+        <!-- Cấu hình Đám Mây Cloudinary (Video & Ảnh Sản Phẩm Siêu Tốc) -->
+        <div class="card admin-only" style="border: 1.5px solid #3B82F6; background: #F8FAFC;">
+          <div class="card-header" style="background: linear-gradient(135deg, #1E40AF, #3B82F6); color: white;">
+            <div class="card-title" style="color: white; display: flex; align-items: center; gap: 8px;">
+              ☁️ Máy Chủ Đám Mây Cloudinary (Video & Ảnh Siêu Tốc)
+            </div>
+          </div>
+          <div class="card-body">
+            <div style="background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 6px; padding: 10px; margin-bottom: 12px; font-size: 12px; color: #1E3A8A; line-height: 1.5;">
+              <b>💡 Giải pháp tối ưu:</b> Tải video trực tiếp từ điện thoại lên Cloudinary, tạo đường dẫn <code>.mp4</code> chuẩn phát mượt mà trên mọi thiết bị và máy tính khác nhau, <b>không bao giờ bị lỗi cấp quyền hay giật lag</b> như Google Drive.
+            </div>
+
+            <div style="margin-bottom: 12px;">
+              <label style="font-size: 12px; font-weight: bold; color: #1E293B;">1. Cloud Name (Tên đám mây): <span style="color: #DC2626;">*</span></label>
+              <input type="text" id="cfgCloudinaryCloudName" class="form-control" placeholder="VD: dxyz12345 (Xem ở Dashboard Cloudinary)" style="font-weight: 600;">
+              <small style="color: #64748B; font-size: 11px;">Tên tài khoản hiển thị ngay trên cùng trang quản trị Cloudinary.</small>
+            </div>
+
+            <div style="margin-bottom: 14px;">
+              <label style="font-size: 12px; font-weight: bold; color: #1E293B;">2. Upload Preset (Chế độ Unsigned): <span style="color: #DC2626;">*</span></label>
+              <input type="text" id="cfgCloudinaryPreset" class="form-control" placeholder="VD: pmqlv_upload hoặc ml_default" style="font-weight: 600;">
+              <small style="color: #64748B; font-size: 11px;">Vào Settings (⚙️) ➔ mục <b>Upload</b> ➔ kéo xuống <b>Upload presets</b> ➔ Add upload preset (Chọn <b>Unsigned</b>) ➔ Save.</small>
+            </div>
+
+            <div id="cloudinaryTestStatus" style="display: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; margin-bottom: 12px; font-weight: 600;"></div>
+
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <button type="button" class="btn btn-sm btn-primary" onclick="app.saveCloudinaryConfig()" style="background: #2563EB; font-weight: 600;">
+                💾 Lưu Cấu Hình Cloudinary
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="app.testCloudinaryConnection()" style="font-weight: 600;">
+                🧪 Kiểm Tra Kết Nối
+              </button>
+              <a href="https://cloudinary.com/users/register_free" target="_blank" class="btn btn-sm btn-outline-primary" style="text-decoration: none; display: inline-flex; align-items: center; gap: 4px; font-weight: 600;">
+                🔗 Đăng Ký Miễn Phí (1 Phút)
+              </a>
+            </div>
+          </div>
+        </div>
 
         <!-- Cấu hình Tiệm Vàng & Bảng Giá TV -->
         <div class="card admin-only">
@@ -871,6 +909,7 @@
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                 <label style="font-size: 12px; font-weight: bold; color: #B45309; display: flex; align-items: center; gap: 6px; margin: 0;">
                   <span>🎬</span> Video Giới Thiệu / Xoay Cận Cảnh (Tùy chọn):
+                  <span id="modalCloudinaryActiveBadge" style="display: none; font-size: 10px; background: #DBEAFE; color: #1E40AF; padding: 1px 6px; border-radius: 4px; font-weight: 700;">☁️ Cloudinary Siêu Tốc</span>
                 </label>
                 <span id="modalVideoStatusBadge" style="font-size: 11px; color: #64748B; font-weight: 500;">Chưa có video</span>
               </div>
@@ -1156,9 +1195,10 @@
   </div>
 
   <!-- Scripts -->
-  <script src="js/defaultData.js?v=44"></script>
-  <script src="js/googleSheetService.js?v=44"></script>
-  <script src="js/barcodeLabel.js?v=44"></script>
-  <script src="js/app.js?v=44"></script>
+  <script src="js/defaultData.js?v=45"></script>
+  <script src="js/googleSheetService.js?v=45"></script>
+  <script src="js/cloudinaryService.js?v=45"></script>
+  <script src="js/barcodeLabel.js?v=45"></script>
+  <script src="js/app.js?v=45"></script>
 </body>
 </html>

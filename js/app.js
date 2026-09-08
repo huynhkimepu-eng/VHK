@@ -286,6 +286,16 @@ class GoldApp {
     const lblWeight = document.getElementById('cfgPrintWeight');
     if (lblWeight) lblWeight.checked = cfg.printWeight !== false; // true by default
 
+    // Cloudinary inputs init
+    const inpCloudName = document.getElementById('cfgCloudinaryCloudName');
+    if (inpCloudName && typeof CloudinaryService !== 'undefined') {
+      inpCloudName.value = CloudinaryService.getCloudName();
+    }
+    const inpCloudPreset = document.getElementById('cfgCloudinaryPreset');
+    if (inpCloudPreset && typeof CloudinaryService !== 'undefined') {
+      inpCloudPreset.value = CloudinaryService.getUploadPreset();
+    }
+
     // Tag configuration init
     const savedTagCfg = localStorage.getItem('pmqlv_tag_config');
     let activeTagCfg = null;
@@ -1961,6 +1971,77 @@ class GoldApp {
     alert('✅ Đã cập nhật cấu hình tiệm vàng & Bảng giá TV thành công!' + cloudMsg);
   }
 
+  async saveCloudinaryConfig() {
+    const cloudName = document.getElementById('cfgCloudinaryCloudName')?.value?.trim() || '';
+    const preset = document.getElementById('cfgCloudinaryPreset')?.value?.trim() || '';
+
+    if (typeof CloudinaryService !== 'undefined') {
+      CloudinaryService.setConfig(cloudName, preset);
+    }
+
+    if (!this.storeConfig) this.storeConfig = {};
+    this.storeConfig.cloudinaryCloudName = cloudName;
+    this.storeConfig.cloudinaryPreset = preset;
+    localStorage.setItem('pmqlv_store_config', JSON.stringify(this.storeConfig));
+
+    let cloudMsg = '';
+    if (window.GoogleSheetService && GoogleSheetService.isConfigured()) {
+      try {
+        const res = await GoogleSheetService.saveStoreConfig(this.storeConfig);
+        if (res && res.success) {
+          cloudMsg = '\n☁️ Đã đồng bộ cấu hình Cloudinary lên Google Sheet (Áp dụng cho mọi máy)!';
+        }
+      } catch (err) {
+        console.warn('Lỗi đồng bộ Cloudinary config:', err);
+      }
+    }
+
+    alert(`✅ Đã lưu cấu hình Cloudinary thành công!${cloudMsg}\nTừ bây giờ, video quay & ảnh tải lên sẽ lưu trực tiếp vào Cloudinary siêu tốc.`);
+  }
+
+  async testCloudinaryConnection() {
+    const statusDiv = document.getElementById('cloudinaryTestStatus');
+    if (statusDiv) {
+      statusDiv.style.display = 'block';
+      statusDiv.style.background = '#EFF6FF';
+      statusDiv.style.color = '#1D4ED8';
+      statusDiv.style.border = '1px solid #BFDBFE';
+      statusDiv.innerHTML = '⏳ Đang kiểm tra kết nối tới máy chủ Cloudinary...';
+    }
+
+    // Tự động lưu cấu hình trước khi test
+    const cloudName = document.getElementById('cfgCloudinaryCloudName')?.value?.trim() || '';
+    const preset = document.getElementById('cfgCloudinaryPreset')?.value?.trim() || '';
+    if (typeof CloudinaryService !== 'undefined') {
+      CloudinaryService.setConfig(cloudName, preset);
+    }
+
+    if (!cloudName || !preset) {
+      if (statusDiv) {
+        statusDiv.style.background = '#FEF2F2';
+        statusDiv.style.color = '#B91C1C';
+        statusDiv.style.border = '1px solid #FECACA';
+        statusDiv.innerHTML = '⚠️ Vui lòng nhập cả Cloud Name và Upload Preset trước khi kiểm tra!';
+      }
+      return;
+    }
+
+    const res = await CloudinaryService.testConnection();
+    if (statusDiv) {
+      if (res.success) {
+        statusDiv.style.background = '#ECFDF5';
+        statusDiv.style.color = '#047857';
+        statusDiv.style.border = '1px solid #A7F3D0';
+        statusDiv.innerHTML = `${res.message}`;
+      } else {
+        statusDiv.style.background = '#FEF2F2';
+        statusDiv.style.color = '#B91C1C';
+        statusDiv.style.border = '1px solid #FECACA';
+        statusDiv.innerHTML = `${res.message}`;
+      }
+    }
+  }
+
   // ================= 7. MODALS & FORMS =================
 
   // Mở trang giới thiệu sản phẩm riêng cho khách xem (san-pham.html?ma=...)
@@ -1996,6 +2077,11 @@ class GoldApp {
     if (statusBadge) statusBadge.innerText = 'Chưa có video';
     const btnClearVideo = document.getElementById('modalBtnClearVideo');
     if (btnClearVideo) btnClearVideo.style.display = 'none';
+    const cloudBadge = document.getElementById('modalCloudinaryActiveBadge');
+    if (cloudBadge) {
+      const isCloud = (typeof CloudinaryService !== 'undefined' && CloudinaryService.isConfigured());
+      cloudBadge.style.display = isCloud ? 'inline-block' : 'none';
+    }
     this.renderModalMediaPreview();
 
     if (document.getElementById('modalChiNhanh')) {
@@ -2091,6 +2177,10 @@ class GoldApp {
     } else {
       if (statusBadge) statusBadge.innerText = 'Chưa có video';
       if (btnClearVideo) btnClearVideo.style.display = 'none';
+    const cloudBadge = document.getElementById('modalCloudinaryActiveBadge');
+    if (cloudBadge) {
+      const isCloud = (typeof CloudinaryService !== 'undefined' && CloudinaryService.isConfigured());
+      cloudBadge.style.display = isCloud ? 'inline-block' : 'none';
     }
 
     this.renderModalMediaPreview();
@@ -2265,14 +2355,15 @@ class GoldApp {
 
     let processedCount = 0;
     const totalFiles = files.length;
+    const isCloudinary = (typeof CloudinaryService !== 'undefined' && CloudinaryService.isConfigured());
 
-    files.forEach(file => {
+    files.forEach((file, fileIdx) => {
       const reader = new FileReader();
       reader.onload = (event) => {
         const img = new Image();
         img.onload = () => {
           const canvas = document.createElement('canvas');
-          const MAX_DIM = 480;
+          const MAX_DIM = 960;
           let width = img.width;
           let height = img.height;
 
@@ -2293,33 +2384,50 @@ class GoldApp {
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, width, height);
 
-          // Nén tối ưu 0.6 để kích thước ảnh nhẹ, lưu nhanh và không tràn bộ nhớ Google Sheet
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+          // Nén tối ưu 0.75 để ảnh sắc nét và nhẹ
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
           if (!this.currentProductImages) this.currentProductImages = [];
           this.currentProductImages.push(dataUrl);
+          this.renderModalMediaPreview();
 
-          // Tải nền ảnh lên Google Drive để nhận link vĩnh viễn siêu nhẹ
-          const hasGasApi = (typeof GoogleSheetService !== 'undefined' && GoogleSheetService.isConfigured());
-          if (hasGasApi) {
-            const maHang = document.getElementById('modalMaHang')?.value?.trim() || 'SP';
-            fetch(GoogleSheetService.getUrl(), {
-              method: 'POST',
-              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-              body: JSON.stringify({
-                action: 'uploadMedia',
-                maHang: maHang,
-                fileName: `img_${maHang}_${Date.now()}.jpg`,
-                mimeType: 'image/jpeg',
-                data: dataUrl
-              })
-            }).then(r => r.json()).then(res => {
-              if (res && res.success && res.url) {
+          // 1. Tải lên Cloudinary (ưu tiên hàng đầu)
+          if (isCloudinary) {
+            CloudinaryService.uploadMedia(dataUrl, 'image').then(res => {
+              if (res && res.secure_url) {
                 const idx = this.currentProductImages.indexOf(dataUrl);
                 if (idx !== -1) {
-                  this.currentProductImages[idx] = res.url;
+                  this.currentProductImages[idx] = res.secure_url;
+                  this.renderModalMediaPreview();
                 }
               }
-            }).catch(() => {});
+            }).catch(err => {
+              console.warn('Lỗi upload ảnh lên Cloudinary:', err);
+            });
+          } else {
+            // 2. Tải nền ảnh lên Google Drive để nhận link vĩnh viễn siêu nhẹ
+            const hasGasApi = (typeof GoogleSheetService !== 'undefined' && GoogleSheetService.isConfigured());
+            if (hasGasApi) {
+              const maHang = document.getElementById('modalMaHang')?.value?.trim() || 'SP';
+              fetch(GoogleSheetService.getUrl(), {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({
+                  action: 'uploadMedia',
+                  maHang: maHang,
+                  fileName: `img_${maHang}_${Date.now()}_${fileIdx}.jpg`,
+                  mimeType: 'image/jpeg',
+                  data: dataUrl
+                })
+              }).then(r => r.json()).then(res => {
+                if (res && res.success && res.url) {
+                  const idx = this.currentProductImages.indexOf(dataUrl);
+                  if (idx !== -1) {
+                    this.currentProductImages[idx] = res.url;
+                    this.renderModalMediaPreview();
+                  }
+                }
+              }).catch(() => {});
+            }
           }
 
           processedCount++;
@@ -2357,8 +2465,8 @@ class GoldApp {
       };
     }
 
-    // 3. Direct video file (.mp4, .webm, .ogg, .mov, blob, data:video)
-    if (url.startsWith('blob:') || url.startsWith('data:video') || url.match(/\.(mp4|webm|ogg|mov)(\?.*)?$/i)) {
+    // 3. Direct video file (.mp4, .webm, .ogg, .mov, blob, data:video, or Cloudinary)
+    if (url.startsWith('blob:') || url.startsWith('data:video') || url.includes('cloudinary.com') || url.match(/\.(mp4|webm|ogg|mov)(\?.*)?$/i)) {
       return {
         type: 'direct',
         embedUrl: url
@@ -2439,7 +2547,50 @@ class GoldApp {
       `;
     }
 
-    // Nếu có Google Sheet API, tiến hành tải lên Google Drive của tiệm
+    // 1. NẾU CÓ CLOUDINARY (Cách 1) -> Tải lên Cloudinary siêu tốc
+    const isCloudinary = (typeof CloudinaryService !== 'undefined' && CloudinaryService.isConfigured());
+    if (isCloudinary) {
+      this.isVideoUploading = true;
+      if (progressText) progressText.innerText = `☁️ Đang tải video lên Cloudinary... (${sizeMB} MB)`;
+
+      try {
+        const uploadRes = await CloudinaryService.uploadMedia(file, 'video', (pct) => {
+          if (progressBar) progressBar.style.width = `${Math.max(10, pct)}%`;
+          if (progressPct) progressPct.innerText = `${Math.max(10, pct)}%`;
+          if (progressText) progressText.innerText = `☁️ Đang tải lên Cloudinary: ${pct}% (${sizeMB} MB)`;
+        });
+
+        this.isVideoUploading = false;
+        if (uploadRes && uploadRes.secure_url) {
+          if (progressBar) { progressBar.style.width = '100%'; progressBar.style.background = '#059669'; }
+          if (progressPct) progressPct.innerText = '100%';
+          if (progressText) progressText.innerText = `✅ Đã tải lên Cloudinary thành công! Xem mượt trên mọi máy.`;
+
+          if (videoInput) videoInput.value = uploadRes.secure_url;
+          this.currentProductVideo = uploadRes.secure_url;
+          if (statusBadge) statusBadge.innerHTML = `<span style="color: #059669; font-weight: bold;">☁️ Cloudinary MP4 (${sizeMB} MB)</span>`;
+          this.showToast('✅ Đã tải video lên Cloudinary thành công!', 'success');
+
+          if (previewBox) {
+            previewBox.innerHTML = `
+              <video src="${uploadRes.secure_url}" controls playsinline autoplay muted style="width: 100%; max-height: 220px; background: #000; border-radius: 6px;"></video>
+            `;
+          }
+
+          setTimeout(() => {
+            if (progressBox) progressBox.style.display = 'none';
+          }, 3500);
+          e.target.value = '';
+          return;
+        }
+      } catch (cloudErr) {
+        this.isVideoUploading = false;
+        console.warn('Lỗi tải lên Cloudinary:', cloudErr);
+        if (progressText) progressText.innerText = `⚠️ Cloudinary báo lỗi (${cloudErr.message}), chuyển sang Google Drive...`;
+      }
+    }
+
+    // 2. PHƯƠNG ÁN DỰ PHÒNG: Google Drive (qua Apps Script)
     const hasGasApi = (typeof GoogleSheetService !== 'undefined' && GoogleSheetService.isConfigured());
 
     if (hasGasApi) {
@@ -2588,6 +2739,24 @@ class GoldApp {
       const giaVangNhap = parseFloat(document.getElementById('modalGiaVangNhap')?.value) || 0;
       const giaVon = parseFloat(document.getElementById('modalGiaVon').value) || 0;
 
+      // Đảm bảo tất cả ảnh đã được tải lên Cloudinary trước khi lưu để tránh tràn bộ nhớ Google Sheet
+      if (typeof CloudinaryService !== 'undefined' && CloudinaryService.isConfigured() && this.currentProductImages && this.currentProductImages.length > 0) {
+        for (let i = 0; i < this.currentProductImages.length; i++) {
+          const imgItem = this.currentProductImages[i];
+          if (imgItem && typeof imgItem === 'string' && imgItem.startsWith('data:image')) {
+            try {
+              const res = await CloudinaryService.uploadMedia(imgItem, 'image');
+              if (res && res.secure_url) {
+                this.currentProductImages[i] = res.secure_url;
+              }
+            } catch (upErr) {
+              console.warn('Lỗi upload ảnh lên Cloudinary khi lưu:', upErr);
+            }
+          }
+        }
+        this.renderModalMediaPreview();
+      }
+
       // Xử lý đóng gói nhiều ảnh & video
       let anhSanPham = '';
       if (this.currentProductImages && this.currentProductImages.length > 0) {
@@ -2611,7 +2780,7 @@ class GoldApp {
         }
       }
       if (this.isVideoUploading) {
-        alert('⏳ Video đang được tải lên Google Drive của tiệm, vui lòng đợi vài giây cho thanh tiến trình hoàn tất 100% rồi bấm Lưu lại nhé!');
+        alert('⏳ Video đang được tải lên đám mây, vui lòng đợi vài giây cho thanh tiến trình hoàn tất 100% rồi bấm Lưu lại nhé!');
         return;
       }
 
@@ -2619,7 +2788,7 @@ class GoldApp {
 
       if (videoSanPham.startsWith('blob:')) {
         console.warn('Video đang là link blob cục bộ:', videoSanPham);
-        const confirmSaveBlob = confirm('⚠️ Video này chưa tải lên Google Drive xong (đang là link tạm chỉ xem được trên máy này). Nếu bạn bấm OK lưu luôn, các máy tính khác hoặc điện thoại khác sẽ KHÔNG xem được video.\n\nBấm "Hủy" (Cancel) để đợi video tải lên Drive xong 100%, hoặc bấm "OK" nếu bạn vẫn muốn lưu tạm.');
+        const confirmSaveBlob = confirm('⚠️ Video này chưa hoàn tất tải lên đám mây (đang là link tạm chỉ xem được trên máy này). Nếu bạn bấm OK lưu luôn, các máy tính hoặc điện thoại khác sẽ không xem được video.\n\nBấm "Hủy" (Cancel) để đợi video tải lên xong 100%, hoặc bấm "OK" nếu bạn vẫn muốn lưu tạm.');
         if (!confirmSaveBlob) return;
       }
 
