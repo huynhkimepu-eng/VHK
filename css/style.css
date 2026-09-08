@@ -1812,5 +1812,68 @@ body.not-authenticated {
   transform: translateY(-1px);
 }
 
+/* ================= THỐNG KÊ TL VÀNG THEO TỪNG LOẠI (KHO HÀNG) ================= */
+.inv-gold-stat-card {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 7px;
+  padding: 8px 11px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  user-select: none;
+}
+
+.inv-gold-stat-card:hover {
+  background: #FFFBEB;
+  border-color: #F59E0B;
+  transform: translateY(-1.5px);
+  box-shadow: 0 3px 8px rgba(217, 119, 6, 0.12);
+}
+
+.inv-gold-stat-card.active {
+  background: #FEF3C7;
+  border-color: #D97706;
+  box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.25);
+}
+
+.inv-gold-stat-card .card-gold-name {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #1E293B;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.inv-gold-stat-card .card-gold-count {
+  font-size: 11px;
+  color: #64748B;
+  background: #E2E8F0;
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+.inv-gold-stat-card.active .card-gold-count {
+  background: #FDE68A;
+  color: #92400E;
+}
+
+.inv-gold-stat-card .card-gold-weight {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 2px;
+}
+
+.inv-gold-stat-card .card-gold-weight-val {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #B45309;
+}
+
 
 

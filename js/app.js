@@ -1547,6 +1547,9 @@ class GoldApp {
 
     if (!tbody) return;
 
+    // Cập nhật thống kê trọng lượng vàng theo từng loại
+    this.renderInventoryGoldStats();
+
     const totalCount = this.products.length;
     const filteredCount = this.filteredProducts.length;
 
@@ -1664,6 +1667,161 @@ class GoldApp {
     }).join('');
 
     this.updateUserRoleUI();
+  }
+
+  renderInventoryGoldStats() {
+    const gridEl = document.getElementById('invGoldStatsCardGrid');
+    const grandBadgeEl = document.getElementById('invGoldStatsGrandTotalBadge');
+    const pagWeightEl = document.getElementById('invPaginationTotalGoldWeight');
+
+    const parseWeight = (val) => {
+      if (!val) return 0;
+      const num = parseFloat(String(val).replace(',', '.').trim());
+      return isNaN(num) ? 0 : num;
+    };
+
+    // 1. Tính tổng TL Vàng của danh sách hiện tại đang hiển thị trong bảng (this.filteredProducts)
+    let totalFilteredWeight = 0;
+    (this.filteredProducts || []).forEach(p => {
+      totalFilteredWeight += parseWeight(p.tlVang);
+    });
+
+    if (pagWeightEl) {
+      pagWeightEl.textContent = totalFilteredWeight.toFixed(3);
+    }
+
+    if (!gridEl) return;
+
+    // 2. Lấy bộ lọc loại vàng hiện tại
+    const currentGoldTypeFilter = document.getElementById('invGoldTypeFilter')?.value || 'ALL';
+
+    // 3. Lọc danh sách sản phẩm theo Chi nhánh, Trạng thái, Quầy, Từ khóa (ngoại trừ invGoldTypeFilter)
+    // để bảng thống kê luôn hiển thị đầy đủ tổng trọng lượng từng loại vàng trong phạm vi đang xem
+    const activeBranch = this.currentBranch;
+    const isAdmin = this.currentUser && this.currentUser.role === 'admin';
+    const status = document.getElementById('invStatusFilter')?.value || 'ALL';
+    const counter = document.getElementById('invCounterFilter')?.value || 'ALL';
+    const keyword = (document.getElementById('invSearchInput')?.value || '').trim().toLowerCase();
+    const isFilteringRecent = (status === 'RECENT_MODIFIED' || status === 'RECENT_ALL' || status === 'RECENT_NEW' || status === 'RECENT_EDIT') || this.isFilteringRecentOnly;
+    const subFilter = (status === 'RECENT_NEW') ? 'new' : (status === 'RECENT_EDIT' ? 'edit' : this.recentSubFilter || 'all');
+
+    const recentMaMap = new Map();
+    (this.recentModifiedItems || []).forEach(i => {
+      const code = typeof i === 'object' ? i.maHang : i;
+      const type = typeof i === 'object' ? (i.type || 'new') : 'new';
+      if (subFilter === 'all' || subFilter === type) {
+        recentMaMap.set(code, typeof i === 'object' ? i : { maHang: code, type });
+      }
+    });
+
+    const scopeProducts = this.products.filter(p => {
+      if (isFilteringRecent) {
+        if (!recentMaMap.has(p.maHang)) return false;
+      } else {
+        const branchMatch = (activeBranch === 'ALL' && isAdmin) || (p.chiNhanh === activeBranch) || (!p.chiNhanh && activeBranch === 'Chi nhánh 1');
+        if (!branchMatch) return false;
+        if (status !== 'ALL' && p.trangThai !== status) return false;
+      }
+
+      if (counter !== 'ALL' && p.quayNho !== counter) return false;
+
+      if (keyword) {
+        const ma = (p.maHang || '').toLowerCase();
+        const ten = (p.tenHang || '').toLowerCase();
+        const loai = (p.loaiVang || '').toLowerCase();
+        if (!ma.includes(keyword) && !ten.includes(keyword) && !loai.includes(keyword)) return false;
+      }
+
+      return true;
+    });
+
+    // Nhóm sản phẩm theo loại vàng
+    const goldGroupMap = new Map();
+    let grandTotalWeight = 0;
+
+    scopeProducts.forEach(p => {
+      const typeName = (p.loaiVang || 'Khác').trim();
+      const w = parseWeight(p.tlVang);
+      grandTotalWeight += w;
+
+      if (!goldGroupMap.has(typeName)) {
+        goldGroupMap.set(typeName, { name: typeName, count: 0, weight: 0 });
+      }
+      const g = goldGroupMap.get(typeName);
+      g.count++;
+      g.weight += w;
+    });
+
+    if (grandBadgeEl) {
+      grandBadgeEl.textContent = grandTotalWeight.toFixed(3);
+    }
+
+    // Sắp xếp: Ưu tiên loại vàng có trọng lượng cao nhất lên đầu
+    const groups = Array.from(goldGroupMap.values()).sort((a, b) => {
+      if (Math.abs(b.weight - a.weight) > 0.0001) return b.weight - a.weight;
+      return b.count - a.count;
+    });
+
+    if (groups.length === 0) {
+      gridEl.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: #94A3B8; font-size: 12px; padding: 10px;">Không có dữ liệu loại vàng trong kho hiện tại</div>`;
+      return;
+    }
+
+    gridEl.innerHTML = groups.map(g => {
+      const isCardActive = (currentGoldTypeFilter !== 'ALL' && (currentGoldTypeFilter === g.name || this.isMatchingGoldType(g.name, currentGoldTypeFilter)));
+      const escapedName = g.name.replace(/'/g, "\\'");
+      return `
+        <div class="inv-gold-stat-card ${isCardActive ? 'active' : ''}" onclick="app.quickFilterByGoldType('${escapedName}')" title="Bấm để lọc nhanh sản phẩm ${g.name}">
+          <div class="card-gold-name">
+            <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 90px;">${g.name}</span>
+            <span class="card-gold-count">${g.count} SP</span>
+          </div>
+          <div class="card-gold-weight">
+            <span class="card-gold-weight-val">${g.weight.toFixed(3)}</span>
+            <span style="font-size: 11px; color: #78350F; font-weight: 600;">chỉ</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  quickFilterByGoldType(loaiVang) {
+    const sel = document.getElementById('invGoldTypeFilter');
+    if (!sel) return;
+
+    const currentVal = sel.value;
+    const isCurrentlyActive = (currentVal !== 'ALL') && (currentVal === loaiVang || this.isMatchingGoldType(loaiVang, currentVal));
+
+    if (isCurrentlyActive) {
+      sel.value = 'ALL';
+    } else {
+      let matchedOptVal = null;
+      for (let i = 0; i < sel.options.length; i++) {
+        if (sel.options[i].value === loaiVang) {
+          matchedOptVal = sel.options[i].value;
+          break;
+        }
+      }
+      if (!matchedOptVal) {
+        for (let i = 0; i < sel.options.length; i++) {
+          if (sel.options[i].value !== 'ALL' && this.isMatchingGoldType(loaiVang, sel.options[i].value)) {
+            matchedOptVal = sel.options[i].value;
+            break;
+          }
+        }
+      }
+      if (matchedOptVal) {
+        sel.value = matchedOptVal;
+      } else {
+        const opt = document.createElement('option');
+        opt.value = loaiVang;
+        opt.textContent = loaiVang;
+        sel.appendChild(opt);
+        sel.value = loaiVang;
+      }
+    }
+
+    this.filterInventory();
   }
 
   prevPage() {
