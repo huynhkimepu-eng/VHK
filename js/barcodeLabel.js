@@ -229,10 +229,31 @@ const BarcodeLabel = {
       </div>
     `;
 
+    // Xử lý Nhà sản xuất / Nhà cung cấp / Tiêu chuẩn cơ sở (TCCS)
+    const showMfg = config.showManufacturer !== false;
+    const nhaSX = product.nhaSanXuat || '';
+    const nhaCC = product.nhaCungCap || '';
+    const hasMfg = Boolean(nhaSX || nhaCC);
+
+    let mfgTailHtml = '';
+    if (showMfg && hasMfg) {
+      const sxText = 'SX: Việt Nam';
+      const nccText = nhaCC ? `NCC: ${nhaCC}` : '';
+      const tccsText = nhaSX === 'HK' ? 'TCCS: 01:2025/HK' : (nhaSX ? `TCCS: ${nhaSX}` : '');
+
+      mfgTailHtml = `
+        <div class="tag-mfg-info" style="font-size: ${(fontSize * 0.75).toFixed(1)}pt;">
+          <div class="mfg-line"><b>${sxText}</b></div>
+          ${nccText ? `<div class="mfg-line"><b>${nccText}</b></div>` : ''}
+          ${tccsText ? `<div class="mfg-line"><b>${tccsText}</b></div>` : ''}
+        </div>
+      `;
+    }
+
     // Phần đuôi tem (Tail)
     const tailHtml = `
       <div class="tag-tail" style="width: ${layout.tailWidth}mm;">
-        <div class="tail-line"></div>
+        ${mfgTailHtml ? mfgTailHtml : '<div class="tail-line"></div>'}
       </div>
     `;
 
@@ -433,6 +454,25 @@ const BarcodeLabel = {
             display: flex;
             align-items: center;
             justify-content: center;
+            overflow: hidden;
+            padding: 0 1mm;
+          }
+
+          .tag-mfg-info {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-evenly;
+            text-align: left;
+            line-height: 1.05;
+            color: #000;
+          }
+
+          .mfg-line {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
           }
 
           .tail-line {

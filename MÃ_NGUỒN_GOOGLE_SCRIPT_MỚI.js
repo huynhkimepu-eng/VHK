@@ -79,7 +79,7 @@ function doPost(e) {
       const headers = [
         'maHang', 'tenHang', 'loaiHang', 'loaiVang', 'nhomHang', 'trangThai',
         'tlTong', 'tlHot', 'tlVang', 'ni', 'congBan', 'congVon', 'giaBanMon',
-        'giaVon', 'cuaHang', 'quayLon', 'quayNho', 'ngayNhap'
+        'giaVon', 'cuaHang', 'quayLon', 'quayNho', 'ngayNhap', 'nhaSanXuat', 'nhaCungCap'
       ];
 
       const rows = [headers];
@@ -102,7 +102,9 @@ function doPost(e) {
           p.cuaHang || '',
           p.quayLon || '',
           p.quayNho || '',
-          p.ngayNhap || ''
+          p.ngayNhap || '',
+          p.nhaSanXuat || '',
+          p.nhaCungCap || ''
         ]);
       });
 
@@ -131,7 +133,8 @@ function doPost(e) {
         p.maHang, p.tenHang, p.loaiHang, p.loaiVang, p.nhomHang, p.trangThai || 'Còn tồn',
         Number(p.tlTong) || 0, Number(p.tlHot) || 0, Number(p.tlVang) || 0, p.ni || 0,
         Number(p.congBan) || 0, Number(p.congVon) || 0, Number(p.giaBanMon) || 0,
-        Number(p.giaVon) || 0, p.cuaHang, p.quayLon, p.quayNho, p.ngayNhap || ''
+        Number(p.giaVon) || 0, p.cuaHang, p.quayLon, p.quayNho, p.ngayNhap || '',
+        p.nhaSanXuat || '', p.nhaCungCap || ''
       ];
 
       if (rowIndex > 0) {
@@ -299,7 +302,7 @@ function initSheetsIfNotExist() {
     const headers = [
       'maHang', 'tenHang', 'loaiHang', 'loaiVang', 'nhomHang', 'trangThai',
       'tlTong', 'tlHot', 'tlVang', 'ni', 'congBan', 'congVon', 'giaBanMon',
-      'giaVon', 'cuaHang', 'quayLon', 'quayNho', 'ngayNhap'
+      'giaVon', 'cuaHang', 'quayLon', 'quayNho', 'ngayNhap', 'nhaSanXuat', 'nhaCungCap'
     ];
     s.appendRow(headers);
     formatHeaderRow(s, headers.length);

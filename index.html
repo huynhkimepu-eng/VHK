@@ -412,6 +412,9 @@
                   <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
                     <input type="checkbox" id="tagCfgShowLabor" checked onchange="app.updateTagConfig()"> Tiền công / Giá bán
                   </label>
+                  <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; grid-column: span 2; background: #ECFDF5; padding: 3px 6px; border-radius: 4px; color: #065F46; font-weight: 600;">
+                    <input type="checkbox" id="tagCfgShowManufacturer" checked onchange="app.updateTagConfig()"> 🏭 In Nhà SX, NCC & TCCS (Nếu có)
+                  </label>
                 </div>
               </div>
 
@@ -868,6 +871,21 @@
                 <option value="Chi nhánh 2">🏢 Chi nhánh 2</option>
               </select>
               <input type="hidden" id="modalNi" value="0">
+            </div>
+          </div>
+
+          <!-- Nhà sản xuất & Nhà cung cấp -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; background: #F0FDF4; padding: 8px 10px; border-radius: var(--radius-sm); border: 1px dashed #86EFAC;">
+            <div>
+              <label style="font-size: 12px; font-weight: bold; color: #166534;">Nhà Sản Xuất (In Tem)</label>
+              <select id="modalNhaSanXuat" class="form-select" style="font-size: 12px;">
+                <option value="">(Không có - Mặc định)</option>
+                <option value="HK">CTTNHH VB&TS Hoàng Kim (HK)</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size: 12px; font-weight: bold; color: #166534;">Nhà Cung Cấp (Tùy chọn)</label>
+              <input type="text" id="modalNhaCungCap" class="form-control" placeholder="Để trống nếu không có" style="font-size: 12px;">
             </div>
           </div>
 

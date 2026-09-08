@@ -1054,7 +1054,8 @@ class GoldApp {
       showTLT: getChecked('tagCfgShowTLT', true),
       showTLH: getChecked('tagCfgShowTLH', true),
       showTLV: getChecked('tagCfgShowTLV', true),
-      showLaborCost: getChecked('tagCfgShowLabor', true)
+      showLaborCost: getChecked('tagCfgShowLabor', true),
+      showManufacturer: getChecked('tagCfgShowManufacturer', true)
     };
   }
 
@@ -1089,6 +1090,7 @@ class GoldApp {
     setChecked('tagCfgShowTLH', cfg.showTLH);
     setChecked('tagCfgShowTLV', cfg.showTLV);
     setChecked('tagCfgShowLabor', cfg.showLaborCost);
+    setChecked('tagCfgShowManufacturer', cfg.showManufacturer !== false);
   }
 
   saveTagConfig() {
@@ -1123,7 +1125,8 @@ class GoldApp {
       showTLT: true,
       showTLH: true,
       showTLV: true,
-      showLaborCost: true
+      showLaborCost: true,
+      showManufacturer: true
     };
     this.setTagConfigUI(defaultCfg);
     this.saveTagConfig();
@@ -1874,6 +1877,12 @@ class GoldApp {
     if (document.getElementById('modalChiNhanh')) {
       document.getElementById('modalChiNhanh').value = (this.currentBranch === 'Chi nhánh 2' ? 'Chi nhánh 2' : 'Chi nhánh 1');
     }
+    if (document.getElementById('modalNhaSanXuat')) {
+      document.getElementById('modalNhaSanXuat').value = '';
+    }
+    if (document.getElementById('modalNhaCungCap')) {
+      document.getElementById('modalNhaCungCap').value = '';
+    }
     if (document.getElementById('modalGiaVangNhap')) {
       document.getElementById('modalGiaVangNhap').value = '';
     }
@@ -1893,6 +1902,12 @@ class GoldApp {
     document.getElementById('modalQuayNho').value = p.quayNho || '2VANG24K';
     if (document.getElementById('modalChiNhanh')) {
       document.getElementById('modalChiNhanh').value = p.chiNhanh || 'Chi nhánh 1';
+    }
+    if (document.getElementById('modalNhaSanXuat')) {
+      document.getElementById('modalNhaSanXuat').value = p.nhaSanXuat || '';
+    }
+    if (document.getElementById('modalNhaCungCap')) {
+      document.getElementById('modalNhaCungCap').value = p.nhaCungCap || '';
     }
     document.getElementById('modalNi').value = p.ni || 0;
     document.getElementById('modalTlTong').value = p.tlTong || 0;
@@ -2030,6 +2045,8 @@ class GoldApp {
       const loaiVang = document.getElementById('modalLoaiVang').value;
       const quayNho = document.getElementById('modalQuayNho').value;
       const chiNhanh = document.getElementById('modalChiNhanh') ? document.getElementById('modalChiNhanh').value : this.currentBranch;
+      const nhaSanXuat = document.getElementById('modalNhaSanXuat') ? document.getElementById('modalNhaSanXuat').value : '';
+      const nhaCungCap = document.getElementById('modalNhaCungCap') ? document.getElementById('modalNhaCungCap').value.trim() : '';
       const ni = parseInt(document.getElementById('modalNi').value) || 0;
       const tlTong = parseFloat(document.getElementById('modalTlTong').value) || 0;
       const tlHot = parseFloat(document.getElementById('modalTlHot').value) || 0;
@@ -2058,6 +2075,8 @@ class GoldApp {
         giaVangNhap,
         giaBanMon,
         giaVon,
+        nhaSanXuat,
+        nhaCungCap,
         trangThai: existingIndex >= 0 ? this.products[existingIndex].trangThai : 'Còn tồn',
         cuaHang: this.storeConfig.storeName,
         chiNhanh: chiNhanh,
