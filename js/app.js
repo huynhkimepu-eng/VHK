@@ -2288,10 +2288,10 @@ class GoldApp {
           this.currentProductImages.push(dataUrl);
 
           // Tải nền ảnh lên Google Drive để nhận link vĩnh viễn siêu nhẹ
-          const hasGasApi = (typeof googleSheetService !== 'undefined' && googleSheetService.apiUrl && googleSheetService.apiUrl.trim().length > 10);
+          const hasGasApi = (typeof GoogleSheetService !== 'undefined' && GoogleSheetService.isConfigured());
           if (hasGasApi) {
             const maHang = document.getElementById('modalMaHang')?.value?.trim() || 'SP';
-            fetch(googleSheetService.apiUrl, {
+            fetch(GoogleSheetService.getUrl(), {
               method: 'POST',
               headers: { 'Content-Type': 'text/plain;charset=utf-8' },
               body: JSON.stringify({
@@ -2338,7 +2338,7 @@ class GoldApp {
     }
 
     // 2. Google Drive video preview
-    let driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+    let driveMatch = url.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?id=)([a-zA-Z0-9_-]+)/);
     if (driveMatch && driveMatch[1]) {
       return {
         type: 'drive',
@@ -2429,7 +2429,7 @@ class GoldApp {
     }
 
     // Nếu có Google Sheet API, tiến hành tải lên Google Drive của tiệm
-    const hasGasApi = (typeof googleSheetService !== 'undefined' && googleSheetService.apiUrl && googleSheetService.apiUrl.trim().length > 10);
+    const hasGasApi = (typeof GoogleSheetService !== 'undefined' && GoogleSheetService.isConfigured());
 
     if (hasGasApi) {
       if (file.size > 35 * 1024 * 1024) {
@@ -2454,7 +2454,7 @@ class GoldApp {
           const base64Data = readEvt.target.result;
           const maHang = document.getElementById('modalMaHang')?.value?.trim() || 'SP';
 
-          const resp = await fetch(googleSheetService.apiUrl, {
+          const resp = await fetch(GoogleSheetService.getUrl(), {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({
@@ -2595,6 +2595,8 @@ class GoldApp {
 
       if (videoSanPham.startsWith('blob:')) {
         console.warn('Video đang là link blob cục bộ:', videoSanPham);
+        const confirmSaveBlob = confirm('⚠️ Video này chưa tải lên Google Drive xong (đang là link tạm chỉ xem được trên máy này). Nếu bạn bấm OK lưu luôn, các máy tính khác hoặc điện thoại khác sẽ KHÔNG xem được video.\n\nBấm "Hủy" (Cancel) để đợi video tải lên Drive xong 100%, hoặc bấm "OK" nếu bạn vẫn muốn lưu tạm.');
+        if (!confirmSaveBlob) return;
       }
 
       const existingIndex = this.products.findIndex(p => p.maHang === maHang);
