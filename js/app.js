@@ -2261,7 +2261,7 @@ class GoldApp {
         const img = new Image();
         img.onload = () => {
           const canvas = document.createElement('canvas');
-          const MAX_DIM = 600;
+          const MAX_DIM = 480;
           let width = img.width;
           let height = img.height;
 
@@ -2282,9 +2282,34 @@ class GoldApp {
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, width, height);
 
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.72);
+          // Nén tối ưu 0.6 để kích thước ảnh nhẹ, lưu nhanh và không tràn bộ nhớ Google Sheet
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
           if (!this.currentProductImages) this.currentProductImages = [];
           this.currentProductImages.push(dataUrl);
+
+          // Tải nền ảnh lên Google Drive để nhận link vĩnh viễn siêu nhẹ
+          const hasGasApi = (typeof googleSheetService !== 'undefined' && googleSheetService.apiUrl && googleSheetService.apiUrl.trim().length > 10);
+          if (hasGasApi) {
+            const maHang = document.getElementById('modalMaHang')?.value?.trim() || 'SP';
+            fetch(googleSheetService.apiUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+              body: JSON.stringify({
+                action: 'uploadMedia',
+                maHang: maHang,
+                fileName: `img_${maHang}_${Date.now()}.jpg`,
+                mimeType: 'image/jpeg',
+                data: dataUrl
+              })
+            }).then(r => r.json()).then(res => {
+              if (res && res.success && res.url) {
+                const idx = this.currentProductImages.indexOf(dataUrl);
+                if (idx !== -1) {
+                  this.currentProductImages[idx] = res.url;
+                }
+              }
+            }).catch(() => {});
+          }
 
           processedCount++;
           if (processedCount === totalFiles) {

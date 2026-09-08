@@ -230,7 +230,37 @@ function doPost(e) {
         nhaCungCap: p.nhaCungCap || ''
       };
 
-      const rowValues = headers.map(h => fieldMap[h] !== undefined ? fieldMap[h] : '');
+      const rowValues = headers.map(h => {
+        let val = fieldMap[h] !== undefined ? fieldMap[h] : '';
+        // Phòng ngừa triệt để lỗi Google Sheet tối đa 50.000 ký tự trong một ô
+        if (typeof val === 'string' && val.length > 48000) {
+          try {
+            let folder;
+            const folders = DriveApp.getFoldersByName('PMQLV_Media');
+            if (folders.hasNext()) folder = folders.next();
+            else folder = DriveApp.createFolder('PMQLV_Media');
+
+            let cleanBase64 = val;
+            if (val.startsWith('["') || val.startsWith("['")) {
+              try {
+                const arr = JSON.parse(val);
+                if (arr && arr[0]) cleanBase64 = arr[0];
+              } catch(e) {}
+            }
+            if (cleanBase64.indexOf('base64,') > -1) {
+              cleanBase64 = cleanBase64.split('base64,')[1];
+            }
+            const decoded = Utilities.base64Decode(cleanBase64);
+            const blob = Utilities.newBlob(decoded, 'image/jpeg', 'img_' + (p.maHang || 'sp') + '_' + Date.now() + '.jpg');
+            const file = folder.createFile(blob);
+            file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+            val = 'https://drive.google.com/file/d/' + file.getId() + '/preview';
+          } catch(err) {
+            val = val.substring(0, 48000);
+          }
+        }
+        return val;
+      });
 
       if (rowIndex > 0) {
         sheet.getRange(rowIndex, 1, 1, rowValues.length).setValues([rowValues]);
