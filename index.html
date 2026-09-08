@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>PMQLV - Phần Mềm Quản Lý & Bán Hàng Vàng Bạc Đá Quý</title>
+  <link rel="stylesheet" href="css/style.css?v=27">
+  <!-- HTML5 QR Code & Barcode Scanner for Camera -->
+    <script>
+    window.onerror = function(msg, src, line, col, err) {
+      document.body.insertAdjacentHTML('afterbegin', '<div style="position:fixed;top:0;left:0;right:0;background:red;color:white;padding:10px;z-index:999999;font-size:12px;">' + 'JS ERROR: ' + msg + ' | ' + src + ':' + line + '</div>');
+    };
+  </script><script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <!-- SheetJS for Excel Import/Export -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+
+  <!-- ================= APP HEADER ================= -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand-box">
+        <div class="brand-logo-icon">👑</div>
+        <div class="brand-text">
+          <h1 id="headerStoreName">TIỆM VÀNG HOÀNG KIM</h1>
+          <p id="headerSlogan">Quản Lý Kho & Bán Hàng Vàng Bạc Đá Quý</p>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <!-- Bảng Giá TV -->
+        <a href="bang-gia-vang.html" target="_blank" style="display: flex; align-items: center; gap: 6px; background: linear-gradient(135deg, #F59E0B, #D97706); color: #000; padding: 5px 12px; border-radius: 6px; margin-right: 12px; text-decoration: none; font-size: 12.5px; font-weight: 700; box-shadow: 0 2px 6px rgba(0,0,0,0.2);" title="Mở Màn Hình Bảng Giá Điện Tử Chiếu TV">
+          <span>📺</span> Bảng Giá TV
+        </a>
+
+        <!-- Chọn Chi Nhánh -->
+        <div style="display: flex; align-items: center; background: rgba(255,255,255,0.15); padding: 4px 10px; border-radius: 6px; margin-right: 15px;">
+          <label style="font-size: 11px; margin-right: 6px; opacity: 0.9;">CHI NHÁNH:</label>
+          <select id="globalBranchSelector" onchange="app.changeBranch()" style="background: transparent; color: white; border: none; font-size: 13px; font-weight: bold; outline: none; cursor: pointer;">
+            <option value="Chi nhánh 1" style="color: black;">Chi nhánh 1</option>
+            <option value="Chi nhánh 2" style="color: black;">Chi nhánh 2</option>
+            <option value="ALL" style="color: black;" id="optAllBranches">Tất cả chi nhánh (Xem Báo Cáo)</option>
+          </select>
+        </div>
+
+        <!-- Trạng thái kết nối Google Sheet -->
+        <div class="sync-status-badge" id="syncBadge" title="Bấm để kiểm tra đồng bộ Google Sheet" onclick="app.showSyncModal()">
+          <span class="status-dot" id="syncDot"></span>
+          <span class="text" id="syncText">Đang kiểm tra...</span>
+        </div>
+
+        <!-- Người dùng hiện tại & Phân quyền -->
+        <div class="user-badge" id="userBadge">
+          <span id="userRoleText">Admin</span>: <b id="userFullName">Chủ Tiệm</b>
+          <button class="btn-logout" onclick="app.logout()" title="Đăng xuất / Chuyển tài khoản">Đổi</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= DESKTOP NAV TABS ================= -->
+  <nav class="nav-tabs-wrapper">
+    <div class="nav-tabs-container">
+      <button class="tab-btn active" data-tab="tab-pos" onclick="app.switchTab('tab-pos')">
+        <span>🛒</span> Bán Hàng (POS)
+      </button>
+      <button class="tab-btn" data-tab="tab-inventory" onclick="app.switchTab('tab-inventory')">
+        <span>📦</span> Kho Hàng <span class="badge" id="totalInventoryBadge">1.174</span>
+      </button>
+      <button class="tab-btn" data-tab="tab-tags" onclick="app.switchTab('tab-tags')">
+        <span>🏷️</span> In Tem Đuôi Chuột
+      </button>
+      <button class="tab-btn" data-tab="tab-gold-rates" onclick="app.switchTab('tab-gold-rates')">
+        <span>📈</span> Bảng Giá Vàng
+      </button>
+      <button class="tab-btn" data-tab="tab-reports" onclick="app.switchTab('tab-reports')">
+        <span>📊</span> Báo Cáo & Lãi Gộp
+      </button>
+      <button class="tab-btn" data-tab="tab-settings" onclick="app.switchTab('tab-settings')">
+        <span>⚙️</span> Cài Đặt Hệ Thống
+      </button>
+    </div>
+  </nav>
+
+  <!-- ================= MAIN CONTENT WRAPPER ================= -->
+  <main class="main-wrapper">
+
+    <!-- ================= TAB 1: BÁN HÀNG (POS) ================= -->
+    <section id="tab-pos" class="tab-content-panel active">
+      <div class="pos-layout">
+        
+        <!-- Cột trái: Tìm kiếm & Danh mục sản phẩm để chọn -->
+        <div class="pos-product-section">
+          <div class="card">
+            <div class="card-body" style="padding: 12px;">
+              
+              <!-- Search & Barcode Scan Toolbar -->
+              <div class="pos-search-bar">
+                <input type="text" id="posSearchInput" class="form-control" placeholder="🔍 Quét mã vạch hoặc nhập tên món, mã hàng (I660..., I950...)..." onkeyup="app.filterPosProducts()">
+                <button class="btn pos-scan-btn" onclick="app.openCameraScanner('pos')">
+                  📷 Quét Camera
+                </button>
+              </div>
+
+              <!-- Quick category / Quầy buttons -->
+              <div style="display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 8px;">
+                <button class="btn btn-sm btn-secondary pos-filter-btn active" onclick="app.filterPosByGold('ALL', this)">Tất cả</button>
+                <button class="btn btn-sm btn-secondary pos-filter-btn" onclick="app.filterPosByGold('Vàng 24K', this)">Vàng 24K</button>
+                <button class="btn btn-sm btn-secondary pos-filter-btn" onclick="app.filterPosByGold('Vàng 18K', this)">Vàng 18K</button>
+                <button class="btn btn-sm btn-secondary pos-filter-btn" onclick="app.filterPosByGold('Vàng 10K', this)">Vàng 10K</button>
+                <button class="btn btn-sm btn-secondary pos-filter-btn" onclick="app.filterPosByGold('Bạc', this)">Bạc / Bạc Ý</button>
+                <button class="btn btn-sm btn-secondary pos-filter-btn" onclick="app.filterPosByGold('Đá Phong Thuỷ', this)">Phong Thuỷ</button>
+              </div>
+
+              <!-- Grid sản phẩm -->
+              <div class="pos-grid-products" id="posProductGrid">
+                <!-- Javascript will render product cards here -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cột phải: Giỏ hàng & Hóa đơn thu ngân -->
+        <div class="pos-cart-section">
+          <div class="pos-cart">
+            <div class="cart-header">
+              <span><b>ĐƠN BÁN HÀNG</b> (<span id="cartCount">0</span> món)</span>
+              <button class="btn btn-sm btn-danger" style="padding: 2px 8px; font-size: 11px;" onclick="app.clearCart()">Xóa đơn</button>
+            </div>
+
+            <!-- Customer inputs -->
+            <div style="padding: 10px 12px; background: #F8FAFC; border-bottom: 1px solid #E2E8F0;">
+              <input type="text" id="cartCustomerName" class="form-control" placeholder="Tên khách hàng (Tùy chọn)" style="margin-bottom: 6px; font-size: 12px; padding: 6px 10px;">
+              <input type="text" id="cartCustomerPhone" class="form-control" placeholder="Số điện thoại khách (Tùy chọn)" style="font-size: 12px; padding: 6px 10px;">
+            </div>
+
+            <!-- Cart items list -->
+            <div class="cart-body" id="cartItemList">
+              <div class="cart-empty">
+                <div style="font-size: 36px; margin-bottom: 8px;">🛒</div>
+                Giỏ hàng trống.<br>Hãy bấm vào sản phẩm hoặc quét mã vạch để thêm vào đơn.
+              </div>
+            </div>
+
+            <!-- Cart totals & checkout -->
+            <div class="cart-footer">
+              <div class="cart-total-row">
+                <span>Tổng TL Vàng:</span>
+                <span id="cartTotalGoldWeight">0.000 chỉ</span>
+              </div>
+              <div class="cart-total-row">
+                <span>Tổng Tiền Công:</span>
+                <span id="cartTotalLaborCost">0 đ</span>
+              </div>
+              <div class="cart-total-row grand-total">
+                <span>TỔNG CỘNG:</span>
+                <span id="cartGrandTotal">0 đ</span>
+              </div>
+              <button class="btn btn-primary btn-lg btn-block" style="margin-top: 10px; font-weight: 800;" onclick="app.checkoutOrder()">
+                💰 THANH TOÁN & IN HÓA ĐƠN
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ================= TAB 2: KHO HÀNG (INVENTORY) ================= -->
+    <section id="tab-inventory" class="tab-content-panel">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <span>📦 Quản Lý Kho Hàng</span>
+            <span style="font-size: 13px; font-weight: normal; color: #64748B;">(<span id="invFilteredCount">1.174</span> / <span id="invTotalCount">1.174</span> món)</span>
+          </div>
+
+          <!-- Action Buttons -->
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button class="btn btn-primary btn-sm admin-only" onclick="app.openAddProductModal()">
+              + Thêm Sản Phẩm Mới
+            </button>
+            <button class="btn btn-sm admin-only" onclick="document.getElementById('importExcelInput').click()" style="background: #EEF2FF; color: #4338CA; border: 1px solid #C7D2FE; font-weight: 600;" title="Nhập danh sách sản phẩm nhanh từ file Excel">
+              📥 Nhập từ Excel
+            </button>
+            <input type="file" id="importExcelInput" accept=".xlsx, .xls, .csv" style="display: none;" onchange="app.handleImportExcel(event)">
+            <button class="btn btn-dark btn-sm" onclick="app.printSelectedTags()">
+              🏷️ In Tem Đã Chọn (<span id="selectedTagsCount">0</span>)
+            </button>
+            <button class="btn btn-warning btn-sm admin-only" onclick="app.transferSelectedProducts()" title="Chuyển các món đã chọn sang Chi nhánh khác" style="font-weight: 600;">
+              🔄 Chuyển Kho
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="app.exportToExcel()">
+              📤 Xuất Excel
+            </button>
+            <button class="btn btn-success btn-sm admin-only" onclick="app.syncAllProductsToGoogleSheet()">
+              ☁️ Đồng Bộ Lên Google Sheet
+            </button>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <!-- Filters -->
+          <div class="inventory-filters">
+            <div>
+              <label style="font-size: 11px; font-weight: 700; color: #64748B;">TÌM KIẾM MÃ/TÊN</label>
+              <input type="text" id="invSearchInput" class="form-control" placeholder="Mã vạch, tên món..." onkeyup="app.filterInventory()">
+            </div>
+            <div>
+              <label style="font-size: 11px; font-weight: 700; color: #64748B;">QUẦY HÀNG</label>
+              <select id="invCounterFilter" class="form-select" onchange="app.filterInventory()">
+                <option value="ALL">Tất cả quầy</option>
+                <option value="2VANG24K">2VANG24K (Vàng 24K)</option>
+                <option value="2VANG10K">2VANG10K (Vàng 10K)</option>
+                <option value="2BAC">2BAC (Bạc & Bạc Ý)</option>
+                <option value="2PHONGTHUY">2PHONGTHUY (Phong Thủy)</option>
+                <option value="2VANG18K">2VANG18K (Vàng 18K)</option>
+                <option value="2VANG14K">2VANG14K (Vàng 14K)</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size: 11px; font-weight: 700; color: #64748B;">LOẠI VÀNG</label>
+              <select id="invGoldTypeFilter" class="form-select" onchange="app.filterInventory()">
+                <option value="ALL">Tất cả loại vàng</option>
+                <option value="Vàng 24K">Vàng 24K</option>
+                <option value="VANG23K">Vàng 23K</option>
+                <option value="Vàng Ý 18K">Vàng Ý 18K</option>
+                <option value="Vàng Korea 18k">Vàng Korea 18K</option>
+                <option value="Vàng 14K">Vàng 14K</option>
+                <option value="Vàng 10K">Vàng 10K</option>
+                <option value="Vàng 10k Ý">Vàng 10K Ý</option>
+                <option value="Bạc">Bạc</option>
+                <option value="Bạc Ý">Bạc Ý</option>
+                <option value="Bạc Ancarat">Bạc Ancarat</option>
+                <option value="Bạc Phú Quý">Bạc Phú Quý</option>
+                <option value="Đá Phong Thuỷ">Đá Phong Thuỷ</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size: 11px; font-weight: 700; color: #64748B;">TRẠNG THÁI</label>
+              <select id="invStatusFilter" class="form-select" onchange="app.filterInventory()">
+                <option value="ALL">Tất cả</option>
+                <option value="Còn tồn" selected>Còn tồn trong kho</option>
+                <option value="Đã bán">Đã bán</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Product Table -->
+          <div class="table-responsive">
+            <table class="table-custom">
+              <thead>
+                <tr>
+                  <th style="width: 36px; text-align: center;">
+                    <input type="checkbox" id="selectAllCheckbox" onchange="app.toggleSelectAll(this)">
+                  </th>
+                  <th>Ảnh</th>
+                  <th>Mã Hàng</th>
+                  <th>Tên Sản Phẩm</th>
+                  <th>Loại Vàng</th>
+                  <th>Quầy</th>
+                  <th>Chi Nhánh</th>
+                  <th style="text-align: right;">TL Tổng</th>
+                  <th style="text-align: right;">TL Hột</th>
+                  <th style="text-align: right;">TL Vàng</th>
+                  <th style="text-align: center;">Ni</th>
+                  <th style="text-align: right;">Công Bán</th>
+                  <th style="text-align: right;" class="admin-only">Công Vốn</th>
+                  <th style="text-align: right;">Giá Món</th>
+                  <th style="text-align: right;" class="admin-only">Giá Vốn</th>
+                  <th style="text-align: center;">Trạng Thái</th>
+                  <th style="text-align: center;">Thao Tác</th>
+                </tr>
+              </thead>
+              <tbody id="inventoryTableBody">
+                <!-- Javascript will render rows here -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          <div class="pagination-bar">
+            <div>
+              Hiển thị <span id="paginationInfo">1-50</span> trên tổng số <span id="paginationTotal">1.174</span> sản phẩm
+            </div>
+            <div style="display: flex; gap: 6px;">
+              <button class="btn btn-secondary btn-sm" id="btnPrevPage" onclick="app.prevPage()">◀ Trước</button>
+              <span id="currentPageText" style="padding: 6px 12px; font-weight: bold;">Trang 1</span>
+              <button class="btn btn-secondary btn-sm" id="btnNextPage" onclick="app.nextPage()">Sau ▶</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= TAB 3: IN TEM ĐUÔI CHUỘT (RAT-TAIL TAGS) ================= -->
+    <section id="tab-tags" class="tab-content-panel">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🏷️ Quản Lý & In Tem Đuôi Chuột Tiệm Vàng</div>
+          <button class="btn btn-primary btn-sm" onclick="app.printAllQueuedTags()">
+            🖨️ In Toàn Bộ Tem Trong Hàng Đợi (<span id="tagQueueCount">0</span> tem)
+          </button>
+        </div>
+        <div class="card-body">
+          <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px;">
+            
+            <!-- Tag Configuration -->
+            <div style="background: #F8FAFC; padding: 16px; border-radius: var(--radius-sm); border: 1px solid #E2E8F0;">
+              <h4 style="margin-bottom: 12px; color: var(--navy-bg); display: flex; justify-content: space-between; align-items: center;">
+                <span>🛠️ Cấu Hình Mẫu Tem</span>
+                <button class="btn btn-sm btn-secondary" onclick="app.resetTagConfigToDefault()" style="font-size: 11px; padding: 2px 8px;" title="Khôi phục chuẩn 72x10mm">Mặc Định</button>
+              </h4>
+              
+              <!-- 1. Kích thước & Vị trí đuôi tem -->
+              <div style="background: #FFF; padding: 10px; border-radius: 6px; border: 1px solid #CBD5E1; margin-bottom: 12px;">
+                <div style="font-size: 12px; font-weight: bold; color: #1E293B; margin-bottom: 8px;">📏 Kích Thước Tem (mm):</div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+                  <div>
+                    <label style="font-size: 11px; color: #475569; display: block;">Chiều dài tổng (mm):</label>
+                    <input type="number" id="tagCfgWidth" class="form-control" style="padding: 6px 8px; font-size: 13px;" value="72" step="1" min="30" max="150" oninput="app.updateTagConfig()">
+                  </div>
+                  <div>
+                    <label style="font-size: 11px; color: #475569; display: block;">Chiều cao tem (mm):</label>
+                    <input type="number" id="tagCfgHeight" class="form-control" style="padding: 6px 8px; font-size: 13px;" value="10" step="0.5" min="5" max="30" oninput="app.updateTagConfig()">
+                  </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+                  <div>
+                    <label style="font-size: 11px; color: #475569; display: block;">Chiều dài đuôi (mm):</label>
+                    <input type="number" id="tagCfgTailWidth" class="form-control" style="padding: 6px 8px; font-size: 13px;" value="30" step="1" min="5" max="60" oninput="app.updateTagConfig()">
+                  </div>
+                  <div>
+                    <label style="font-size: 11px; color: #475569; display: block;">Vị trí đuôi dán:</label>
+                    <select id="tagCfgTailPos" class="form-select" style="padding: 6px 8px; font-size: 12px;" onchange="app.updateTagConfig()">
+                      <option value="right" selected>Phía Phải (Chuẩn của bạn)</option>
+                      <option value="center">Ở Giữa (Chuẩn 2 cánh)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Căn lề bù trừ (Bù lệch máy in) -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: #FEF3C7; padding: 6px 8px; border-radius: 4px; border: 1px dashed #F59E0B;">
+                  <div>
+                    <label style="font-size: 10.5px; color: #92400E; display: block; font-weight: bold;">Lệch trái/phải (mm):</label>
+                    <input type="number" id="tagCfgShiftX" class="form-control" style="padding: 4px 6px; font-size: 12px; height: 28px;" value="0" step="0.5" min="-10" max="10" oninput="app.updateTagConfig()" title="Số âm: đẩy sang trái | Số dương: đẩy sang phải">
+                  </div>
+                  <div>
+                    <label style="font-size: 10.5px; color: #92400E; display: block; font-weight: bold;">Lệch trên/dưới (mm):</label>
+                    <input type="number" id="tagCfgShiftY" class="form-control" style="padding: 4px 6px; font-size: 12px; height: 28px;" value="0" step="0.5" min="-5" max="5" oninput="app.updateTagConfig()" title="Số âm: đẩy lên trên | Số dương: đẩy xuống dưới">
+                  </div>
+                </div>
+              </div>
+
+              <!-- 2. Cỡ chữ & Mã vạch -->
+              <div style="background: #FFF; padding: 10px; border-radius: 6px; border: 1px solid #CBD5E1; margin-bottom: 12px;">
+                <div style="font-size: 12px; font-weight: bold; color: #1E293B; margin-bottom: 8px;">🔤 Cỡ Chữ & Mã Vạch:</div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+                  <div>
+                    <label style="font-size: 11px; color: #475569; display: block;">Cỡ chữ (pt):</label>
+                    <input type="number" id="tagCfgFontSize" class="form-control" style="padding: 6px 8px; font-size: 13px;" value="6.5" step="0.5" min="4" max="12" oninput="app.updateTagConfig()">
+                  </div>
+                  <div>
+                    <label style="font-size: 11px; color: #475569; display: block;">Chiều cao mã vạch (px):</label>
+                    <input type="number" id="tagCfgBarcodeHeight" class="form-control" style="padding: 6px 8px; font-size: 13px;" value="16" step="1" min="10" max="30" oninput="app.updateTagConfig()">
+                  </div>
+                </div>
+
+                <div>
+                  <label style="font-size: 11px; color: #475569; display: block;">Tên tiệm vàng in trên tem:</label>
+                  <input type="text" id="tagCfgStoreName" class="form-control" style="padding: 6px 8px; font-size: 13px;" value="HOÀNG KIM" oninput="app.updateTagConfig()">
+                </div>
+              </div>
+
+              <!-- 3. Nội dung hiển thị -->
+              <div style="background: #FFF; padding: 10px; border-radius: 6px; border: 1px solid #CBD5E1; margin-bottom: 12px;">
+                <div style="font-size: 12px; font-weight: bold; color: #1E293B; margin-bottom: 8px;">📋 Nội Dung In Lên Tem:</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 12px;">
+                  <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                    <input type="checkbox" id="tagCfgShowStore" checked onchange="app.updateTagConfig()"> Tên tiệm vàng
+                  </label>
+                  <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                    <input type="checkbox" id="tagCfgShowBarcode" checked onchange="app.updateTagConfig()"> Mã vạch Barcode
+                  </label>
+                  <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                    <input type="checkbox" id="tagCfgShowBarcodeText" checked onchange="app.updateTagConfig()"> Số mã hàng (*I...*)
+                  </label>
+                  <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                    <input type="checkbox" id="tagCfgShowNi" checked onchange="app.updateTagConfig()"> Kích cỡ (Ni)
+                  </label>
+                  <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                    <input type="checkbox" id="tagCfgShowProductName" checked onchange="app.updateTagConfig()"> Tên sản phẩm
+                  </label>
+                  <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                    <input type="checkbox" id="tagCfgShowGoldType" checked onchange="app.updateTagConfig()"> Loại vàng
+                  </label>
+                  <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                    <input type="checkbox" id="tagCfgShowTLT" checked onchange="app.updateTagConfig()"> Trọng lượng TLT
+                  </label>
+                  <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                    <input type="checkbox" id="tagCfgShowTLH" checked onchange="app.updateTagConfig()"> Trọng lượng Hột (TLH)
+                  </label>
+                  <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                    <input type="checkbox" id="tagCfgShowTLV" checked onchange="app.updateTagConfig()"> Trọng lượng Vàng (TLV)
+                  </label>
+                  <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                    <input type="checkbox" id="tagCfgShowLabor" checked onchange="app.updateTagConfig()"> Tiền công / Giá bán
+                  </label>
+                </div>
+              </div>
+
+              <div style="display: flex; gap: 8px;">
+                <button class="btn btn-primary btn-sm btn-block" onclick="app.saveTagConfig()">
+                  💾 Lưu Cấu Hình Tem Này
+                </button>
+              </div>
+
+              <hr style="margin: 12px 0; border: none; border-top: 1px solid #CBD5E1;">
+
+              <p style="font-size: 11.5px; color: #64748B; line-height: 1.4;">
+                💡 <b>Mẹo căn chỉnh:</b> Màn hình xem trước bên phải sẽ cập nhật trực tiếp theo thông số bạn nhập. Khổ tem <b>72 x 10 mm</b> có phần đuôi phải dài <b>30 mm</b>, vùng in thân tem còn lại là <b>42 mm</b> (chia đều 2 mặt gập 21 mm).
+              </p>
+            </div>
+
+            <!-- Tag Live Preview -->
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h4 style="color: var(--navy-bg);">Xem Trước Tem Mẫu Thực Tế</h4>
+                <button class="btn btn-secondary btn-sm" onclick="app.clearTagQueue()">Xóa hàng đợi tem</button>
+              </div>
+
+              <div id="tagPreviewContainer" style="background: #E2E8F0; padding: 20px; border-radius: var(--radius-sm); min-height: 250px; display: flex; flex-direction: column; gap: 12px; align-items: center; overflow-y: auto; max-height: 500px;">
+                <!-- Live tags rendered here -->
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= TAB 4: BẢNG GIÁ VÀNG ================= -->
+    <section id="tab-gold-rates" class="tab-content-panel">
+      <div class="card">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+          <div class="card-title">📈 Bảng Giá Vàng Hôm Nay (Đơn vị: 1.000 VNĐ / Chỉ)</div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <a href="bang-gia-vang.html" target="_blank" class="btn btn-sm btn-dark" style="background: linear-gradient(135deg, #B45309, #D97706); color: white; border: none; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; padding: 6px 14px; border-radius: 6px;" title="Mở Màn Hình Bảng Giá Điện Tử Chiếu TV">
+              📺 Mở Màn Hình Bảng Giá TV
+            </a>
+            <button class="btn btn-primary btn-sm admin-only" onclick="app.saveGoldPrices()">
+              💾 Lưu & Cập Nhật Giá Vàng
+            </button>
+          </div>
+        </div>
+        <div class="card-body">
+          <p style="font-size: 13px; color: #64748B; margin-bottom: 14px;">
+            Giá bán ở bảng này sẽ tự động được áp dụng tại màn hình Bán Hàng khi tính tiền theo công thức: <b>Thành tiền = (TL Vàng * Giá Bán) + Tiền Công</b>. Cột <b>Chiếu TV</b> cho phép bạn chủ động chọn loại vàng nào được chiếu lên màn hình TV của tiệm.
+          </p>
+
+          <div class="table-responsive">
+            <table class="table-custom">
+              <thead>
+                <tr>
+                  <th style="width: 100px; text-align: center;" title="Tích chọn loại vàng này có hiển thị trên Bảng Giá TV không">Chiếu TV</th>
+                  <th>Loại Vàng / Sản Phẩm</th>
+                  <th>Hàm Lượng</th>
+                  <th style="width: 180px; text-align: right;">Giá Mua Vào (x1.000đ)</th>
+                  <th style="width: 180px; text-align: right;">Giá Bán Ra (x1.000đ)</th>
+                  <th>Đơn Vị</th>
+                  <th style="text-align: right;">Quy Đổi VNĐ (Bán Ra)</th>
+                </tr>
+              </thead>
+              <tbody id="goldRatesTableBody">
+                <!-- Javascript renders editable gold price rows here -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= TAB 5: BÁO CÁO & DOANH THU (ADMIN & QUẢN LÝ CHI NHÁNH) ================= -->
+    <section id="tab-reports" class="tab-content-panel">
+
+      <!-- Bộ lọc ngày tháng -->
+      <div class="card" style="margin-bottom: 16px;">
+        <div class="card-body" style="padding: 14px 20px;">
+          <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-weight: 700; color: #1E3A5F; font-size: 14px;">📅 Lọc Theo Thời Gian:</span>
+              <span id="reportBranchBadge" style="font-weight: 700; background: #DBEAFE; color: #1E40AF; padding: 3px 10px; border-radius: 99px; font-size: 11.5px;">Chi nhánh 1</span>
+            </div>
+            <label style="font-size: 13px; display: flex; align-items: center; gap: 6px;">
+              Từ ngày:
+              <input type="date" id="reportDateFrom" class="form-control" style="width: 150px; font-size: 13px;" onchange="app.updateReportStats()">
+            </label>
+            <label style="font-size: 13px; display: flex; align-items: center; gap: 6px;">
+              Đến ngày:
+              <input type="date" id="reportDateTo" class="form-control" style="width: 150px; font-size: 13px;" onchange="app.updateReportStats()">
+            </label>
+            <button class="btn btn-sm btn-primary" onclick="app.setReportToday()">📆 Hôm Nay</button>
+            <button class="btn btn-sm btn-secondary" onclick="app.setReportThisMonth()">📅 Tháng Này</button>
+            <button class="btn btn-sm btn-secondary" onclick="app.clearReportFilter()">🗑️ Xem Tất Cả</button>
+            <span id="reportPeriodLabel" style="font-size: 13px; color: #64748B; font-style: italic; margin-left: auto;">Tất cả thời gian</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dashboard Cards -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">📦</div>
+          <div class="stat-info">
+            <div class="label">Tổng Món Tồn Kho</div>
+            <div class="val" id="statTotalItems">1.174</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">⚖️</div>
+          <div class="stat-info">
+            <div class="label">Tổng TL Vàng Tồn</div>
+            <div class="val" id="statTotalGoldWeight">0.000 c</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">💵</div>
+          <div class="stat-info">
+            <div class="label">Tổng Vốn Tồn Kho</div>
+            <div class="val" id="statTotalInventoryCost">0 đ</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">🧾</div>
+          <div class="stat-info">
+            <div class="label">Số Hóa Đơn</div>
+            <div class="val" id="statTotalOrders">0 HĐ</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">💰</div>
+          <div class="stat-info">
+            <div class="label">Doanh Thu Bán Hàng</div>
+            <div class="val" id="statTodayRevenue">0 đ</div>
+          </div>
+        </div>
+
+        <div class="stat-card" style="background: linear-gradient(135deg, #ECFDF5, #D1FAE5);">
+          <div class="stat-icon">📈</div>
+          <div class="stat-info">
+            <div class="label">Lãi Gộp (Doanh Thu - Vốn)</div>
+            <div class="val" id="statTotalProfit" style="color: #059669;">0 đ</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Orders Table -->
+      <div class="card">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+          <div class="card-title">📜 Lịch Sử Hóa Đơn Bán Hàng</div>
+          <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <label style="font-size: 14px; font-weight: bold; color: #475569; margin: 0;">Trạng Thái:</label>
+            <select id="orderStatusFilter" class="form-control" style="width: 180px;" onchange="app.updateReportStats()">
+              <option value="all">Hiển thị Tất cả</option>
+              <option value="Đã bán">✅ Đã bán</option>
+              <option value="Đã hủy">🚫 Đã hủy</option>
+              <option value="Hoàn hàng">🔄 Hoàn hàng</option>
+            </select>
+            <button class="btn btn-sm btn-danger admin-only" onclick="app.promptDeleteData('orders_history')" title="Xóa toàn bộ lịch sử hóa đơn và đặt lại báo cáo về 0">
+              🗑️ Xóa Lịch Sử Đơn
+            </button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table-custom">
+              <thead>
+                <tr>
+                  <th>Mã HĐ</th>
+                  <th>Ngày Bán</th>
+                  <th>Khách Hàng</th>
+                  <th>SĐT</th>
+                  <th>Chi Nhánh</th>
+                  <th style="text-align:center;">Số Món</th>
+                  <th style="text-align: right;">Tổng Tiền</th>
+                  <th style="text-align: right; color: #059669;">Lãi Gộp</th>
+                  <th>Trạng Thái</th>
+                  <th>Thu Ngân</th>
+                  <th style="text-align: center;">Thao Tác</th>
+                </tr>
+              </thead>
+              <tbody id="orderHistoryTableBody">
+                <!-- Javascript will render recent orders -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= TAB 6: GOOGLE SHEET & CÀI ĐẶT ================= -->
+    <section id="tab-settings" class="tab-content-panel">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
+        
+
+        <!-- Cấu hình Tiệm Vàng -->
+        <div class="card admin-only">
+          <div class="card-header">
+            <div class="card-title">🏪 Thông Tin Tiệm Vàng & In Ấn</div>
+          </div>
+          <div class="card-body">
+            <div style="margin-bottom: 12px;">
+              <label style="font-size: 12px; font-weight: bold;">Tên Tiệm Vàng:</label>
+              <input type="text" id="cfgStoreName" class="form-control" value="TIỆM VÀNG HOÀNG KIM">
+            </div>
+
+            <div style="margin-bottom: 12px;">
+              <label style="font-size: 12px; font-weight: bold;">Khẩu hiệu / Slogan:</label>
+              <input type="text" id="cfgStoreSlogan" class="form-control" value="Uy Tín Trọn Niềm Tin - Vàng Chuẩn Tuổi">
+            </div>
+
+            <div style="margin-bottom: 12px;">
+              <label style="font-size: 12px; font-weight: bold;">Địa chỉ tiệm:</label>
+              <input type="text" id="cfgStoreAddress" class="form-control" value="123 Đường Kim Hoàn, Quận 1, TP. Hồ Chí Minh">
+            </div>
+
+            <div style="margin-bottom: 12px;">
+              <label style="font-size: 12px; font-weight: bold;">Số điện thoại:</label>
+              <input type="text" id="cfgStorePhone" class="form-control" value="0988.888.888">
+            </div>
+
+            <div style="margin-bottom: 12px;">
+              <label style="font-size: 12px; font-weight: bold;">Ghi chú dưới Hóa Đơn (Quy định đổi trả):</label>
+              <textarea id="cfgInvoiceFooter" class="form-control" rows="4" placeholder="Nhập các quy định thu đổi, bảo hành, lời cảm ơn... để in dưới hóa đơn.">- Quý khách vui lòng giữ Giấy đảm bảo này khi cần bán lại hoặc đổi món mới.
+- Vàng 24K, 18K mua lại theo giá niêm yết tại thời điểm thu đổi.
+- Tiệm nhận thu đổi, làm mới, đánh bóng trọn đời sản phẩm.</textarea>
+            </div>
+
+            <div style="margin-bottom: 15px; background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+              <label style="font-size: 12px; font-weight: bold; color: #0f172a;">Tùy Chỉnh In Tem Cân (Mã Vạch):</label>
+              <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
+                <label style="font-size: 13px; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                  <input type="checkbox" id="cfgPrintLabor" checked> In Tiền Công / Giá bán lên tem
+                </label>
+                <label style="font-size: 13px; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                  <input type="checkbox" id="cfgPrintNi" checked> In Kích cỡ (Ni) lên tem
+                </label>
+                <label style="font-size: 13px; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                  <input type="checkbox" id="cfgPrintWeight" checked> In Trọng lượng (TLT, TLH, TLV) lên tem
+                </label>
+              </div>
+            </div>
+
+            <button class="btn btn-primary btn-sm" onclick="app.saveStoreConfig()">
+              💾 Lưu Thông Tin Tiệm & In Ấn
+            </button>
+          </div>
+        </div>
+
+        <!-- Quản Trị & Xóa Dữ Liệu An Toàn (Admin Only) -->
+        <div class="card admin-only" style="border: 1.5px solid #FCA5A5; background: #FFFDFD;">
+          <div class="card-header" style="background: #FEF2F2; border-bottom: 1px solid #FECACA;">
+            <div class="card-title" style="color: #991B1B; display: flex; align-items: center; gap: 8px;">
+              ⚠️ Vùng Quản Trị Dữ Liệu & Làm Sạch (Admin)
+            </div>
+          </div>
+          <div class="card-body">
+            <p style="font-size: 13px; color: #7F1D1D; margin-bottom: 14px; line-height: 1.5;">
+              Các thao tác dưới đây giúp bạn xóa kho hàng hoặc lịch sử giao dịch. <b>Bắt buộc phải nhập mã xác thực bảo mật <code>821989</code> trước khi thực hiện.</b>
+            </p>
+
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              <!-- 1. Xóa sản phẩm theo Chi nhánh 1 -->
+              <div style="display: flex; justify-content: space-between; align-items: center; background: #FFFFFF; padding: 10px 14px; border-radius: 6px; border: 1px solid #FEE2E2; gap: 10px; flex-wrap: wrap;">
+                <div>
+                  <b style="font-size: 13px; color: #1E293B;">🏢 Xóa toàn bộ sản phẩm Chi nhánh 1</b>
+                  <div style="font-size: 11.5px; color: #64748B;">Xóa sạch các món thuộc Chi nhánh 1 (giữ nguyên Chi nhánh 2)</div>
+                </div>
+                <button class="btn btn-sm btn-danger" onclick="app.promptDeleteData('branch1')" style="background: #DC2626; font-weight: 600; white-space: nowrap;">
+                  🗑️ Xóa Kho CN1
+                </button>
+              </div>
+
+              <!-- 2. Xóa sản phẩm theo Chi nhánh 2 -->
+              <div style="display: flex; justify-content: space-between; align-items: center; background: #FFFFFF; padding: 10px 14px; border-radius: 6px; border: 1px solid #FEE2E2; gap: 10px; flex-wrap: wrap;">
+                <div>
+                  <b style="font-size: 13px; color: #1E293B;">🏢 Xóa toàn bộ sản phẩm Chi nhánh 2</b>
+                  <div style="font-size: 11.5px; color: #64748B;">Xóa sạch các món thuộc Chi nhánh 2 (giữ nguyên Chi nhánh 1)</div>
+                </div>
+                <button class="btn btn-sm btn-danger" onclick="app.promptDeleteData('branch2')" style="background: #DC2626; font-weight: 600; white-space: nowrap;">
+                  🗑️ Xóa Kho CN2
+                </button>
+              </div>
+
+              <!-- 3. Xóa toàn bộ sản phẩm tất cả chi nhánh -->
+              <div style="display: flex; justify-content: space-between; align-items: center; background: #FFFFFF; padding: 10px 14px; border-radius: 6px; border: 1px solid #FEE2E2; gap: 10px; flex-wrap: wrap;">
+                <div>
+                  <b style="font-size: 13px; color: #991B1B;">💥 Xóa TOÀN BỘ sản phẩm (Tất cả chi nhánh)</b>
+                  <div style="font-size: 11.5px; color: #64748B;">Làm trống toàn bộ kho hàng để nhập mới hoặc dọn dẹp</div>
+                </div>
+                <button class="btn btn-sm btn-danger" onclick="app.promptDeleteData('all_products')" style="background: #B91C1C; font-weight: 700; white-space: nowrap;">
+                  💥 Xóa Hết Kho
+                </button>
+              </div>
+
+              <!-- 4. Xóa toàn bộ lịch sử giao dịch & báo cáo -->
+              <div style="display: flex; justify-content: space-between; align-items: center; background: #FFFFFF; padding: 10px 14px; border-radius: 6px; border: 1px solid #FEE2E2; gap: 10px; flex-wrap: wrap;">
+                <div>
+                  <b style="font-size: 13px; color: #1E293B;">🧾 Xóa Lịch sử Giao dịch & Dữ liệu Báo cáo</b>
+                  <div style="font-size: 11.5px; color: #64748B;">Xóa toàn bộ hóa đơn đã bán, phiếu đổi trả, đặt lại doanh thu & lợi nhuận về 0</div>
+                </div>
+                <button class="btn btn-sm btn-warning" onclick="app.promptDeleteData('orders_history')" style="background: #D97706; color: white; border-color: #D97706; font-weight: 600; white-space: nowrap;">
+                  🧾 Xóa Lịch Sử Đơn
+                </button>
+              </div>
+
+              <!-- 5. Xóa tất cả (Sản phẩm + Giao dịch + Báo cáo) -->
+              <div style="display: flex; justify-content: space-between; align-items: center; background: #FEF2F2; padding: 10px 14px; border-radius: 6px; border: 1.5px dashed #EF4444; gap: 10px; flex-wrap: wrap;">
+                <div>
+                  <b style="font-size: 13px; color: #7F1D1D;">☣️ Xóa TẤT CẢ dữ liệu (Kho hàng + Hóa đơn + Báo cáo)</b>
+                  <div style="font-size: 11.5px; color: #991B1B;">Làm sạch hoàn toàn hệ thống để bắt đầu vận hành lại từ đầu</div>
+                </div>
+                <button class="btn btn-sm btn-danger" onclick="app.promptDeleteData('wipe_all')" style="background: #7F1D1D; border-color: #7F1D1D; font-weight: 700; white-space: nowrap;">
+                  ☣️ Xóa Tất Cả
+                </button>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ================= MOBILE BOTTOM NAVIGATION BAR ================= -->
+  <nav class="mobile-bottom-nav">
+    <div class="mobile-nav-items">
+      <button class="mobile-nav-btn active" data-tab="tab-pos" onclick="app.switchTab('tab-pos')">
+        <span class="icon">🛒</span>
+        <span>Bán hàng</span>
+      </button>
+      <button class="mobile-nav-btn" data-tab="tab-inventory" onclick="app.switchTab('tab-inventory')">
+        <span class="icon">📦</span>
+        <span>Kho hàng</span>
+      </button>
+      <button class="mobile-nav-btn" data-tab="tab-tags" onclick="app.switchTab('tab-tags')">
+        <span class="icon">🏷️</span>
+        <span>In tem</span>
+      </button>
+      <button class="mobile-nav-btn" data-tab="tab-gold-rates" onclick="app.switchTab('tab-gold-rates')">
+        <span class="icon">📈</span>
+        <span>Giá vàng</span>
+      </button>
+      <button class="mobile-nav-btn" data-tab="tab-reports" onclick="app.switchTab('tab-reports')">
+        <span class="icon">📊</span>
+        <span>Báo cáo</span>
+      </button>
+      <button class="mobile-nav-btn" data-tab="tab-settings" onclick="app.switchTab('tab-settings')">
+        <span class="icon">⚙️</span>
+        <span>Cài đặt</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ================= MODAL 1: CAMERA BARCODE SCANNER ================= -->
+  <div class="modal-overlay" id="scannerModal">
+    <div class="modal-content" style="max-width: 440px;">
+      <div class="modal-header">
+        <h3>📷 Quét Mã Vạch Bằng Camera</h3>
+        <button class="btn-close-modal" onclick="app.closeCameraScanner()">✕</button>
+      </div>
+      <div class="modal-body" style="text-align: center;">
+        <p style="font-size: 12.5px; color: #64748B; margin-bottom: 10px;">
+          Hướng camera vào mã vạch trên tem trang sức hoặc bao bì sản phẩm.
+        </p>
+        <div id="scanner-reader"></div>
+        <div id="scanner-status" style="margin-top: 10px; font-size: 12px; color: #0284C7;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="app.closeCameraScanner()">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL 2: THÊM / SỬA SẢN PHẨM ================= -->
+  <div class="modal-overlay" id="productModal">
+    <div class="modal-content" style="max-width: 600px;">
+      <div class="modal-header">
+        <h3 id="productModalTitle">Thêm Sản Phẩm Mới</h3>
+        <button class="btn-close-modal" onclick="app.closeProductModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="productForm" onsubmit="event.preventDefault(); app.saveProductFromModal();">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+            <div>
+              <label style="font-size: 12px; font-weight: bold;">Mã Hàng (Barcode) *</label>
+              <input type="text" id="modalMaHang" class="form-control" required placeholder="VD: I9500123">
+            </div>
+            <div>
+              <label style="font-size: 12px; font-weight: bold;">Tên Sản Phẩm *</label>
+              <input type="text" id="modalTenHang" class="form-control" required placeholder="VD: Nhẫn Kim Tiền">
+            </div>
+          </div>
+
+          <!-- Ảnh sản phẩm -->
+          <div style="margin-bottom: 10px; background: #F8FAFC; padding: 10px; border-radius: var(--radius-sm); border: 1px dashed #CBD5E1;">
+            <label style="font-size: 12px; font-weight: bold; display: block; margin-bottom: 6px;">Ảnh Sản Phẩm (Link hoặc Chụp/Chọn ảnh)</label>
+            <div style="display: flex; gap: 10px; align-items: flex-start;">
+              <div id="modalImagePreview" style="width: 60px; height: 60px; border-radius: 4px; background: #E2E8F0; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                <span style="color: #94A3B8; font-size: 10px;">No IMG</span>
+              </div>
+              <div style="flex: 1; display: flex; flex-direction: column; gap: 6px;">
+                <input type="url" id="modalAnhSanPhamUrl" class="form-control" placeholder="Dán link ảnh (http...) hoặc tải lên bên dưới" oninput="app.updateImagePreview(this.value)">
+                <div style="display: flex; gap: 6px;">
+                  <label class="btn btn-sm btn-secondary" style="margin: 0; cursor: pointer; flex: 1; text-align: center;">
+                    📷 Chụp / Chọn Ảnh
+                    <input type="file" id="modalAnhSanPhamFile" accept="image/*" capture="environment" style="display: none;" onchange="app.handleImageUpload(event)">
+                  </label>
+                  <button type="button" class="btn btn-sm btn-danger" onclick="app.clearImagePreview()">Xóa</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+            <div>
+              <label style="font-size: 12px; font-weight: bold;">Loại Vàng</label>
+              <select id="modalLoaiVang" class="form-select" onchange="app.onModalLoaiVangChange()">
+                <option value="Vàng 24K">Vàng 24K</option>
+                <option value="VANG23K">Vàng 23K</option>
+                <option value="Vàng Ý 18K">Vàng Ý 18K</option>
+                <option value="Vàng 14K">Vàng 14K</option>
+                <option value="Vàng 10K">Vàng 10K</option>
+                <option value="Bạc">Bạc</option>
+                <option value="Bạc Ý">Bạc Ý</option>
+                <option value="Bạc Ancarat">Bạc Ancarat</option>
+                <option value="Bạc Phú Quý">Bạc Phú Quý</option>
+                <option value="Đá Phong Thuỷ">Đá Phong Thuỷ</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size: 12px; font-weight: bold;">Quầy Hàng</label>
+              <select id="modalQuayNho" class="form-select">
+                <option value="2VANG24K">2VANG24K</option>
+                <option value="2VANG18K">2VANG18K</option>
+                <option value="2VANG14K">2VANG14K</option>
+                <option value="2VANG10K">2VANG10K</option>
+                <option value="2BAC">2BAC</option>
+                <option value="2PHONGTHUY">2PHONGTHUY</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size: 12px; font-weight: bold;">Chi Nhánh (Kho Hàng)</label>
+              <select id="modalChiNhanh" class="form-select" style="font-weight: 700; color: #1E3A8A; background-color: #EFF6FF; border: 1.5px solid #93C5FD; padding: 7px 10px;">
+                <option value="Chi nhánh 1">🏢 Chi nhánh 1</option>
+                <option value="Chi nhánh 2">🏢 Chi nhánh 2</option>
+              </select>
+              <input type="hidden" id="modalNi" value="0">
+            </div>
+          </div>
+
+          <!-- Trọng lượng -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px; background: #F8FAFC; padding: 10px; border-radius: var(--radius-sm);">
+            <div>
+              <label style="font-size: 12px; font-weight: bold;">TL Tổng (chỉ) *</label>
+              <input type="number" step="0.0001" id="modalTlTong" class="form-control" required placeholder="0.0" oninput="app.calcModalGoldWeight()">
+            </div>
+            <div>
+              <label style="font-size: 12px; font-weight: bold;">TL Hột (chỉ)</label>
+              <input type="number" step="0.0001" id="modalTlHot" class="form-control" placeholder="0.0" value="0" oninput="app.calcModalGoldWeight()">
+            </div>
+            <div>
+              <label style="font-size: 12px; font-weight: bold; color: #B45309;">TL Vàng (chỉ)</label>
+              <input type="number" step="0.0001" id="modalTlVang" class="form-control" style="font-weight: bold; background: #FEF3C7;" readonly>
+            </div>
+          </div>
+
+          <!-- Tiền công & Giá -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+            <div>
+              <label style="font-size: 12px; font-weight: bold;">Tiền Công Bán (x1.000đ)</label>
+              <input type="number" id="modalCongBan" class="form-control" placeholder="VD: 550 (= 550.000đ)">
+            </div>
+            <div>
+              <label style="font-size: 12px; font-weight: bold;">Giá Bán Món (Nếu bán món)</label>
+              <input type="number" id="modalGiaBanMon" class="form-control" placeholder="VD: 350 (= 350.000đ)">
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px;" class="admin-only">
+            <div>
+              <label style="font-size: 12px; font-weight: bold;">Giá Vàng Nhập (x1.000đ/chỉ)</label>
+              <input type="number" step="any" id="modalGiaVangNhap" class="form-control" placeholder="VD: 7500 hoặc 280" oninput="app.calcModalCostPrice()">
+            </div>
+            <div>
+              <label style="font-size: 12px; font-weight: bold;">Công Vốn (Thợ) (x1.000đ)</label>
+              <input type="number" step="any" id="modalCongVon" class="form-control" placeholder="VD: 100" oninput="app.calcModalCostPrice()">
+            </div>
+            <div>
+              <label style="font-size: 12px; font-weight: bold; color: #B45309;">Giá Gốc (Vốn) (x1.000đ)</label>
+              <input type="number" step="any" id="modalGiaVon" class="form-control" placeholder="Tự tính hoặc sửa" style="font-weight: bold; background: #FFFBEB;">
+            </div>
+          </div>
+
+          <div class="modal-footer" style="padding: 10px 0 0 0;">
+            <button type="button" class="btn btn-secondary" onclick="app.closeProductModal()">Hủy</button>
+            <button type="submit" class="btn btn-primary">Lưu Sản Phẩm</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL 3: ĐĂNG NHẬP / CHUYỂN TÀI KHOẢN ================= -->
+  <div class="modal-overlay" id="loginModal">
+    <div class="modal-content" style="max-width: 420px;">
+      <div class="modal-header">
+        <h3>🔐 Đăng Nhập Hệ Thống</h3>
+        <button class="btn-close-modal" onclick="app.closeLoginModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <form onsubmit="event.preventDefault(); app.handleLogin();">
+          <div style="margin-bottom: 12px;">
+            <label style="font-size: 12px; font-weight: bold;">Tên đăng nhập:</label>
+            <input type="text" id="loginUsername" class="form-control" required placeholder="admin / chinhanh1 / chinhanh2" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="username">
+          </div>
+          <div style="margin-bottom: 16px;">
+            <label style="font-size: 12px; font-weight: bold;">Mật khẩu:</label>
+            <input type="password" id="loginPassword" class="form-control" required placeholder="Mật khẩu (mặc định 123)" autocomplete="current-password">
+          </div>
+          <div id="loginErrorMsg" style="color: #EF4444; font-size: 12px; margin-bottom: 10px; display: none; font-weight: 600;"></div>
+          <button type="submit" class="btn btn-primary btn-block btn-lg" style="font-weight: 700;">ĐĂNG NHẬP</button>
+        </form>
+
+        <div style="margin-top: 15px; font-size: 12px; color: #475569; background: #F8FAFC; border: 1px solid #E2E8F0; padding: 12px; border-radius: 8px; line-height: 1.6;">
+          <b style="color: #1E3A5F;">Danh sách 3 tài khoản hệ thống (Mật khẩu: <code>123</code>):</b><br>
+          • <b>Quản lý chung:</b> <code>admin</code> / pass: <code>123</code> (Toàn quyền)<br>
+          • <b>Quản lý Chi Nhánh 1:</b> <code>chinhanh1</code> / pass: <code>123</code><br>
+          • <b>Quản lý Chi Nhánh 2:</b> <code>chinhanh2</code> / pass: <code>123</code><br>
+          <small style="color: #64748B;">* Tài khoản chi nhánh chỉ xem báo cáo & hủy đơn của chi nhánh mình.</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL 4: XÁC THỰC BẢO MẬT ADMIN (NHẬP CODE 821989) ================= -->
+  <div class="modal-overlay" id="securityConfirmModal">
+    <div class="modal-content" style="max-width: 440px; border-top: 5px solid #DC2626;">
+      <div class="modal-header">
+        <h3 style="color: #991B1B; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+          🛡️ Xác Thực Bảo Mật Quản Trị (Admin)
+        </h3>
+        <button class="btn-close-modal" onclick="app.closeSecurityModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="background: #FEF2F2; border: 1px solid #FECACA; border-radius: 6px; padding: 12px; margin-bottom: 15px;">
+          <div style="font-weight: bold; color: #991B1B; font-size: 13.5px; margin-bottom: 5px;" id="securityModalTitle">
+            CẢNH BÁO XÓA DỮ LIỆU
+          </div>
+          <div style="font-size: 12.5px; color: #7F1D1D; line-height: 1.45;" id="securityModalDesc">
+            Hành động này sẽ xóa dữ liệu đã chọn và không thể khôi phục nếu chưa sao lưu!
+          </div>
+        </div>
+
+        <form onsubmit="event.preventDefault(); app.submitSecurityAction();">
+          <div style="margin-bottom: 15px;">
+            <label style="font-size: 13px; font-weight: bold; color: #1E293B; display: block; margin-bottom: 6px;">
+              Nhập mã bảo mật để xác nhận: <span style="color: #DC2626;">*</span>
+            </label>
+            <input type="password" id="securityInputCode" class="form-control" placeholder="Nhập mã xác thực (821989)..." style="font-size: 16px; letter-spacing: 2px; text-align: center; font-weight: bold; border: 2px solid #CBD5E1;" required autocomplete="off">
+            <div id="securityCodeError" style="color: #DC2626; font-size: 12px; margin-top: 6px; font-weight: 600; display: none;">
+              ❌ Mã xác thực không chính xác! Vui lòng nhập đúng mã code: 821989.
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 10px; justify-content: flex-end;">
+            <button type="button" class="btn btn-secondary" onclick="app.closeSecurityModal()">Hủy Bỏ</button>
+            <button type="submit" class="btn btn-danger" style="background: #DC2626; border-color: #DC2626; font-weight: 700;">
+              🗑️ Xác Nhận Xóa
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= PRINTABLE INVOICE (ẨN, CHỈ HIỆN KHI IN) ================= -->
+  <div id="printable-invoice">
+    <div class="invoice-header">
+      <h2 id="invPrintStoreName">TIỆM VÀNG HOÀNG KIM</h2>
+      <p id="invPrintSlogan" style="font-style: italic;">Uy Tín Trọn Niềm Tin - Vàng Chuẩn Tuổi</p>
+      <p id="invPrintAddress">Đ/c: 123 Đường Kim Hoàn, Quận 1, TP. HCM</p>
+      <p id="invPrintPhone">Hotline: 0988.888.888</p>
+      <div class="invoice-title">GIẤY ĐẢM BẢO VÀNG KIÊM HÓA ĐƠN BÁN HÀNG</div>
+      <p>Số HĐ: <b id="invPrintMaHD">HD0001</b> | Ngày: <span id="invPrintDate">2026-09-06</span></p>
+    </div>
+
+    <div style="margin-bottom: 8px;">
+      <div>Khách hàng: <b id="invPrintCustomer">Khách lẻ</b></div>
+      <div>Điện thoại: <span id="invPrintCustPhone">--</span></div>
+      <div>Nhân viên bán: <span id="invPrintStaff">Admin</span></div>
+    </div>
+
+    <table class="invoice-table">
+      <thead>
+        <tr>
+          <th>STT</th>
+          <th>Tên Món Hàng</th>
+          <th>Loại Vàng</th>
+          <th style="text-align: right;">TL Vàng</th>
+          <th style="text-align: right;">Đơn Giá</th>
+          <th style="text-align: right;">Tiền Công</th>
+          <th style="text-align: right;">Thành Tiền</th>
+        </tr>
+      </thead>
+      <tbody id="invPrintTableBody">
+        <!-- Products in invoice -->
+      </tbody>
+    </table>
+
+    <div style="text-align: right; font-size: 14px; margin-top: 10px;">
+      <b>TỔNG THANH TOÁN: <span id="invPrintTotal" style="font-size: 16px; color: #000;">0 đ</span></b>
+    </div>
+
+    <div class="invoice-footer">
+      <p><b>QUY ĐỊNH THU ĐỔI & BẢO ĐẢM:</b></p>
+      <div id="invPrintFooterContent" style="white-space: pre-wrap; font-size: 11px; line-height: 1.4; margin-top: 4px;">
+- Quý khách vui lòng giữ Giấy đảm bảo này khi cần bán lại hoặc đổi món mới.
+- Vàng 24K, 18K mua lại theo giá niêm yết tại thời điểm thu đổi.
+- Tiệm nhận thu đổi, làm mới, đánh bóng trọn đời sản phẩm.
+      </div>
+      <div style="display: flex; justify-content: space-between; margin-top: 25px; text-align: center;">
+        <div>
+          <b>KHÁCH HÀNG</b><br>
+          <span style="font-size: 10px;">(Ký, ghi rõ họ tên)</span>
+        </div>
+        <div>
+          <b>ĐẠI DIỆN CỬA HÀNG</b><br>
+          <span style="font-size: 10px;">(Ký, đóng dấu)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/defaultData.js?v=30"></script>
+  <script src="js/googleSheetService.js?v=30"></script>
+  <script src="js/barcodeLabel.js?v=30"></script>
+  <script src="js/app.js?v=30"></script>
+</body>
+</html>

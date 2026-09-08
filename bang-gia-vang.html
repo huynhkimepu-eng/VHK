@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bảng Giá Vàng Điện Tử - Tiệm Vàng Hoàng Kim</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0B1120;
+      --card-bg: rgba(15, 23, 42, 0.85);
+      --gold-primary: #F59E0B;
+      --gold-light: #FDE68A;
+      --gold-dark: #D97706;
+      --gold-gradient: linear-gradient(135deg, #FBBF24 0%, #D97706 50%, #B45309 100%);
+      --text-main: #F8FAFC;
+      --text-muted: #94A3B8;
+      --border-gold: rgba(245, 158, 11, 0.35);
+      --buy-color: #10B981;
+      --sell-color: #EF4444;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: radial-gradient(circle at 50% 20%, #1E293B 0%, #0B1120 75%, #020617 100%);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* Nút Toàn Màn Hình đặt dưới Đồng Hồ */
+    .btn-fullscreen-tv {
+      margin-top: 10px;
+      width: 100%;
+      background: var(--gold-gradient);
+      color: #0b0f19;
+      border: none;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      padding: 7px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+      transition: all 0.2s ease;
+    }
+
+    .btn-fullscreen-tv:hover {
+      filter: brightness(1.15);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(245, 158, 11, 0.5);
+    }
+
+    .btn-fullscreen-tv:active {
+      transform: translateY(0);
+    }
+
+    /* Main Container */
+    .tv-container {
+      flex: 1;
+      width: 100%;
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 24px 30px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header Section */
+    .tv-header {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 25px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid var(--border-gold);
+      margin-bottom: 25px;
+    }
+
+    .brand-logo-badge {
+      width: 76px;
+      height: 76px;
+      background: var(--gold-gradient);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 42px;
+      box-shadow: 0 0 25px rgba(245, 158, 11, 0.4);
+    }
+
+    .brand-titles h1 {
+      font-family: 'Cinzel', serif;
+      font-size: 38px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      background: linear-gradient(135deg, #FFFBEB 0%, #FDE68A 40%, #F59E0B 80%, #D97706 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+      text-shadow: 0 0 30px rgba(245, 158, 11, 0.3);
+    }
+
+    .brand-titles .slogan {
+      font-size: 15px;
+      color: var(--gold-light);
+      letter-spacing: 1px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .brand-titles .slogan span.contact {
+      color: var(--text-muted);
+      font-size: 13.5px;
+    }
+
+    /* Clock Widget */
+    .clock-widget {
+      text-align: right;
+      background: rgba(15, 23, 42, 0.7);
+      padding: 12px 22px;
+      border-radius: 14px;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    }
+
+    .clock-time {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 34px;
+      font-weight: 800;
+      color: var(--gold-light);
+      letter-spacing: 2px;
+      line-height: 1.1;
+    }
+
+    .clock-date {
+      font-size: 14px;
+      color: var(--text-muted);
+      font-weight: 600;
+      margin-top: 4px;
+      text-transform: capitalize;
+    }
+
+    /* Rates Table Card */
+    .rates-card {
+      flex: 1;
+      background: var(--card-bg);
+      border-radius: 20px;
+      border: 1.5px solid var(--border-gold);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .rates-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    .rates-table thead th {
+      background: linear-gradient(180deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.95) 100%);
+      color: var(--gold-light);
+      font-family: 'Cinzel', serif;
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      padding: 20px 24px;
+      border-bottom: 2px solid var(--border-gold);
+      text-transform: uppercase;
+    }
+
+    .rates-table thead th.th-right {
+      text-align: right;
+    }
+
+    .rates-table thead th.th-center {
+      text-align: center;
+    }
+
+    .rates-table tbody tr {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+      transition: background 0.15s ease;
+    }
+
+    .rates-table tbody tr:nth-child(even) {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .rates-table tbody tr:hover {
+      background: rgba(245, 158, 11, 0.08);
+    }
+
+    .rates-table td {
+      padding: 20px 24px;
+      vertical-align: middle;
+      font-size: 19px;
+    }
+
+    .gold-name-box {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .gold-bullet {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--gold-gradient);
+      box-shadow: 0 0 10px rgba(245, 158, 11, 0.8);
+      flex-shrink: 0;
+    }
+
+    .gold-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: #FFFFFF;
+      letter-spacing: 0.5px;
+    }
+
+    .gold-sub {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .purity-badge {
+      display: inline-block;
+      padding: 5px 12px;
+      border-radius: 8px;
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      color: var(--gold-light);
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .unit-tag {
+      font-size: 16px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .price-cell {
+      text-align: right;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: 1px;
+    }
+
+    .price-buy {
+      color: #34D399;
+      text-shadow: 0 0 15px rgba(52, 211, 153, 0.3);
+    }
+
+    .price-sell {
+      color: #F87171;
+      text-shadow: 0 0 15px rgba(248, 113, 113, 0.3);
+    }
+
+    .price-vnd-sub {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 500;
+      margin-top: 2px;
+    }
+
+    /* Empty state */
+    .empty-state {
+      padding: 60px 20px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 18px;
+    }
+
+    /* Bottom Ticker Marquee */
+    .bottom-ticker {
+      background: #020617;
+      border-top: 1px solid var(--border-gold);
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      font-size: 14.5px;
+      overflow: hidden;
+      margin-top: 20px;
+    }
+
+    .ticker-badge {
+      background: var(--gold-gradient);
+      color: #000;
+      font-size: 12px;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 4px;
+      white-space: nowrap;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .ticker-content {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .ticker-text {
+      display: inline-block;
+      padding-left: 100%;
+      animation: tickerAnimation 30s linear infinite;
+      color: var(--gold-light);
+      font-weight: 600;
+    }
+
+    @keyframes tickerAnimation {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-100%); }
+    }
+
+
+
+    /* Responsive for TV / Tablet / Mobile */
+    @media (max-width: 1024px) {
+      .tv-header {
+        grid-template-columns: auto 1fr;
+      }
+      .clock-widget {
+        grid-column: 1 / -1;
+        text-align: center;
+      }
+      .gold-title { font-size: 18px; }
+      .price-cell { font-size: 21px; }
+      .purity-badge { font-size: 14px; }
+      .rates-table thead th { font-size: 14px; padding: 14px 16px; }
+      .rates-table td { padding: 14px 16px; font-size: 16px; }
+    }
+
+    @media (max-width: 640px) {
+      .tv-container { padding: 12px; }
+      .brand-titles h1 { font-size: 24px; }
+      .clock-time { font-size: 24px; }
+      .price-cell { font-size: 17px; }
+      .gold-title { font-size: 15px; }
+      .rates-table thead th { font-size: 12px; padding: 10px; }
+      .rates-table td { padding: 10px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="tv-container">
+    <!-- Header Section -->
+    <header class="tv-header">
+      <div class="brand-logo-badge">👑</div>
+      <div class="brand-titles">
+        <h1 id="tvStoreName">TIỆM VÀNG HOÀNG KIM</h1>
+        <div class="slogan">
+          <span id="tvStoreSlogan">Uy Tín Trọn Niềm Tin - Vàng Chuẩn Tuổi</span>
+          <span class="contact" id="tvStoreContact">| Hotline: 0988.888.888</span>
+        </div>
+      </div>
+      <div class="clock-widget">
+        <div class="clock-time" id="liveClock">00:00:00</div>
+        <div class="clock-date" id="liveDate">Đang tải thời gian...</div>
+        <button class="btn-fullscreen-tv" id="btnTvFullscreen" onclick="toggleFullScreen()" title="Bật/Tắt chế độ toàn màn hình">
+          <span id="fsIcon">⛶</span> <span id="fsText">Toàn Màn Hình</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Bảng Giá Vàng -->
+    <main class="rates-card">
+      <table class="rates-table">
+        <thead>
+          <tr>
+            <th style="width: 32%;">Loại Vàng / Sản Phẩm</th>
+            <th class="th-center" style="width: 18%;">Hàm Lượng</th>
+            <th class="th-center" style="width: 12%;">Đơn Vị</th>
+            <th class="th-right" style="width: 19%;">Giá Mua Vào</th>
+            <th class="th-right" style="width: 19%;">Giá Bán Ra</th>
+          </tr>
+        </thead>
+        <tbody id="ratesTableBody">
+          <!-- Rows render dynamically via JavaScript -->
+        </tbody>
+      </table>
+
+      <div id="emptyRatesMessage" class="empty-state" style="display: none;">
+        ⚠️ Bảng giá vàng đang được cập nhật. Vui lòng quay lại sau!
+      </div>
+    </main>
+
+    <!-- Marquee Banner chạy chữ chân trang -->
+    <footer class="bottom-ticker">
+      <div class="ticker-badge">THÔNG BÁO</div>
+      <div class="ticker-content">
+        <div class="ticker-text" id="tickerText">
+          ✨ Kính chúc Quý khách Vạn Sự Như Ý - Phát Tài Phát Lộc! | Giá vàng niêm yết tại thời điểm giao dịch thực tế tại quầy | Nhận thu đổi, làm mới, đánh bóng trọn đời sản phẩm.
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/defaultData.js"></script>
+  <script src="js/googleSheetService.js"></script>
+  <script>
+    // State
+    let goldPrices = [];
+    let storeConfig = {};
+    const STORAGE_KEY_PRICES = 'pmqlv_gold_prices';
+    const STORAGE_KEY_CONFIG = 'pmqlv_store_config';
+    const STORAGE_KEY_VISIBLE = 'pmqlv_tv_visible_types';
+
+    // 1. Khởi động
+    function init() {
+      loadData();
+      updateClock();
+      setInterval(updateClock, 1000);
+
+      // Render giao diện bảng giá
+      renderTVDisplay();
+
+      // Đồng bộ từ Google Sheet (nếu có cấu hình)
+      fetchLatestFromCloud();
+      setInterval(fetchLatestFromCloud, 30000); // 30s đồng bộ 1 lần
+
+      // Lắng nghe thay đổi dữ liệu từ các tab/cửa sổ khác
+      window.addEventListener('storage', (e) => {
+        if (e.key === STORAGE_KEY_PRICES || e.key === STORAGE_KEY_CONFIG || e.key === STORAGE_KEY_VISIBLE) {
+          loadData();
+          renderTVDisplay();
+        }
+      });
+
+      // Lắng nghe thay đổi toàn màn hình
+      document.addEventListener('fullscreenchange', () => {
+        updateFsButton(!!document.fullscreenElement);
+      });
+
+      // Kiểm tra cập nhật bộ nhớ cục bộ mỗi 2 giây
+      setInterval(() => {
+        const currentSaved = localStorage.getItem(STORAGE_KEY_PRICES);
+        const currentVisible = localStorage.getItem(STORAGE_KEY_VISIBLE);
+        if (currentSaved && currentSaved !== JSON.stringify(goldPrices)) {
+          loadData();
+          renderTVDisplay();
+        }
+      }, 2000);
+    }
+
+    // 2. Tải dữ liệu từ LocalStorage
+    function loadData() {
+      // Cấu hình cửa hàng
+      const savedConfig = localStorage.getItem(STORAGE_KEY_CONFIG);
+      storeConfig = savedConfig ? JSON.parse(savedConfig) : (window.DEFAULT_STORE_CONFIG || {});
+
+      // Cập nhật thông tin tiêu đề
+      const nameEl = document.getElementById('tvStoreName');
+      const sloganEl = document.getElementById('tvStoreSlogan');
+      const contactEl = document.getElementById('tvStoreContact');
+
+      if (nameEl) nameEl.textContent = storeConfig.storeName || 'TIỆM VÀNG HOÀNG KIM';
+      if (sloganEl) sloganEl.textContent = storeConfig.slogan || 'Uy Tín Trọn Niềm Tin - Vàng Chuẩn Tuổi';
+      if (contactEl) contactEl.textContent = storeConfig.phone ? `| Hotline: ${storeConfig.phone}` : '';
+
+      // Bảng giá vàng
+      const savedPrices = localStorage.getItem(STORAGE_KEY_PRICES);
+      let loaded = [];
+      if (savedPrices) {
+        try { loaded = JSON.parse(savedPrices); } catch (e) { loaded = []; }
+      }
+      const defaultPrices = (window.DEFAULT_GOLD_PRICES && window.DEFAULT_GOLD_PRICES.length > 0) ? window.DEFAULT_GOLD_PRICES : [];
+      if (!loaded || loaded.length === 0) {
+        loaded = defaultPrices;
+      } else {
+        defaultPrices.forEach(def => {
+          if (!loaded.some(p => p.loaiVang === def.loaiVang)) {
+            loaded.push(def);
+          }
+        });
+      }
+      goldPrices = loaded;
+    }
+
+    // Lấy danh sách loại vàng hiển thị theo đúng cấu hình Admin đã lưu
+    function getVisibleTypes() {
+      const saved = localStorage.getItem(STORAGE_KEY_VISIBLE);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) return parsed;
+        } catch (e) {}
+      }
+      if (storeConfig && Array.isArray(storeConfig.tvVisibleTypes)) {
+        return storeConfig.tvVisibleTypes;
+      }
+      return goldPrices
+        .filter(g => Number(g.giaBan) > 0 || g.loaiVang.includes('Vàng') || g.loaiVang.includes('VANG') || g.loaiVang.includes('Bạc'))
+        .map(g => g.loaiVang);
+    }
+
+    // 3. Render bảng hiển thị TV
+    function renderTVDisplay() {
+      const tbody = document.getElementById('ratesTableBody');
+      const emptyMsg = document.getElementById('emptyRatesMessage');
+      if (!tbody) return;
+
+      const visibleTypes = getVisibleTypes();
+      // Lọc danh sách theo đúng lựa chọn của Admin
+      const filtered = goldPrices.filter(g => visibleTypes.includes(g.loaiVang));
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '';
+        if (emptyMsg) emptyMsg.style.display = 'block';
+        return;
+      }
+
+      if (emptyMsg) emptyMsg.style.display = 'none';
+
+      const multiplier = storeConfig.currencyUnitMultiplier || 1000;
+
+      tbody.innerHTML = filtered.map(g => {
+        const mua = Number(g.giaMua) || 0;
+        const ban = Number(g.giaBan) || 0;
+
+        // Quy đổi VNĐ
+        const muaVndStr = (mua * multiplier).toLocaleString('vi-VN') + ' đ';
+        const banVndStr = (ban * multiplier).toLocaleString('vi-VN') + ' đ';
+
+        return `
+          <tr>
+            <td>
+              <div class="gold-name-box">
+                <span class="gold-bullet"></span>
+                <div>
+                  <div class="gold-title">${g.loaiVang}</div>
+                  <div class="gold-sub">${g.hamLuong ? 'Chuẩn tuổi ' + g.hamLuong : 'Trang sức kim hoàn'}</div>
+                </div>
+              </div>
+            </td>
+            <td style="text-align: center;">
+              <span class="purity-badge">${g.hamLuong || '--'}</span>
+            </td>
+            <td style="text-align: center;">
+              <span class="unit-tag">${g.donVi || 'chỉ'}</span>
+            </td>
+            <td class="price-cell price-buy">
+              ${muaVndStr}
+              <div class="price-vnd-sub">Mua vào: ${mua.toLocaleString('vi-VN')}k</div>
+            </td>
+            <td class="price-cell price-sell">
+              ${banVndStr}
+              <div class="price-vnd-sub">Bán ra: ${ban.toLocaleString('vi-VN')}k</div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // 4. Đồng bộ dữ liệu từ Google Sheet (khi mở trên TV / thiết bị riêng)
+    async function fetchLatestFromCloud() {
+      if (window.GoogleSheetService && typeof GoogleSheetService.fetchAllData === 'function' && GoogleSheetService.isConfigured()) {
+        try {
+          const data = await GoogleSheetService.fetchAllData();
+          if (data) {
+            let hasChanged = false;
+            if (data.goldPrices && Array.isArray(data.goldPrices)) {
+              goldPrices = data.goldPrices;
+              localStorage.setItem(STORAGE_KEY_PRICES, JSON.stringify(goldPrices));
+              hasChanged = true;
+            }
+            if (data.config && typeof data.config === 'object') {
+              storeConfig = { ...storeConfig, ...data.config };
+              localStorage.setItem(STORAGE_KEY_CONFIG, JSON.stringify(storeConfig));
+              if (Array.isArray(data.config.tvVisibleTypes)) {
+                localStorage.setItem(STORAGE_KEY_VISIBLE, JSON.stringify(data.config.tvVisibleTypes));
+              }
+              hasChanged = true;
+            }
+            if (hasChanged) {
+              renderTVDisplay();
+            }
+          }
+        } catch (e) {
+          console.warn('TV Cloud Sync warning:', e);
+        }
+      }
+    }
+
+    // 5. Đồng hồ thời gian thực
+    function updateClock() {
+      const now = new Date();
+      const clockEl = document.getElementById('liveClock');
+      const dateEl = document.getElementById('liveDate');
+
+      if (clockEl) {
+        const h = String(now.getHours()).padStart(2, '0');
+        const m = String(now.getMinutes()).padStart(2, '0');
+        const s = String(now.getSeconds()).padStart(2, '0');
+        clockEl.textContent = `${h}:${m}:${s}`;
+      }
+
+      if (dateEl) {
+        const days = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+        const dayName = days[now.getDay()];
+        const d = String(now.getDate()).padStart(2, '0');
+        const mo = String(now.getMonth() + 1).padStart(2, '0');
+        const y = now.getFullYear();
+        dateEl.textContent = `${dayName}, ngày ${d}/${mo}/${y}`;
+      }
+    }
+
+    // 6. Toàn màn hình
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().then(() => {
+          updateFsButton(true);
+        }).catch(err => {
+          console.warn('Lỗi toàn màn hình:', err);
+        });
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen().then(() => {
+            updateFsButton(false);
+          }).catch(err => {
+            console.warn('Lỗi thoát toàn màn hình:', err);
+          });
+        }
+      }
+    }
+
+    function updateFsButton(isFs) {
+      const fsIcon = document.getElementById('fsIcon');
+      const fsText = document.getElementById('fsText');
+      if (fsIcon && fsText) {
+        if (isFs) {
+          fsIcon.textContent = '🗗';
+          fsText.textContent = 'Thu Nhỏ';
+        } else {
+          fsIcon.textContent = '⛶';
+          fsText.textContent = 'Toàn Màn Hình';
+        }
+      }
+    }
+
+    // Chạy khi nạp DOM
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

@@ -1,0 +1,1002 @@
+/* =========================================================================
+   PMQLV - PHẦN MỀM QUẢN LÝ VÀNG BẠC ĐÁ QUÝ
+   Style CSS - Giao diện Sang Trọng, Tối Ưu Mobile & Máy Tính
+   ========================================================================= */
+
+:root {
+  --primary-gold: #D4AF37;
+  --primary-gold-dark: #AA820A;
+  --primary-gold-light: #FBF4D9;
+  --primary-gold-hover: #C59B27;
+  --navy-bg: #0F172A;
+  --navy-card: #1E293B;
+  --navy-border: #334155;
+  --text-main: #0F172A;
+  --text-muted: #64748B;
+  --text-light: #F8FAFC;
+  --bg-app: #F1F5F9;
+  --white: #FFFFFF;
+  --success: #10B981;
+  --danger: #EF4444;
+  --warning: #F59E0B;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+  --shadow-lg: 0 10px 25px rgba(0,0,0,0.12);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background-color: var(--bg-app);
+  color: var(--text-main);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ================= HEADER & NAVIGATION ================= */
+.app-header {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: var(--white);
+  padding: 10px 20px;
+  border-bottom: 3px solid var(--primary-gold);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+.header-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+}
+
+.brand-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-logo-icon {
+  width: 38px;
+  height: 38px;
+  background: linear-gradient(135deg, var(--primary-gold), #FFF2B2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #573E02;
+  font-weight: 900;
+  font-size: 20px;
+  box-shadow: 0 0 10px rgba(212,175,55,0.4);
+}
+
+.brand-text h1 {
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: #FFF;
+}
+
+.brand-text p {
+  font-size: 11px;
+  color: #94A3B8;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sync-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: #CBD5E1;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.sync-status-badge:hover {
+  background: rgba(255,255,255,0.15);
+}
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--success);
+}
+.status-dot.offline {
+  background: var(--warning);
+}
+
+.user-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(212,175,55,0.15);
+  border: 1px solid rgba(212,175,55,0.3);
+  color: #FEEBC8;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.btn-logout {
+  background: transparent;
+  border: none;
+  color: #F87171;
+  cursor: pointer;
+  font-size: 12px;
+  text-decoration: underline;
+  margin-left: 4px;
+}
+
+/* ================= NAV TABS (DESKTOP & TABLET) ================= */
+.nav-tabs-wrapper {
+  background: #FFF;
+  border-bottom: 1px solid #E2E8F0;
+  box-shadow: var(--shadow-sm);
+  position: sticky;
+  top: 59px;
+  z-index: 90;
+}
+
+.nav-tabs-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.nav-tabs-container::-webkit-scrollbar { display: none; }
+
+.tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 18px;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.tab-btn:hover {
+  color: var(--primary-gold-dark);
+  background: var(--primary-gold-light);
+}
+
+.tab-btn.active {
+  color: #B45309;
+  border-bottom-color: var(--primary-gold);
+  background: #FFFDF5;
+}
+
+.tab-btn .badge {
+  background: #E2E8F0;
+  color: #475569;
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 12px;
+}
+
+.tab-btn.active .badge {
+  background: var(--primary-gold);
+  color: #000;
+  font-weight: 700;
+}
+
+/* ================= MAIN CONTAINER ================= */
+.main-wrapper {
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 16px;
+  flex: 1;
+}
+
+.tab-content-panel {
+  display: none;
+}
+.tab-content-panel.active {
+  display: block;
+}
+
+/* ================= CARDS & BOXES ================= */
+.card {
+  background: var(--white);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid #E2E8F0;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.card-header {
+  padding: 14px 18px;
+  background: #FAFAFA;
+  border-bottom: 1px solid #E2E8F0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.card-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--navy-bg);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-body {
+  padding: 16px;
+}
+
+/* ================= BUTTONS & INPUTS ================= */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.btn-primary {
+  background: var(--primary-gold);
+  color: #1A1A1A;
+}
+.btn-primary:hover {
+  background: var(--primary-gold-hover);
+}
+
+.btn-secondary {
+  background: #E2E8F0;
+  color: #334155;
+}
+.btn-secondary:hover {
+  background: #CBD5E1;
+}
+
+.btn-dark {
+  background: var(--navy-card);
+  color: #FFF;
+}
+.btn-dark:hover {
+  background: #000;
+}
+
+.btn-success {
+  background: var(--success);
+  color: #FFF;
+}
+.btn-success:hover {
+  background: #059669;
+}
+
+.btn-danger {
+  background: var(--danger);
+  color: #FFF;
+}
+.btn-danger:hover {
+  background: #DC2626;
+}
+
+.btn-sm {
+  padding: 5px 10px;
+  font-size: 12px;
+}
+
+.btn-lg {
+  padding: 12px 24px;
+  font-size: 15px;
+}
+
+.btn-block {
+  width: 100%;
+}
+
+.form-control, .form-select {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid #CBD5E1;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  color: var(--text-main);
+  background: #FFF;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: var(--primary-gold-dark);
+  box-shadow: 0 0 0 3px rgba(212,175,55,0.2);
+}
+
+.input-group {
+  display: flex;
+  gap: 6px;
+}
+
+/* ================= 1. TAB BÁN HÀNG (POS) ================= */
+.pos-layout {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 16px;
+  align-items: start;
+}
+
+.pos-search-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.pos-scan-btn {
+  background: #3B82F6;
+  color: #FFF;
+  white-space: nowrap;
+}
+.pos-scan-btn:hover { background: #2563EB; }
+
+.pos-grid-products {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 12px;
+  max-height: calc(100vh - 240px);
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.product-card-pos {
+  background: #FFF;
+  border: 1px solid #E2E8F0;
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+}
+
+.product-card-pos:hover {
+  border-color: var(--primary-gold);
+  box-shadow: 0 4px 12px rgba(212,175,55,0.2);
+  transform: translateY(-2px);
+}
+
+.product-card-pos .tag-gold {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  background: #FEF3C7;
+  color: #92400E;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.product-card-pos .code {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748B;
+}
+
+.product-card-pos .name {
+  font-size: 14px;
+  font-weight: 700;
+  margin: 4px 0 6px 0;
+  color: var(--navy-bg);
+  line-height: 1.25;
+}
+
+.product-card-pos .weight-info {
+  font-size: 11px;
+  color: #475569;
+  margin-bottom: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.product-card-pos .price-tag {
+  font-size: 14px;
+  font-weight: 800;
+  color: #B45309;
+}
+
+/* POS CART (GIỎ HÀNG) */
+.pos-cart {
+  background: #FFF;
+  border-radius: var(--radius-md);
+  border: 1px solid #CBD5E1;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 160px);
+  position: sticky;
+  top: 130px;
+}
+
+.cart-header {
+  padding: 12px 16px;
+  background: var(--navy-bg);
+  color: #FFF;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top-left-radius: var(--radius-md);
+  border-top-right-radius: var(--radius-md);
+}
+
+.cart-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+}
+
+.cart-empty {
+  text-align: center;
+  padding: 40px 10px;
+  color: #94A3B8;
+  font-size: 13px;
+}
+
+.cart-item {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  margin-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: relative;
+}
+
+.cart-item-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.cart-item-desc {
+  font-size: 11px;
+  color: #64748B;
+}
+
+.cart-item-calc {
+  font-size: 11px;
+  color: #0369A1;
+  background: #F0F9FF;
+  padding: 4px 6px;
+  border-radius: 4px;
+  margin: 3px 0;
+}
+
+.cart-item-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.cart-item-price {
+  font-size: 14px;
+  font-weight: 800;
+  color: #B45309;
+}
+
+.cart-item-remove {
+  background: none;
+  border: none;
+  color: #EF4444;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.cart-footer {
+  border-top: 1px solid #E2E8F0;
+  padding: 14px 16px;
+  background: #F8FAFC;
+}
+
+.cart-total-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.cart-total-row.grand-total {
+  font-size: 18px;
+  font-weight: 800;
+  color: #B45309;
+  border-top: 1px dashed #CBD5E1;
+  padding-top: 8px;
+}
+
+/* ================= 2. TAB KHO HÀNG (INVENTORY) ================= */
+.inventory-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+  background: #F8FAFC;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid #E2E8F0;
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.table-custom {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  text-align: left;
+}
+
+.table-custom th {
+  background: #F1F5F9;
+  color: #334155;
+  font-weight: 700;
+  padding: 10px 8px;
+  border-bottom: 2px solid #CBD5E1;
+  white-space: nowrap;
+}
+
+.table-custom td {
+  padding: 9px 8px;
+  border-bottom: 1px solid #E2E8F0;
+  color: #1E293B;
+  vertical-align: middle;
+}
+
+.table-custom tr:hover {
+  background: #F8FAFC;
+}
+
+.badge-status {
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  display: inline-block;
+}
+.badge-instock {
+  background: #DEF7EC;
+  color: #03543F;
+}
+.badge-sold {
+  background: #FDE8E8;
+  color: #9B1C1C;
+}
+
+.pagination-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: #F8FAFC;
+  border-top: 1px solid #E2E8F0;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 13px;
+}
+
+/* ================= 2.1. JEWELRY TAGS PREVIEW ================= */
+.jewelry-tag-wrapper {
+  background: #fff;
+  padding: 0;
+  border: 1px dashed #cbd5e1;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  display: inline-block;
+}
+
+.jewelry-tag {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  line-height: 1.15;
+  overflow: hidden;
+  background: #fff;
+}
+
+.tag-body-zone {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.tag-wing {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+}
+
+.tag-wing-1 {
+  text-align: center;
+  padding: 1px 2px;
+  border-right: 1px dotted #e2e8f0;
+}
+
+.tag-store-name {
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.1;
+}
+
+.tag-barcode-box {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+}
+
+.tag-barcode-text {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: bold;
+  padding: 0 1px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.tag-wing-2 {
+  text-align: left;
+  padding: 1px 2px 1px 3px;
+}
+
+.tag-product-title {
+  font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.1;
+}
+
+.tag-gold-type {
+  font-size: 0.9em;
+  color: #111;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.1;
+}
+
+.tag-weight-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.88em;
+  white-space: nowrap;
+  line-height: 1.1;
+}
+
+.tag-tail {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tail-line {
+  width: 100%;
+  height: 1.5px;
+  background: #cbd5e1;
+}
+
+/* ================= 3. STATS DASHBOARD ================= */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.stat-card {
+  background: #FFF;
+  border: 1px solid #E2E8F0;
+  border-radius: var(--radius-md);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.stat-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 10px;
+  background: var(--primary-gold-light);
+  color: #B45309;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}
+
+.stat-info .label {
+  font-size: 12px;
+  color: #64748B;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.stat-info .val {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--navy-bg);
+  margin-top: 2px;
+}
+
+/* ================= 4. MODALS & POPUPS ================= */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.7);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+  backdrop-filter: blur(2px);
+}
+.modal-overlay.active {
+  display: flex;
+}
+
+.modal-content {
+  background: #FFF;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: modalFadeIn 0.2s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.modal-header {
+  padding: 14px 18px;
+  background: #FAFAFA;
+  border-bottom: 1px solid #E2E8F0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--navy-bg);
+}
+
+.btn-close-modal {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #64748B;
+  line-height: 1;
+}
+
+.modal-body {
+  padding: 18px;
+  overflow-y: auto;
+}
+
+.modal-footer {
+  padding: 12px 18px;
+  background: #F8FAFC;
+  border-top: 1px solid #E2E8F0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* CAMERA SCANNER */
+#scanner-container {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: #000;
+}
+
+/* ================= MOBILE BOTTOM NAVIGATION ================= */
+.mobile-bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #FFF;
+  border-top: 1px solid #E2E8F0;
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.06);
+  z-index: 100;
+  padding: 6px 4px 8px 4px;
+}
+
+.mobile-nav-items {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.mobile-nav-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: none;
+  border: none;
+  color: #64748B;
+  font-size: 10.5px;
+  font-weight: 600;
+  cursor: pointer;
+  flex: 1;
+  padding: 4px 2px;
+  white-space: nowrap;
+}
+
+.mobile-nav-btn.active {
+  color: #B45309;
+}
+
+.mobile-nav-btn .icon {
+  font-size: 18px;
+}
+
+/* ================= INVOICE PRINT TEMPLATE ================= */
+#printable-invoice {
+  display: none;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #printable-invoice, #printable-invoice * {
+    visibility: visible;
+  }
+  #printable-invoice {
+    display: block !important;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 10px;
+    background: #FFF;
+    color: #000;
+    font-size: 12px;
+  }
+
+  .invoice-header {
+    text-align: center;
+    border-bottom: 2px solid #000;
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+  }
+  .invoice-title {
+    font-size: 16px;
+    font-weight: bold;
+    margin: 4px 0;
+  }
+  .invoice-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+  }
+  .invoice-table th, .invoice-table td {
+    border: 1px solid #000;
+    padding: 6px 4px;
+    font-size: 11px;
+  }
+  .invoice-footer {
+    margin-top: 15px;
+    font-size: 10.5px;
+    line-height: 1.4;
+  }
+}
+
+/* ================= RESPONSIVE DESIGN (MOBILE & TABLET) ================= */
+@media (max-width: 900px) {
+  .pos-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .pos-cart {
+    height: auto;
+    max-height: 420px;
+    position: static;
+  }
+
+  .nav-tabs-wrapper {
+    display: none; /* Hide top desktop tabs on mobile */
+  }
+
+  .mobile-bottom-nav {
+    display: block; /* Show bottom thumb navigation */
+  }
+
+  .main-wrapper {
+    padding-bottom: 75px; /* Space for bottom nav */
+  }
+
+  .app-header {
+    padding: 8px 12px;
+  }
+
+  .header-right .sync-status-badge span.text {
+    display: none; /* Hide extra text on small screens */
+  }
+
+  .brand-text h1 {
+    font-size: 15px;
+  }
+}
