@@ -45,14 +45,17 @@ class GoldApp {
       this.applyStoreConfig();
       this.setupEventListeners();
       this.updateUserRoleUI();
+      this.updateAuthGateUI();
 
-      // Render dữ liệu ban đầu từ localStorage trước
-      try { this.renderGoldRatesTable(); } catch(e) { console.error('renderGoldRatesTable error:', e); }
-      try { this.filterPosProducts(); } catch(e) { console.error('filterPosProducts error:', e); }
-      try { this.filterInventory(); } catch(e) { console.error('filterInventory error:', e); }
-      if (typeof this.renderTagQueue === 'function') try { this.renderTagQueue(); } catch(e) {}
-      try { this.updateReportStats(); } catch(e) { console.error('updateReportStats error:', e); }
-      if (typeof this.checkCloudSync === 'function') try { this.checkCloudSync(); } catch(e) {}
+      // Chỉ render dữ liệu nội bộ nếu đã đăng nhập hợp lệ
+      if (this.currentUser) {
+        try { this.renderGoldRatesTable(); } catch(e) { console.error('renderGoldRatesTable error:', e); }
+        try { this.filterPosProducts(); } catch(e) { console.error('filterPosProducts error:', e); }
+        try { this.filterInventory(); } catch(e) { console.error('filterInventory error:', e); }
+        if (typeof this.renderTagQueue === 'function') try { this.renderTagQueue(); } catch(e) {}
+        try { this.updateReportStats(); } catch(e) { console.error('updateReportStats error:', e); }
+        if (typeof this.checkCloudSync === 'function') try { this.checkCloudSync(); } catch(e) {}
+      }
 
       // Ẩn loading ngay để người dùng có thể dùng giao diện
       this.hideGlobalLoading();
@@ -230,21 +233,24 @@ class GoldApp {
     this.users = loadedUsers;
     localStorage.setItem('pmqlv_users', JSON.stringify(this.users));
 
-    // 5. Đăng nhập hiện tại (Mặc định tài khoản Quản Lý Chi Nhánh 1 nếu chưa đăng nhập)
-    const defaultStaff = this.users.find(u => u.username === 'chinhanh1') || 
-                         this.users.find(u => u.role === 'chinhanh') || 
-                         { username: 'chinhanh1', role: 'chinhanh', fullName: 'Quản Lý Chi Nhánh 1', chiNhanh: 'Chi nhánh 1' };
-    const savedCurrentUser = localStorage.getItem('pmqlv_current_user');
+    // 5. Đăng nhập hiện tại (Chỉ đăng nhập nếu có phiên xác thực hợp lệ)
+    const savedCurrentUser = localStorage.getItem('pmqlv_current_user') || sessionStorage.getItem('pmqlv_current_user');
+    let authenticatedUser = null;
     if (savedCurrentUser) {
       try {
-        this.currentUser = JSON.parse(savedCurrentUser);
+        const parsed = JSON.parse(savedCurrentUser);
+        if (parsed && parsed.username) {
+          const match = this.users.find(u => 
+            String(u.username || '').trim().toLowerCase() === String(parsed.username || '').trim().toLowerCase() &&
+            String(u.password || '').trim() === String(parsed.password || '').trim()
+          );
+          if (match) authenticatedUser = match;
+        }
       } catch (e) {
-        this.currentUser = defaultStaff;
+        authenticatedUser = null;
       }
-    } else {
-      this.currentUser = defaultStaff;
-      localStorage.setItem('pmqlv_current_user', JSON.stringify(this.currentUser));
     }
+    this.currentUser = authenticatedUser;
 
     // 6. Lịch sử đơn hàng
     const savedOrders = localStorage.getItem('pmqlv_orders');
@@ -3934,51 +3940,69 @@ class GoldApp {
 
   // ================= 9. ĐĂNG NHẬP & PHÂN QUYỀN =================
 
-  logout() {
-    // Reset về tài khoản chi nhánh mặc định
-    const defaultStaff = this.users.find(u => u.username === 'chinhanh1') || 
-                         this.users.find(u => u.role === 'chinhanh') || 
-                         { username: 'chinhanh1', role: 'chinhanh', fullName: 'Quản Lý Chi Nhánh 1', chiNhanh: 'Chi nhánh 1' };
-    this.currentUser = defaultStaff;
-    localStorage.setItem('pmqlv_current_user', JSON.stringify(defaultStaff));
-    this.updateUserRoleUI();
-    this.filterPosProducts();
-    this.filterInventory();
-    this.updateReportStats();
-    this.renderGoldRatesTable();
+  // ================= 9. ĐĂNG NHẬP & BẢO MẬT HỆ THỐNG =================
 
-    // Mở modal đăng nhập nếu muốn chuyển sang tài khoản khác
-    const uInp = document.getElementById('loginUsername');
-    const pInp = document.getElementById('loginPassword');
-    const errEl = document.getElementById('loginErrorMsg');
-    if (uInp) uInp.value = '';
-    if (pInp) pInp.value = '';
+  updateAuthGateUI() {
+    const authGate = document.getElementById('appAuthGate');
+    const authArea = document.getElementById('appAuthenticatedArea');
+
+    if (!this.currentUser) {
+      document.body.classList.add('not-authenticated');
+      if (authGate) authGate.style.display = 'flex';
+      if (authArea) authArea.style.display = 'none';
+
+      // Cập nhật tên tiệm nếu đã lưu
+      const storeNameEl = document.getElementById('authGateStoreName');
+      if (storeNameEl && this.storeConfig && this.storeConfig.storeName) {
+        storeNameEl.textContent = this.storeConfig.storeName;
+      }
+
+      // Tự động focus vào ô username
+      setTimeout(() => {
+        const uInp = document.getElementById('authGateUsername');
+        if (uInp) uInp.focus();
+      }, 100);
+    } else {
+      document.body.classList.remove('not-authenticated');
+      if (authGate) authGate.style.display = 'none';
+      if (authArea) authArea.style.display = 'block';
+      this.updateUserRoleUI();
+    }
+  }
+
+  handleAuthGateLogin() {
+    const uInp = document.getElementById('authGateUsername');
+    const pInp = document.getElementById('authGatePassword');
+    const remCheck = document.getElementById('authGateRemember');
+    const errEl = document.getElementById('authGateErrorMsg');
+
+    const u = (uInp?.value || '').trim().toLowerCase();
+    const p = (pInp?.value || '').trim();
+
     if (errEl) errEl.style.display = 'none';
-    const modal = document.getElementById('loginModal');
-    if (modal) modal.classList.add('active');
-  }
+    if (uInp) uInp.style.borderColor = '#CBD5E1';
+    if (pInp) pInp.style.borderColor = '#CBD5E1';
 
-  closeLoginModal() {
-    document.getElementById('loginModal').classList.remove('active');
-  }
+    if (!u || !p) {
+      if (errEl) {
+        errEl.textContent = 'Vui lòng nhập đầy đủ Tên đăng nhập và Mật khẩu!';
+        errEl.style.display = 'block';
+      }
+      if (!u && uInp) uInp.style.borderColor = '#DC2626';
+      if (!p && pInp) pInp.style.borderColor = '#DC2626';
+      return;
+    }
 
-  handleLogin() {
-    const u = (document.getElementById('loginUsername')?.value || '').trim().toLowerCase();
-    const p = (document.getElementById('loginPassword')?.value || '').trim();
-    const errEl = document.getElementById('loginErrorMsg');
-
-    // Luôn đảm bảo danh sách users có đủ dữ liệu từ DEFAULT_USERS
     if (!this.users || this.users.length === 0) {
       this.users = window.DEFAULT_USERS || [];
     }
 
-    // Tìm kiếm user: so sánh chuỗi, không phân biệt hoa thường với username, hỗ trợ password dạng số hoặc chuỗi
     let found = this.users.find(user => 
       String(user.username || '').trim().toLowerCase() === u && 
       String(user.password || '').trim() === p
     );
 
-    // Hỗ trợ alias nếu user gõ tên nhân viên cũ
+    // Hỗ trợ alias cũ
     if (!found) {
       const aliasMap = {
         'nhanvien1': 'chinhanh1',
@@ -3994,7 +4018,7 @@ class GoldApp {
       }
     }
 
-    // Fallback: nếu trong this.users chưa có nhưng trong DEFAULT_USERS có tài khoản
+    // Fallback nếu có trong DEFAULT_USERS
     if (!found && window.DEFAULT_USERS) {
       found = window.DEFAULT_USERS.find(user =>
         String(user.username || '').trim().toLowerCase() === u &&
@@ -4008,20 +4032,33 @@ class GoldApp {
 
     if (!found) {
       if (errEl) {
-        errEl.textContent = 'Tên đăng nhập hoặc mật khẩu không đúng!';
+        errEl.textContent = 'Tên đăng nhập hoặc mật khẩu không chính xác! Vui lòng thử lại.';
         errEl.style.display = 'block';
+      }
+      if (pInp) {
+        pInp.style.borderColor = '#DC2626';
+        pInp.value = '';
+        pInp.focus();
       }
       return;
     }
 
+    // Xác thực thành công
     this.currentUser = found;
-    localStorage.setItem('pmqlv_current_user', JSON.stringify(found));
-    this.updateUserRoleUI();
-    this.closeLoginModal();
+    const isRemember = remCheck ? remCheck.checked : true;
+    if (isRemember) {
+      localStorage.setItem('pmqlv_current_user', JSON.stringify(found));
+      sessionStorage.removeItem('pmqlv_current_user');
+    } else {
+      sessionStorage.setItem('pmqlv_current_user', JSON.stringify(found));
+      localStorage.removeItem('pmqlv_current_user');
+    }
+
+    this.updateAuthGateUI();
+    this.renderGoldRatesTable();
     this.filterPosProducts();
     this.filterInventory();
     this.updateReportStats();
-    this.renderGoldRatesTable();
 
     let roleTitle = 'QUẢN LÝ CHUNG (ADMIN)';
     if (found.role === 'chinhanh') {
@@ -4029,7 +4066,45 @@ class GoldApp {
     } else if (found.role === 'nhanvien') {
       roleTitle = 'NHÂN VIÊN THU NGÂN';
     }
-    alert(`Đăng nhập thành công với tài khoản: ${found.fullName || found.username}\nVai trò: ${roleTitle}`);
+    this.showToast(`Chào mừng ${found.fullName || found.username} (${roleTitle}) đã đăng nhập!`, 'success');
+  }
+
+  toggleAuthPasswordVisibility() {
+    const pInp = document.getElementById('authGatePassword');
+    const eyeBtn = document.getElementById('authGatePasswordToggle');
+    if (!pInp) return;
+    if (pInp.type === 'password') {
+      pInp.type = 'text';
+      if (eyeBtn) eyeBtn.textContent = '🙈';
+    } else {
+      pInp.type = 'password';
+      if (eyeBtn) eyeBtn.textContent = '👁️';
+    }
+  }
+
+  logout() {
+    if (!confirm('Bạn có chắc chắn muốn đăng xuất khỏi hệ thống không?')) {
+      return;
+    }
+    this.currentUser = null;
+    localStorage.removeItem('pmqlv_current_user');
+    sessionStorage.removeItem('pmqlv_current_user');
+    this.updateAuthGateUI();
+
+    const uInp = document.getElementById('authGateUsername');
+    const pInp = document.getElementById('authGatePassword');
+    const errEl = document.getElementById('authGateErrorMsg');
+    if (uInp) uInp.value = '';
+    if (pInp) pInp.value = '';
+    if (errEl) errEl.style.display = 'none';
+  }
+
+  // Tương thích ngược nếu modal cũ được gọi
+  closeLoginModal() {
+    this.logout();
+  }
+  handleLogin() {
+    this.handleAuthGateLogin();
   }
 
   // ================= 10. XUẤT EXCEL =================

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>PMQLV - Phần Mềm Quản Lý & Bán Hàng Vàng Bạc Đá Quý</title>
-  <link rel="stylesheet" href="css/style.css?v=56">
+  <link rel="stylesheet" href="css/style.css?v=57">
   <!-- HTML5 QR Code & Barcode Scanner for Camera -->
     <script>
     window.onerror = function(msg, src, line, col, err) {
@@ -16,32 +16,103 @@
   <!-- SheetJS for Excel Import/Export -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
-<body>
+<body class="not-authenticated">
 
-  <!-- ================= APP HEADER ================= -->
-  <header class="app-header">
-    <div class="header-inner">
-      <div class="header-brand-row">
-        <div class="brand-box">
-          <div class="brand-logo-icon">👑</div>
-          <div class="brand-text">
-            <h1 id="headerStoreName">TIỆM VÀNG HOÀNG KIM</h1>
-            <p id="headerSlogan">Quản Lý Kho & Bán Hàng Vàng Bạc Đá Quý</p>
-          </div>
-        </div>
-
-        <!-- Trạng thái kết nối & User phân quyền -->
-        <div class="header-user-meta">
-          <div class="sync-status-badge" id="syncBadge" title="Bấm để kiểm tra đồng bộ Google Sheet" onclick="app.showSyncModal()">
-            <span class="status-dot" id="syncDot"></span>
-            <span class="text" id="syncText">Đang kiểm tra...</span>
-          </div>
-          <div class="user-badge" id="userBadge">
-            <span id="userRoleText">Admin</span>: <b id="userFullName">Chủ Tiệm</b>
-            <button class="btn-logout" onclick="app.logout()" title="Đăng xuất / Chuyển tài khoản">Đổi</button>
-          </div>
-        </div>
+  <!-- ================= PROFESSIONAL AUTH GATE SCREEN (KHÓA TOÀN BỘ NẾU CHƯA ĐĂNG NHẬP) ================= -->
+  <div id="appAuthGate">
+    <div class="auth-gate-card">
+      <div class="auth-gate-header">
+        <div class="auth-gate-logo">👑</div>
+        <h1 id="authGateStoreName" class="auth-gate-title">TIỆM VÀNG HOÀNG KIM</h1>
+        <p class="auth-gate-subtitle">HỆ THỐNG QUẢN LÝ NỘI BỘ & BÁN HÀNG</p>
       </div>
+
+      <div class="auth-gate-body">
+        <form onsubmit="event.preventDefault(); app.handleAuthGateLogin();">
+          <div class="auth-input-group">
+            <label class="auth-input-label">Tên Đăng Nhập</label>
+            <div class="auth-input-wrap">
+              <span class="auth-input-icon">👤</span>
+              <input type="text" id="authGateUsername" class="auth-form-control" placeholder="Nhập tên đăng nhập..." autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" required>
+            </div>
+          </div>
+
+          <div class="auth-input-group">
+            <label class="auth-input-label">Mật Khẩu</label>
+            <div class="auth-input-wrap">
+              <span class="auth-input-icon">🔒</span>
+              <input type="password" id="authGatePassword" class="auth-form-control" placeholder="Nhập mật khẩu..." autocomplete="current-password" required style="padding-right: 42px;">
+              <button type="button" id="authGatePasswordToggle" onclick="app.toggleAuthPasswordVisibility()" title="Hiện/ẩn mật khẩu" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 16px; color: #64748B; padding: 4px;">
+                👁️
+              </button>
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; font-size: 13px; color: #475569;">
+            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none;">
+              <input type="checkbox" id="authGateRemember" checked style="accent-color: #D97706; width: 16px; height: 16px; cursor: pointer;">
+              <span>Ghi nhớ đăng nhập</span>
+            </label>
+          </div>
+
+          <div id="authGateErrorMsg" style="display: none; background: #FEF2F2; border: 1px solid #FECACA; color: #DC2626; padding: 10px 12px; border-radius: 8px; font-size: 12.5px; font-weight: 600; margin-bottom: 14px; text-align: center;"></div>
+
+          <button type="submit" class="auth-btn-submit">
+            <span>🔐</span>
+            <span>ĐĂNG NHẬP HỆ THỐNG</span>
+          </button>
+        </form>
+
+        <!-- Phân cách dành cho Khách hàng -->
+        <div class="auth-public-divider">
+          <span>DÀNH CHO KHÁCH HÀNG</span>
+        </div>
+
+        <div class="auth-public-links">
+          <a href="bang-gia-vang.html" target="_blank" class="auth-public-btn btn-tv" title="Xem Bảng Giá Vàng Điện Tử Chiếu TV">
+            <span style="font-size: 20px;">📺</span>
+            <span>Xem Bảng Giá TV</span>
+          </a>
+          <a href="san-pham.html" target="_blank" class="auth-public-btn btn-shop" title="Xem Danh Mục Sản Phẩm Dành Cho Khách Hàng">
+            <span style="font-size: 20px;">🛍️</span>
+            <span>Trang Khách Xem</span>
+          </a>
+        </div>
+
+        <p style="text-align: center; margin-top: 14px; margin-bottom: 0; font-size: 11.5px; color: #94A3B8; line-height: 1.4;">
+          🛡️ Hệ thống nội bộ chỉ dành cho Quản trị viên & Nhân viên. Khách hàng vui lòng truy cập 2 mục công khai ở trên.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= AUTHENTICATED APPLICATION AREA (CHỈ HIỆN KHI ĐÃ ĐĂNG NHẬP) ================= -->
+  <div id="appAuthenticatedArea" style="display: none;">
+
+    <!-- ================= APP HEADER ================= -->
+    <header class="app-header">
+      <div class="header-inner">
+        <div class="header-brand-row">
+          <div class="brand-box">
+            <div class="brand-logo-icon">👑</div>
+            <div class="brand-text">
+              <h1 id="headerStoreName">TIỆM VÀNG HOÀNG KIM</h1>
+              <p id="headerSlogan">Quản Lý Kho & Bán Hàng Vàng Bạc Đá Quý</p>
+            </div>
+          </div>
+
+          <!-- Trạng thái kết nối & User phân quyền -->
+          <div class="header-user-meta">
+            <div class="sync-status-badge" id="syncBadge" title="Bấm để kiểm tra đồng bộ Google Sheet" onclick="app.showSyncModal()">
+              <span class="status-dot" id="syncDot"></span>
+              <span class="text" id="syncText">Đang kiểm tra...</span>
+            </div>
+            <div class="user-badge" id="userBadge">
+              <span id="userRoleText">Admin</span>: <b id="userFullName">Chủ Tiệm</b>
+              <button class="btn-logout" onclick="app.logout()" title="Đăng xuất khỏi hệ thống" style="background: #FEE2E2; color: #991B1B; border: 1px solid #FECACA; padding: 3px 8px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 11px; margin-left: 6px;">🚪 Đăng xuất</button>
+            </div>
+          </div>
+        </div>
 
       <div class="header-actions-row">
         <!-- Chọn Chi Nhánh -->
@@ -1488,11 +1559,13 @@
     </div>
   </div>
 
+  </div> <!-- /#appAuthenticatedArea -->
+
   <!-- Scripts -->
   <script src="js/defaultData.js?v=51"></script>
   <script src="js/googleSheetService.js?v=51"></script>
   <script src="js/cloudinaryService.js?v=51"></script>
   <script src="js/barcodeLabel.js?v=51"></script>
-  <script src="js/app.js?v=56"></script>
+  <script src="js/app.js?v=57"></script>
 </body>
 </html>
