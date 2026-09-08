@@ -153,7 +153,17 @@ class GoldApp {
           this.users = merged;
           localStorage.setItem('pmqlv_users', JSON.stringify(this.users));
         }
-        if (data.orders && Array.isArray(data.orders)) this.orders = data.orders;
+        if (data.orders && Array.isArray(data.orders)) {
+          this.orders = data.orders;
+          this.orders.forEach(o => {
+            if (typeof o.items === 'string') {
+              try { o.items = JSON.parse(o.items); } catch(e) { o.items = []; }
+            } else if (typeof o.chiTietSanPham === 'string') {
+              try { o.items = JSON.parse(o.chiTietSanPham); } catch(e) { o.items = []; }
+            }
+            o.chiNhanh = this.normalizeOrderBranch(o);
+          });
+        }
         if (data.storeConfig && typeof data.storeConfig === 'object') {
           this.storeConfig = Object.assign({}, this.storeConfig, data.storeConfig);
           localStorage.setItem('pmqlv_store_config', JSON.stringify(this.storeConfig));
@@ -261,6 +271,7 @@ class GoldApp {
       } else if (typeof o.chiTietSanPham === 'string') {
         try { o.items = JSON.parse(o.chiTietSanPham); } catch(e) { o.items = []; }
       }
+      o.chiNhanh = this.normalizeOrderBranch(o);
     });
 
     // 7. Mặt hàng vừa thêm mới hoặc vừa sửa (để tiện in tem, đồng bộ đa thiết bị)
@@ -1100,6 +1111,10 @@ class GoldApp {
     const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
     const maHD = 'HD' + dateStr + '-' + Math.floor(1000 + Math.random() * 9000);
 
+    const branchName = (this.currentBranch === 'Chi nhánh 2' ? 'Chi nhánh 2' : 'Chi nhánh 1');
+    const staffName = (this.currentUser && this.currentUser.fullName) || (branchName === 'Chi nhánh 2' ? 'Quản Lý Chi Nhánh 2' : 'Admin');
+    const sellerUsername = (this.currentUser && this.currentUser.username) || (branchName === 'Chi nhánh 2' ? 'chinhanh2' : 'admin');
+
     const orderData = {
       maHD: maHD,
       ngayBan: now.toLocaleString('vi-VN'),
@@ -1113,14 +1128,15 @@ class GoldApp {
         donGia: c.donGiaVang,
         congBan: c.congBan,
         thanhTien: c.thanhTien,
-        giaVon: c.product.giaVon // Thêm giá vốn vào chi tiết để dự phòng
+        giaVon: c.product.giaVon, // Thêm giá vốn vào chi tiết để dự phòng
+        chiNhanh: c.product.chiNhanh || branchName
       })),
       tongTien: grandTotal,
       tongVon: grandCost,
-      nhanVien: (this.currentUser && this.currentUser.fullName) || 'Admin',
-      nguoiBan: (this.currentUser && this.currentUser.username) || 'admin',
-      ghiChu: '',
-      chiNhanh: this.currentBranch
+      nhanVien: staffName,
+      nguoiBan: sellerUsername,
+      ghiChu: `[${branchName}]`,
+      chiNhanh: branchName
     };
 
     this.showGlobalLoading('Đang thanh toán và lưu lên Google Sheet...');
@@ -2366,6 +2382,40 @@ class GoldApp {
 
   // ================= 5. BÁO CÁO & THỐNG KÊ (ADMIN) =================
 
+  // Chuẩn hóa và nhận diện chính xác chi nhánh của hóa đơn
+  normalizeOrderBranch(o) {
+    if (!o) return 'Chi nhánh 1';
+
+    // 1. Kiểm tra trường chiNhanh có sẵn
+    const raw = o.chiNhanh ? String(o.chiNhanh).trim() : '';
+    if (raw === 'Chi nhánh 2') return 'Chi nhánh 2';
+
+    // 2. Kiểm tra dấu hiệu Chi nhánh 2 (kể cả khi raw đang là 'Chi nhánh 1' do fallback cũ)
+    // Kiểm tra theo tài khoản người bán hoặc tên nhân viên
+    if (o.nguoiBan === 'chinhanh2' || (o.nhanVien && o.nhanVien.includes('Chi nhánh 2'))) {
+      return 'Chi nhánh 2';
+    }
+
+    // Kiểm tra trong ghi chú (ví dụ: [Chi nhánh 2])
+    if (o.ghiChu && o.ghiChu.includes('Chi nhánh 2')) {
+      return 'Chi nhánh 2';
+    }
+
+    // Kiểm tra trong danh sách món hàng đã bán
+    if (Array.isArray(o.items) && o.items.length > 0) {
+      for (const it of o.items) {
+        if (!it) continue;
+        if (it.chiNhanh === 'Chi nhánh 2') return 'Chi nhánh 2';
+        if (it.maHang && Array.isArray(this.products)) {
+          const p = this.products.find(prod => prod && prod.maHang === it.maHang);
+          if (p && p.chiNhanh === 'Chi nhánh 2') return 'Chi nhánh 2';
+        }
+      }
+    }
+
+    return raw === 'Chi nhánh 1' ? 'Chi nhánh 1' : 'Chi nhánh 1';
+  }
+
   updateReportStats() {
     const totalItemsEl = document.getElementById('statTotalItems');
     const totalGoldEl = document.getElementById('statTotalGoldWeight');
@@ -2402,8 +2452,9 @@ class GoldApp {
     const toDate = toInput && toInput.value ? new Date(toInput.value + 'T23:59:59') : null;
 
     let filteredOrders = this.orders.filter(o => {
-      // 1. Chi nhánh
-      const branchMatch = (activeBranch === 'ALL' && isAdmin) || (o.chiNhanh === activeBranch) || (!o.chiNhanh && activeBranch === 'Chi nhánh 1');
+      // 1. Chi nhánh (chuẩn hóa tự động từ đơn hàng/mặt hàng/nhân viên)
+      const orderBranch = this.normalizeOrderBranch(o);
+      const branchMatch = (activeBranch === 'ALL' && isAdmin) || (orderBranch === activeBranch);
       if (!branchMatch) return false;
 
       // 2. Ngày
@@ -2531,7 +2582,8 @@ class GoldApp {
           const isBr = u && u.role === 'chinhanh';
 
           const myBranchName = u ? (u.chiNhanh || (u.username === 'chinhanh2' ? 'Chi nhánh 2' : 'Chi nhánh 1')) : '';
-          const isOrderOfMyBranch = (o.chiNhanh === myBranchName) || (!o.chiNhanh && myBranchName === 'Chi nhánh 1');
+          const orderBranch = this.normalizeOrderBranch(o);
+          const isOrderOfMyBranch = (orderBranch === myBranchName);
           const isOrderSoldByMe = (o.nguoiBan && o.nguoiBan === u.username) ||
                                   (o.nhanVien && (o.nhanVien === u.fullName || o.nhanVien === u.username)) ||
                                   (isBr && isOrderOfMyBranch);
@@ -2554,7 +2606,7 @@ class GoldApp {
               <td style="font-size:12px;">${o.ngayBan}</td>
               <td>${o.tenKhach || 'Khách lẻ'}</td>
               <td>${o.sdt || '--'}</td>
-              <td>${o.chiNhanh || 'Chi nhánh 1'}</td>
+              <td><b>${orderBranch}</b></td>
               <td style="text-align:center;">${(o.items && o.items.length) || 0} món</td>
               <td style="text-align: right;">${tongTienStr}</td>
               <td style="text-align: right; color: #059669; font-size:12px;">${showProfit ? profitNum.toLocaleString('vi-VN') + ' đ' : '--'}</td>
@@ -2622,7 +2674,8 @@ class GoldApp {
 
     if (!isAdm) {
       const myBranchName = u ? (u.chiNhanh || (u.username === 'chinhanh2' ? 'Chi nhánh 2' : 'Chi nhánh 1')) : '';
-      const isOrderOfMyBranch = (order.chiNhanh === myBranchName) || (!order.chiNhanh && myBranchName === 'Chi nhánh 1');
+      const orderBranch = this.normalizeOrderBranch(order);
+      const isOrderOfMyBranch = (orderBranch === myBranchName);
       const isOrderSoldByMe = (order.nguoiBan && order.nguoiBan === u.username) ||
                               (order.nhanVien && (order.nhanVien === u.fullName || order.nhanVien === u.username)) ||
                               (isBr && isOrderOfMyBranch);
@@ -2749,7 +2802,7 @@ class GoldApp {
       ghiChu: `[HOÀN HÀNG] Hủy HĐ ${maHD} - Lý do: ${reason}`,
       trangThai: 'Hoàn hàng',
       maHDGoc: maHD,
-      chiNhanh: order.chiNhanh || 'Chi nhánh 1'
+      chiNhanh: this.normalizeOrderBranch(order)
     };
     this.orders.unshift(returnEntry);
 
@@ -2934,6 +2987,14 @@ class GoldApp {
         }
         if (data.orders && Array.isArray(data.orders)) {
           this.orders = data.orders;
+          this.orders.forEach(o => {
+            if (typeof o.items === 'string') {
+              try { o.items = JSON.parse(o.items); } catch(e) { o.items = []; }
+            } else if (typeof o.chiTietSanPham === 'string') {
+              try { o.items = JSON.parse(o.chiTietSanPham); } catch(e) { o.items = []; }
+            }
+            o.chiNhanh = this.normalizeOrderBranch(o);
+          });
           this.saveOrdersToLocal();
         }
         if (data.storeConfig && typeof data.storeConfig === 'object') {

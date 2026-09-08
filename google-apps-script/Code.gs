@@ -299,13 +299,12 @@ function doPost(e) {
       // Clear contents but keep headers if they exist, or just clear all and re-add headers
       orderSheet.clearContents();
       
-      const headers = ['maHD', 'ngayBan', 'tenKhach', 'sdt', 'items', 'tongTien', 'tongVon', 'nhanVien', 'ghiChu', 'trangThai', 'lyDoHuy', 'maHoanHang', 'maHDGoc'];
+      const headers = ['maHD', 'ngayBan', 'tenKhach', 'sdt', 'items', 'tongTien', 'tongVon', 'nhanVien', 'ghiChu', 'trangThai', 'lyDoHuy', 'maHoanHang', 'maHDGoc', 'chiNhanh', 'nguoiBan'];
       orderSheet.appendRow(headers);
+      formatHeaderRow(orderSheet, headers.length);
 
       if (orders.length > 0) {
         // Prepare 2D array for bulk insert
-        // The frontend orders array goes from newest (index 0) to oldest. 
-        // We can just write them in the same order.
         const rows = orders.map(order => [
           order.maHD || '',
           order.ngayBan || '',
@@ -319,7 +318,9 @@ function doPost(e) {
           order.trangThai || 'Đã bán',
           order.lyDoHuy || '',
           order.maHoanHang || '',
-          order.maHDGoc || ''
+          order.maHDGoc || '',
+          order.chiNhanh || '',
+          order.nguoiBan || ''
         ]);
         
         orderSheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
@@ -330,26 +331,54 @@ function doPost(e) {
 
     // 4. Tạo đơn bán hàng & Tự động đổi trạng thái sản phẩm sang 'Đã bán'
     if (action === 'createOrder') {
-      const order = contents.order; // { maHD, ngayBan, tenKhach, sdt, tongTien, nhanVien, ghiChu, items: [] }
+      const order = contents.order; // { maHD, ngayBan, tenKhach, sdt, tongTien, nhanVien, ghiChu, items: [], chiNhanh, nguoiBan }
       const ss = SpreadsheetApp.getActiveSpreadsheet();
       
       // Ghi đơn vào sheet HoaDon
-      const orderSheet = ss.getSheetByName(SHEET_NAMES.HOA_DON);
-      const orderRow = [
-        order.maHD || '',
-        order.ngayBan || Utilities.formatDate(new Date(), 'GMT+7', 'yyyy-MM-dd HH:mm:ss'),
-        order.tenKhach || 'Khách lẻ',
-        order.sdt || '',
-        JSON.stringify(order.items || []),
-        Number(order.tongTien) || 0,
-        Number(order.tongVon) || 0, // NEW
-        order.nhanVien || '',
-        order.ghiChu || '',
-        'Đã bán', // trangThai
-        '',       // lyDoHuy
-        '',       // maHoanHang
-        ''        // maHDGoc
-      ];
+      let orderSheet = ss.getSheetByName(SHEET_NAMES.HOA_DON);
+      if (!orderSheet) {
+        orderSheet = ss.insertSheet(SHEET_NAMES.HOA_DON);
+      }
+      const data = orderSheet.getDataRange().getValues();
+      let headers = data.length > 0 ? data[0].map(h => String(h).trim()) : [];
+
+      if (headers.length === 0) {
+        headers = ['maHD', 'ngayBan', 'tenKhach', 'sdt', 'items', 'tongTien', 'tongVon', 'nhanVien', 'ghiChu', 'trangThai', 'lyDoHuy', 'maHoanHang', 'maHDGoc', 'chiNhanh', 'nguoiBan'];
+        orderSheet.appendRow(headers);
+        formatHeaderRow(orderSheet, headers.length);
+      } else {
+        // Tự động thêm cột chiNhanh và nguoiBan nếu sheet HoaDon chưa có
+        if (headers.indexOf('chiNhanh') === -1) {
+          headers.push('chiNhanh');
+          orderSheet.getRange(1, headers.length).setValue('chiNhanh');
+          formatHeaderRow(orderSheet, headers.length);
+        }
+        if (headers.indexOf('nguoiBan') === -1) {
+          headers.push('nguoiBan');
+          orderSheet.getRange(1, headers.length).setValue('nguoiBan');
+          formatHeaderRow(orderSheet, headers.length);
+        }
+      }
+
+      const fieldMap = {
+        maHD: order.maHD || '',
+        ngayBan: order.ngayBan || Utilities.formatDate(new Date(), 'GMT+7', 'yyyy-MM-dd HH:mm:ss'),
+        tenKhach: order.tenKhach || 'Khách lẻ',
+        sdt: order.sdt || '',
+        items: JSON.stringify(order.items || []),
+        tongTien: Number(order.tongTien) || 0,
+        tongVon: Number(order.tongVon) || 0,
+        nhanVien: order.nhanVien || '',
+        ghiChu: order.ghiChu || '',
+        trangThai: order.trangThai || 'Đã bán',
+        lyDoHuy: order.lyDoHuy || '',
+        maHoanHang: order.maHoanHang || '',
+        maHDGoc: order.maHDGoc || '',
+        chiNhanh: order.chiNhanh || '',
+        nguoiBan: order.nguoiBan || ''
+      };
+
+      const orderRow = headers.map(h => fieldMap[h] !== undefined ? fieldMap[h] : '');
       orderSheet.appendRow(orderRow);
 
       // Cập nhật trạng thái 'Đã bán' cho các mã hàng trong sheet SanPham
@@ -509,7 +538,7 @@ function initSheetsIfNotExist() {
   // 2. HoaDon
   if (!ss.getSheetByName(SHEET_NAMES.HOA_DON)) {
     const s = ss.insertSheet(SHEET_NAMES.HOA_DON);
-    const headers = ['maHD', 'ngayBan', 'tenKhach', 'sdt', 'items', 'tongTien', 'tongVon', 'nhanVien', 'ghiChu', 'trangThai', 'lyDoHuy', 'maHoanHang', 'maHDGoc'];
+    const headers = ['maHD', 'ngayBan', 'tenKhach', 'sdt', 'items', 'tongTien', 'tongVon', 'nhanVien', 'ghiChu', 'trangThai', 'lyDoHuy', 'maHoanHang', 'maHDGoc', 'chiNhanh', 'nguoiBan'];
     s.appendRow(headers);
     formatHeaderRow(s, headers.length);
   }

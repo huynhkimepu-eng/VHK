@@ -130,6 +130,18 @@ const GoogleSheetService = {
             } else if (typeof o.chiTietSanPham === 'string') {
               try { o.items = JSON.parse(o.chiTietSanPham); } catch(e) { o.items = []; }
             }
+            // Khôi phục chính xác chi nhánh cho đơn hàng nếu chưa có hoặc đang trống
+            if (!o.chiNhanh || o.chiNhanh === 'undefined' || o.chiNhanh === 'null' || !String(o.chiNhanh).trim()) {
+              if (Array.isArray(o.items) && o.items.length > 0) {
+                const itBranch = o.items.find(it => it && it.chiNhanh);
+                if (itBranch) o.chiNhanh = itBranch.chiNhanh;
+              }
+              if (!o.chiNhanh) {
+                if (o.nguoiBan === 'chinhanh2' || (o.nhanVien && o.nhanVien.includes('Chi nhánh 2')) || (o.ghiChu && o.ghiChu.includes('Chi nhánh 2'))) {
+                  o.chiNhanh = 'Chi nhánh 2';
+                }
+              }
+            }
             return o;
           });
         }
