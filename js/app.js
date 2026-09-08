@@ -24,6 +24,10 @@ class GoldApp {
     this.itemsPerPage = 40;
     this.selectedMaHangSet = new Set();
 
+    // Mặt hàng vừa thêm mới hoặc vừa sửa (tiện in tem)
+    this.recentModifiedItems = []; // [{ maHang: string, type: 'new' | 'edit', timestamp: number }]
+    this.isFilteringRecentOnly = false;
+
     // Camera Scanner
     this.html5QrCode = null;
     this.scannerMode = 'pos'; // 'pos' hoặc 'inv'
@@ -36,6 +40,7 @@ class GoldApp {
     try {
       this.showGlobalLoading('Đang tải dữ liệu...');
       this.loadLocalData();
+      this.updateRecentModifiedUI();
       this.applyStoreConfig();
       this.setupEventListeners();
       this.updateUserRoleUI();
@@ -251,6 +256,18 @@ class GoldApp {
         try { o.items = JSON.parse(o.chiTietSanPham); } catch(e) { o.items = []; }
       }
     });
+
+    // 7. Mặt hàng vừa thêm mới hoặc vừa sửa (để tiện in tem)
+    const savedRecent = localStorage.getItem('pmqlv_recent_modified_items');
+    if (savedRecent) {
+      try {
+        this.recentModifiedItems = JSON.parse(savedRecent) || [];
+      } catch(e) {
+        this.recentModifiedItems = [];
+      }
+    } else {
+      this.recentModifiedItems = [];
+    }
   }
 
   saveProductsToLocal() {
@@ -823,6 +840,149 @@ class GoldApp {
 
   // ================= 2. QUẢN LÝ KHO HÀNG (INVENTORY) =================
 
+  // Quản lý danh sách mặt hàng vừa thêm mới hoặc vừa sửa (tiện in tem)
+  saveRecentModifiedItems() {
+    try {
+      localStorage.setItem('pmqlv_recent_modified_items', JSON.stringify(this.recentModifiedItems || []));
+    } catch (e) {
+      console.warn('Lỗi lưu pmqlv_recent_modified_items:', e);
+    }
+  }
+
+  addRecentModifiedProduct(maHang, type = 'new', autoSave = true) {
+    if (!maHang) return;
+    if (!this.recentModifiedItems) this.recentModifiedItems = [];
+    // Loại bỏ mục cũ nếu có để đưa lên đầu danh sách với timestamp mới nhất
+    this.recentModifiedItems = this.recentModifiedItems.filter(item => item.maHang !== maHang);
+    this.recentModifiedItems.unshift({
+      maHang: maHang,
+      type: type, // 'new' | 'edit'
+      timestamp: Date.now()
+    });
+    if (autoSave) {
+      this.saveRecentModifiedItems();
+      this.updateRecentModifiedUI();
+    }
+  }
+
+  removeRecentModifiedProduct(maHang) {
+    if (!maHang || !this.recentModifiedItems) return;
+    this.recentModifiedItems = this.recentModifiedItems.filter(item => item.maHang !== maHang);
+    this.saveRecentModifiedItems();
+    this.updateRecentModifiedUI();
+  }
+
+  clearRecentModifiedList() {
+    const count = this.recentModifiedItems ? this.recentModifiedItems.length : 0;
+    if (count === 0) {
+      alert('Danh sách hàng vừa thêm mới/sửa đang trống!');
+      return;
+    }
+    if (confirm(`Bạn có chắc muốn đặt lại (làm trống) danh sách ${count} mặt hàng vừa thêm/sửa này không?\n\n(Chức năng này dùng sau khi bạn đã in tem xong để chuẩn bị cho đợt hàng tiếp theo)`)) {
+      this.recentModifiedItems = [];
+      this.saveRecentModifiedItems();
+      if (this.isFilteringRecentOnly) {
+        this.isFilteringRecentOnly = false;
+        const statusSelect = document.getElementById('invStatusFilter');
+        if (statusSelect && statusSelect.value === 'RECENT_MODIFIED') {
+          statusSelect.value = 'Còn tồn';
+        }
+      }
+      this.updateRecentModifiedUI();
+      this.filterInventory();
+      this.showToast('Đã làm trống danh sách hàng chờ in tem!', 'success');
+    }
+  }
+
+  toggleRecentFilter() {
+    this.isFilteringRecentOnly = !this.isFilteringRecentOnly;
+    const statusSelect = document.getElementById('invStatusFilter');
+    if (this.isFilteringRecentOnly) {
+      if (statusSelect) statusSelect.value = 'RECENT_MODIFIED';
+    } else {
+      if (statusSelect && statusSelect.value === 'RECENT_MODIFIED') {
+        statusSelect.value = 'Còn tồn';
+      }
+    }
+    this.filterInventory();
+    this.updateRecentModifiedUI();
+  }
+
+  updateRecentModifiedUI() {
+    const count = (this.recentModifiedItems && Array.isArray(this.recentModifiedItems)) ? this.recentModifiedItems.length : 0;
+
+    // 1. Nút trên thanh công cụ
+    const countBadge = document.getElementById('recentCountBadge');
+    if (countBadge) countBadge.textContent = count;
+
+    const btnTop = document.getElementById('btnToggleRecentFilter');
+    if (btnTop) {
+      if (this.isFilteringRecentOnly) {
+        btnTop.innerHTML = `🔙 Xem Tất Cả Kho`;
+        btnTop.style.background = '#2563EB';
+        btnTop.style.color = '#FFF';
+        btnTop.style.borderColor = '#1D4ED8';
+      } else {
+        btnTop.innerHTML = `✨ Vừa Thêm/Sửa (<span id="recentCountBadge">${count}</span>)`;
+        btnTop.style.background = count > 0 ? '#FEF3C7' : '#F1F5F9';
+        btnTop.style.color = count > 0 ? '#92400E' : '#64748B';
+        btnTop.style.borderColor = count > 0 ? '#F59E0B' : '#CBD5E1';
+      }
+    }
+
+    // 2. Banner thông báo trên bảng
+    const banner = document.getElementById('recentModifiedBanner');
+    const bannerCount = document.getElementById('bannerRecentCount');
+    const bannerBtnPrintCount = document.getElementById('bannerBtnPrintCount');
+    const btnBannerFilter = document.getElementById('btnBannerFilterRecent');
+
+    if (bannerCount) bannerCount.textContent = count;
+    if (bannerBtnPrintCount) bannerBtnPrintCount.textContent = count;
+
+    if (banner) {
+      if (count > 0) {
+        banner.style.display = 'flex';
+      } else {
+        banner.style.display = 'none';
+      }
+    }
+
+    if (btnBannerFilter) {
+      if (this.isFilteringRecentOnly) {
+        btnBannerFilter.innerHTML = '🔙 Xem Toàn Bộ Kho';
+        btnBannerFilter.style.background = '#DBEAFE';
+      } else {
+        btnBannerFilter.innerHTML = '👁️ Xem Danh Sách Này';
+        btnBannerFilter.style.background = '#FFF';
+      }
+    }
+  }
+
+  printAllRecentTags() {
+    if (!this.recentModifiedItems || this.recentModifiedItems.length === 0) {
+      alert('Không có mặt hàng nào trong danh sách vừa thêm mới hoặc sửa để in tem!');
+      return;
+    }
+
+    // Lấy các sản phẩm có mã trong danh sách theo đúng thứ tự
+    const matchedProducts = [];
+    this.recentModifiedItems.forEach(item => {
+      const p = this.products.find(prod => prod.maHang === item.maHang);
+      if (p) matchedProducts.push(p);
+    });
+
+    if (matchedProducts.length === 0) {
+      alert('Không tìm thấy thông tin sản phẩm tương ứng trong kho hàng!');
+      return;
+    }
+
+    if (typeof BarcodeLabel !== 'undefined' && BarcodeLabel.printTags) {
+      BarcodeLabel.printTags(matchedProducts, this.getTagConfig());
+    } else {
+      alert('Thư viện in tem BarcodeLabel chưa sẵn sàng!');
+    }
+  }
+
   filterInventory() {
     const keyword = (document.getElementById('invSearchInput')?.value || '').trim().toLowerCase();
     const counter = document.getElementById('invCounterFilter')?.value || 'ALL';
@@ -832,13 +992,21 @@ class GoldApp {
     const activeBranch = this.currentBranch;
     const isAdmin = this.currentUser && this.currentUser.role === 'admin';
 
-    this.filteredProducts = this.products.filter(p => {
-      // Check branch
-      const branchMatch = (activeBranch === 'ALL' && isAdmin) || (p.chiNhanh === activeBranch) || (!p.chiNhanh && activeBranch === 'Chi nhánh 1');
-      if (!branchMatch) return false;
+    const isFilteringRecent = (status === 'RECENT_MODIFIED') || this.isFilteringRecentOnly;
+    const recentMaMap = new Map((this.recentModifiedItems || []).map(i => [i.maHang, i]));
 
-      // Lọc trạng thái
-      if (status !== 'ALL' && p.trangThai !== status) return false;
+    this.filteredProducts = this.products.filter(p => {
+      // Nếu đang lọc theo danh sách vừa thêm mới/sửa
+      if (isFilteringRecent) {
+        if (!recentMaMap.has(p.maHang)) return false;
+      } else {
+        // Check branch
+        const branchMatch = (activeBranch === 'ALL' && isAdmin) || (p.chiNhanh === activeBranch) || (!p.chiNhanh && activeBranch === 'Chi nhánh 1');
+        if (!branchMatch) return false;
+
+        // Lọc trạng thái
+        if (status !== 'ALL' && p.trangThai !== status) return false;
+      }
 
       // Lọc quầy
       if (counter !== 'ALL' && p.quayNho !== counter) return false;
@@ -859,6 +1027,15 @@ class GoldApp {
 
       return true;
     });
+
+    // Nếu đang lọc theo danh sách vừa thêm/sửa, ưu tiên sắp xếp các món mới nhất lên trên
+    if (isFilteringRecent) {
+      this.filteredProducts.sort((a, b) => {
+        const itemA = recentMaMap.get(a.maHang);
+        const itemB = recentMaMap.get(b.maHang);
+        return (itemB ? (itemB.timestamp || 0) : 0) - (itemA ? (itemA.timestamp || 0) : 0);
+      });
+    }
 
     this.currentPage = 1;
     this.renderInventoryTable();
@@ -898,6 +1075,7 @@ class GoldApp {
 
     const isAdmin = this.currentUser && this.currentUser.role === 'admin';
     const multiplier = this.storeConfig.currencyUnitMultiplier || 1000;
+    const recentMaMap = new Map((this.recentModifiedItems || []).map(i => [i.maHang, i]));
 
     if (pageItems.length === 0) {
       const activeBranch = this.currentBranch;
@@ -920,6 +1098,16 @@ class GoldApp {
       const isSelected = this.selectedMaHangSet.has(p.maHang);
       const isSold = (p.trangThai === 'Đã bán');
       const statusClass = isSold ? 'badge-sold' : 'badge-instock';
+
+      const recentInfo = recentMaMap.get(p.maHang);
+      let recentBadge = '';
+      if (recentInfo) {
+        if (recentInfo.type === 'new') {
+          recentBadge = ` <span style="display:inline-block; font-size:9.5px; background:#ECFDF5; color:#065F46; border:1px solid #A7F3D0; border-radius:4px; padding:1px 4px; font-weight:700; vertical-align:middle;" title="Sản phẩm mới thêm vào kho">🆕 Mới</span>`;
+        } else {
+          recentBadge = ` <span style="display:inline-block; font-size:9.5px; background:#FEF3C7; color:#92400E; border:1px solid #FDE68A; border-radius:4px; padding:1px 4px; font-weight:700; vertical-align:middle;" title="Sản phẩm vừa chỉnh sửa">✏️ Đã sửa</span>`;
+        }
+      }
 
       return `
         <tr style="${isSold ? 'background-color: #FFF5F5;' : ''}">
@@ -944,7 +1132,7 @@ class GoldApp {
                    </div>`;
             })()}
           </td>
-          <td><b>${p.maHang}</b></td>
+          <td><b>${p.maHang}</b>${recentBadge}</td>
           <td>
             <div style="font-weight: 600;">${p.tenHang || '--'}</div>
             ${p.nhaCungCap ? `<span style="font-size: 10px; background: #DCFCE7; color: #166534; padding: 1px 6px; border-radius: 4px; font-weight: 700; display: inline-block; margin-top: 2px;" title="Nhà cung cấp">🏢 ${p.nhaCungCap}</span>` : ''}
@@ -3129,11 +3317,15 @@ class GoldApp {
         btn.textContent = origText;
       }
 
+      const isNew = existingIndex < 0;
       if (existingIndex >= 0) {
         this.products[existingIndex] = { ...this.products[existingIndex], ...productData };
       } else {
         this.products.unshift(productData);
       }
+
+      // Đánh dấu mặt hàng vừa thêm mới / vừa sửa để tiện in tem
+      this.addRecentModifiedProduct(productData.maHang, isNew ? 'new' : 'edit');
 
       this.saveProductsToLocal();
       this.closeProductModal();
@@ -3197,6 +3389,7 @@ class GoldApp {
     }
 
     this.products = this.products.filter(p => p.maHang !== maHang);
+    this.removeRecentModifiedProduct(maHang);
     this.saveProductsToLocal();
     this.filterInventory();
     this.filterPosProducts();
@@ -3708,10 +3901,17 @@ class GoldApp {
         if (existingIdx >= 0) {
           this.products[existingIdx] = { ...this.products[existingIdx], ...item };
           updatedCount++;
+          this.addRecentModifiedProduct(maHang, 'edit', false);
         } else {
           this.products.unshift(item);
           addedCount++;
+          this.addRecentModifiedProduct(maHang, 'new', false);
         }
+      }
+
+      if (addedCount > 0 || updatedCount > 0) {
+        this.saveRecentModifiedItems();
+        this.updateRecentModifiedUI();
       }
 
       this.saveProductsToLocal();
