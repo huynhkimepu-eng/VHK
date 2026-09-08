@@ -23,7 +23,30 @@ const BarcodeLabel = {
     if (!text) return '';
     text = String(text).trim();
 
-    // Code 128B start code = 104
+    // 1. Ưu tiên sử dụng thư viện chuẩn quốc tế JsBarcode nếu đã tải xong
+    if (typeof JsBarcode !== 'undefined') {
+      try {
+        const svgNode = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        JsBarcode(svgNode, text, {
+          format: "CODE128",
+          displayValue: false,
+          height: height,
+          margin: 10,
+          background: "#ffffff",
+          lineColor: "#000000"
+        });
+        svgNode.setAttribute('class', 'barcode-svg');
+        svgNode.style.width = '100%';
+        svgNode.style.height = '100%';
+        svgNode.style.maxHeight = height + 'px';
+        svgNode.style.display = 'block';
+        return svgNode.outerHTML;
+      } catch (err) {
+        console.warn('JsBarcode error, falling back:', err);
+      }
+    }
+
+    // 2. Bộ tạo Code 128B dự phòng chuẩn xác
     let checksum = 104;
     const codes = [104];
 
@@ -51,7 +74,7 @@ const BarcodeLabel = {
     }
 
     // Thêm khoảng trắng an toàn (Quiet Zone) 10 vạch ở 2 bên theo chuẩn Barcode Code 128 quốc tế
-    const quietZone = 10;
+    const quietZone = 12;
     let rects = '';
     let x = quietZone;
     const barWidth = 1.0;
