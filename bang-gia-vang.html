@@ -182,6 +182,185 @@
       100% { opacity: 0.4; transform: scale(0.9); }
     }
 
+    /* Address Line */
+    .address-line {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13.5px;
+      color: #475569;
+      font-weight: 600;
+      margin-top: 5px;
+    }
+
+    .address-pin {
+      font-size: 15px;
+      color: #DC2626;
+      filter: drop-shadow(0 1px 2px rgba(220, 38, 38, 0.25));
+    }
+
+    /* Settings Button on TV Header */
+    .btn-tv-settings {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #FFFFFF;
+      border: 1.5px solid #E5C378;
+      color: #92400E;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(217, 119, 6, 0.12);
+      transition: all 0.2s ease;
+      font-family: 'Montserrat', sans-serif;
+      margin-left: auto;
+    }
+
+    .btn-tv-settings:hover {
+      background: #FEF3C7;
+      border-color: #D97706;
+      transform: translateY(-1px);
+    }
+
+    /* Store Config Modal */
+    .tv-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(5px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 20px;
+    }
+
+    .tv-modal-card {
+      background: #FFFFFF;
+      border: 2px solid #E5C378;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 560px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
+      overflow: hidden;
+      animation: modalFadeIn 0.2s ease-out;
+    }
+
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .tv-modal-header {
+      background: linear-gradient(135deg, #92400E 0%, #B45309 50%, #78350F 100%);
+      color: #FFFFFF;
+      padding: 16px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .tv-modal-header h2 {
+      font-size: 18px;
+      font-weight: 800;
+      margin: 0;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tv-modal-close {
+      background: transparent;
+      border: none;
+      color: #FFFFFF;
+      font-size: 22px;
+      cursor: pointer;
+      line-height: 1;
+      padding: 4px;
+      opacity: 0.85;
+      transition: opacity 0.2s;
+    }
+
+    .tv-modal-close:hover { opacity: 1; }
+
+    .tv-modal-body {
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+
+    .tv-form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .tv-form-group label {
+      font-size: 13px;
+      font-weight: 700;
+      color: #1E293B;
+    }
+
+    .tv-form-input {
+      padding: 10px 14px;
+      border: 1.5px solid #CBD5E1;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      color: #0F172A;
+      background: #F8FAFC;
+      transition: all 0.2s;
+    }
+
+    .tv-form-input:focus {
+      outline: none;
+      border-color: #D97706;
+      background: #FFFFFF;
+      box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.15);
+    }
+
+    .tv-modal-footer {
+      padding: 14px 22px;
+      background: #F8FAFC;
+      border-top: 1px solid #E2E8F0;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .tv-btn {
+      padding: 9px 18px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s;
+    }
+
+    .tv-btn-secondary {
+      background: #E2E8F0;
+      color: #475569;
+    }
+
+    .tv-btn-secondary:hover { background: #CBD5E1; }
+
+    .tv-btn-primary {
+      background: linear-gradient(135deg, #D97706 0%, #B45309 100%);
+      color: #FFFFFF;
+      box-shadow: 0 2px 8px rgba(180, 83, 9, 0.25);
+    }
+
+    .tv-btn-primary:hover {
+      background: linear-gradient(135deg, #B45309 0%, #92400E 100%);
+    }
+
     /* Rates Table Card */
     .rates-card {
       flex: 1;
@@ -414,6 +593,9 @@
             <span class="clock-sep">•</span>
             <span class="clock-date-inline" id="liveDate">Đang tải thời gian...</span>
           </div>
+          <button class="btn-tv-settings" onclick="openStoreConfigModal()" title="Tùy chỉnh thông tin tiệm vàng & địa chỉ">
+            ⚙️ Cài Đặt Tiệm
+          </button>
         </div>
         <div class="slogan">
           <span id="tvStoreSlogan">Uy Tín Trọn Niềm Tin - Vàng Chuẩn Tuổi</span>
@@ -422,6 +604,10 @@
             <span class="live-dot"></span>
             <span id="liveStatusText">Trực tiếp</span>
           </div>
+        </div>
+        <div class="address-line" id="tvStoreAddressRow">
+          <span class="address-pin">📍</span>
+          <span id="tvStoreAddress">123 Đường Kim Hoàn, Quận 1, TP. Hồ Chí Minh</span>
         </div>
       </div>
     </header>
@@ -459,6 +645,42 @@
     </footer>
   </div>
 
+  <!-- Modal Tùy Chỉnh Thông Tin Tiệm Vàng & Địa Chỉ -->
+  <div class="tv-modal-overlay" id="storeConfigModal" style="display: none;">
+    <div class="tv-modal-card">
+      <div class="tv-modal-header">
+        <h2>⚙️ Cài Đặt Thông Tin Tiệm Vàng</h2>
+        <button class="tv-modal-close" onclick="closeStoreConfigModal()">✕</button>
+      </div>
+      <div class="tv-modal-body">
+        <div class="tv-form-group">
+          <label>Tên Tiệm Vàng:</label>
+          <input type="text" id="modalStoreName" class="tv-form-input" placeholder="TIỆM VÀNG HOÀNG KIM" />
+        </div>
+        <div class="tv-form-group">
+          <label>Khẩu hiệu / Slogan:</label>
+          <input type="text" id="modalStoreSlogan" class="tv-form-input" placeholder="Uy Tín Trọn Niềm Tin - Vàng Chuẩn Tuổi" />
+        </div>
+        <div class="tv-form-group">
+          <label>Địa chỉ tiệm vàng:</label>
+          <input type="text" id="modalStoreAddress" class="tv-form-input" placeholder="123 Đường Kim Hoàn, Quận 1, TP. Hồ Chí Minh" />
+        </div>
+        <div class="tv-form-group">
+          <label>Số điện thoại / Hotline:</label>
+          <input type="text" id="modalStorePhone" class="tv-form-input" placeholder="0988.888.888" />
+        </div>
+        <div class="tv-form-group">
+          <label>Dòng chữ chạy thông báo chân trang (Marquee):</label>
+          <textarea id="modalStoreTicker" class="tv-form-input" rows="2" placeholder="Nội dung thông báo chạy phía dưới..."></textarea>
+        </div>
+      </div>
+      <div class="tv-modal-footer">
+        <button class="tv-btn tv-btn-secondary" onclick="closeStoreConfigModal()">Đóng</button>
+        <button class="tv-btn tv-btn-primary" onclick="saveStoreConfigFromModal()">💾 Lưu Thay Đổi</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Scripts -->
   <script src="js/defaultData.js?v=36"></script>
   <script src="js/googleSheetService.js?v=36"></script>
@@ -494,10 +716,22 @@
       // Lắng nghe nhấp đúp để bật/tắt toàn màn hình nếu cần
       document.addEventListener('dblclick', toggleFullScreen);
 
-      // Kiểm tra cập nhật bộ nhớ cục bộ mỗi 1 giây
+      // Kiểm tra cập nhật bộ nhớ cục bộ mỗi 1 giây (cả giá vàng lẫn thông tin tiệm)
+      let lastKnownConfig = localStorage.getItem(STORAGE_KEY_CONFIG);
       setInterval(() => {
         const currentSaved = localStorage.getItem(STORAGE_KEY_PRICES);
+        const currentConfig = localStorage.getItem(STORAGE_KEY_CONFIG);
+        let needRefresh = false;
+
         if (currentSaved && currentSaved !== JSON.stringify(goldPrices)) {
+          needRefresh = true;
+        }
+        if (currentConfig !== lastKnownConfig) {
+          lastKnownConfig = currentConfig;
+          needRefresh = true;
+        }
+
+        if (needRefresh) {
           loadData();
           renderTVDisplay(true);
         }
@@ -514,10 +748,27 @@
       const nameEl = document.getElementById('tvStoreName');
       const sloganEl = document.getElementById('tvStoreSlogan');
       const contactEl = document.getElementById('tvStoreContact');
+      const addressEl = document.getElementById('tvStoreAddress');
+      const addressRow = document.getElementById('tvStoreAddressRow');
 
       if (nameEl) nameEl.textContent = storeConfig.storeName || 'TIỆM VÀNG HOÀNG KIM';
       if (sloganEl) sloganEl.textContent = storeConfig.slogan || 'Uy Tín Trọn Niềm Tin - Vàng Chuẩn Tuổi';
       if (contactEl) contactEl.textContent = storeConfig.phone ? `| Hotline: ${storeConfig.phone}` : '';
+
+      if (addressEl) {
+        const addr = (storeConfig.address && storeConfig.address.trim()) ? storeConfig.address.trim() : '';
+        if (addr) {
+          addressEl.textContent = addr;
+          if (addressRow) addressRow.style.display = 'flex';
+        } else {
+          if (addressRow) addressRow.style.display = 'none';
+        }
+      }
+
+      const tickerEl = document.getElementById('tickerText');
+      if (tickerEl && storeConfig.tickerText && storeConfig.tickerText.trim()) {
+        tickerEl.textContent = storeConfig.tickerText.trim();
+      }
 
       // Bảng giá vàng
       const savedPrices = localStorage.getItem(STORAGE_KEY_PRICES);
@@ -742,6 +993,60 @@
         }
       }
     }
+
+    // 7. Modal Quản Lý Thông Tin Tiệm Vàng
+    function openStoreConfigModal() {
+      const modal = document.getElementById('storeConfigModal');
+      if (!modal) return;
+
+      document.getElementById('modalStoreName').value = storeConfig.storeName || '';
+      document.getElementById('modalStoreSlogan').value = storeConfig.slogan || '';
+      document.getElementById('modalStoreAddress').value = storeConfig.address || '';
+      document.getElementById('modalStorePhone').value = storeConfig.phone || '';
+      document.getElementById('modalStoreTicker').value = storeConfig.tickerText || (document.getElementById('tickerText') ? document.getElementById('tickerText').textContent.trim() : '');
+
+      modal.style.display = 'flex';
+    }
+
+    function closeStoreConfigModal() {
+      const modal = document.getElementById('storeConfigModal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    function saveStoreConfigFromModal() {
+      const name = document.getElementById('modalStoreName').value.trim();
+      const slogan = document.getElementById('modalStoreSlogan').value.trim();
+      const address = document.getElementById('modalStoreAddress').value.trim();
+      const phone = document.getElementById('modalStorePhone').value.trim();
+      const ticker = document.getElementById('modalStoreTicker').value.trim();
+
+      storeConfig.storeName = name || 'TIỆM VÀNG HOÀNG KIM';
+      storeConfig.slogan = slogan;
+      storeConfig.address = address;
+      storeConfig.phone = phone;
+      if (ticker) storeConfig.tickerText = ticker;
+
+      // Lưu vào LocalStorage
+      localStorage.setItem(STORAGE_KEY_CONFIG, JSON.stringify(storeConfig));
+
+      // Lưu đồng bộ Google Sheet nếu có
+      if (window.GoogleSheetService && typeof GoogleSheetService.saveStoreConfig === 'function') {
+        GoogleSheetService.saveStoreConfig(storeConfig).catch(err => console.warn('Lỗi lưu đám mây:', err));
+      }
+
+      // Cập nhật giao diện ngay lập tức
+      loadData();
+      closeStoreConfigModal();
+      alert('Đã cập nhật thông tin tiệm vàng thành công!');
+    }
+
+    // Đóng modal khi nhấn ra ngoài khu vực card
+    window.addEventListener('click', (e) => {
+      const modal = document.getElementById('storeConfigModal');
+      if (modal && e.target === modal) {
+        closeStoreConfigModal();
+      }
+    });
 
     // Chạy khi nạp DOM
     document.addEventListener('DOMContentLoaded', init);
