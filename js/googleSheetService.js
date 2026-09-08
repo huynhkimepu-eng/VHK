@@ -281,10 +281,12 @@ const GoogleSheetService = {
               message: 'LỖI PHÂN QUYỀN: Web App cần được chọn quyền "Bất kỳ ai" (Anyone) khi Triển khai!'
             };
           }
-          return {
-            success: false,
-            message: 'Lỗi phản hồi Google Sheet: ' + text.slice(0, 150)
-          };
+          if (text.includes('<!DOCTYPE html>') || text.includes('<html')) {
+            return {
+              success: false,
+              message: 'Máy chủ Google báo bận hoặc dữ liệu ảnh/video gửi trực tiếp quá lớn. Vui lòng đảm bảo ảnh/video được tải lên Cloudinary trước khi lưu!'
+            };
+          }
         }
         return res;
       } catch (err) {

@@ -2415,6 +2415,7 @@ class GoldApp {
           if (!this.currentProductImages) this.currentProductImages = [];
           this.currentProductImages.push(dataUrl);
           this.renderModalMediaPreview();
+          this.isImageUploading = true;
 
           // Tải thẳng lên Cloudinary (Không dùng Google Drive)
           CloudinaryService.uploadMedia(dataUrl, 'image').then(res => {
@@ -2427,6 +2428,9 @@ class GoldApp {
             }
           }).catch(err => {
             console.warn('Lỗi upload ảnh lên Cloudinary:', err);
+          }).finally(() => {
+            const stillUploading = this.currentProductImages && this.currentProductImages.some(img => typeof img === 'string' && img.startsWith('data:image'));
+            this.isImageUploading = stillUploading;
           });
 
           processedCount++;
@@ -2667,52 +2671,42 @@ class GoldApp {
       const giaVangNhap = parseFloat(document.getElementById('modalGiaVangNhap')?.value) || 0;
       const giaVon = parseFloat(document.getElementById('modalGiaVon').value) || 0;
 
-      // Đảm bảo tất cả ảnh đã được tải lên Cloudinary trước khi lưu để tránh tràn bộ nhớ Google Sheet
-      if (typeof CloudinaryService !== 'undefined' && CloudinaryService.isConfigured() && this.currentProductImages && this.currentProductImages.length > 0) {
-        for (let i = 0; i < this.currentProductImages.length; i++) {
-          const imgItem = this.currentProductImages[i];
-          if (imgItem && typeof imgItem === 'string' && imgItem.startsWith('data:image')) {
-            try {
-              const res = await CloudinaryService.uploadMedia(imgItem, 'image');
-              if (res && res.secure_url) {
-                this.currentProductImages[i] = res.secure_url;
-              }
-            } catch (upErr) {
-              console.warn('Lỗi upload ảnh lên Cloudinary khi lưu:', upErr);
-            }
-          }
-        }
-        this.renderModalMediaPreview();
-      }
-
-      // Xử lý đóng gói nhiều ảnh & video
-      let anhSanPham = '';
-      if (this.currentProductImages && this.currentProductImages.length > 0) {
-        if (this.currentProductImages.length === 1) {
-          anhSanPham = this.currentProductImages[0];
-        } else {
-          anhSanPham = JSON.stringify(this.currentProductImages);
-        }
-      }
-
-      // Phòng ngừa nếu còn sót ảnh base64 lớn từ cache cũ làm tràn bộ nhớ 50.000 ký tự của ô Google Sheet
-      if (typeof anhSanPham === 'string' && anhSanPham.length > 40000) {
-        console.warn('Ảnh sản phẩm vượt quá 40.000 ký tự, tự động tối ưu để không làm lỗi Google Sheet');
-        try {
-          const arr = JSON.parse(anhSanPham);
-          if (Array.isArray(arr) && arr.length > 0) {
-            anhSanPham = arr[0].substring(0, 40000);
-          }
-        } catch(e) {
-          anhSanPham = anhSanPham.substring(0, 40000);
-        }
-      }
       const btn = document.querySelector('#productModal button[type="submit"]');
       const origText = btn ? btn.textContent : 'Lưu Sản Phẩm';
 
       if (this.isVideoUploading) {
         alert('⏳ Video đang được tải lên Cloudinary, vui lòng đợi vài giây cho thanh tiến trình hoàn tất 100% rồi bấm Lưu lại nhé!');
         return;
+      }
+
+      if (this.isImageUploading) {
+        alert('⏳ Hình ảnh đang được tải lên Cloudinary, vui lòng đợi vài giây cho hoàn tất rồi bấm Lưu lại nhé!');
+        return;
+      }
+
+      // Đảm bảo tất cả ảnh đã được tải lên Cloudinary trước khi lưu để tránh tràn bộ nhớ Google Sheet
+      if (this.currentProductImages && this.currentProductImages.length > 0) {
+        const hasBase64 = this.currentProductImages.some(img => typeof img === 'string' && img.startsWith('data:image'));
+        if (hasBase64) {
+          if (btn) { btn.disabled = true; btn.textContent = '⏳ Đang tải ảnh lên Cloudinary...'; }
+          try {
+            for (let i = 0; i < this.currentProductImages.length; i++) {
+              const imgItem = this.currentProductImages[i];
+              if (imgItem && typeof imgItem === 'string' && imgItem.startsWith('data:image')) {
+                const res = await CloudinaryService.uploadMedia(imgItem, 'image');
+                if (res && res.secure_url) {
+                  this.currentProductImages[i] = res.secure_url;
+                }
+              }
+            }
+            this.renderModalMediaPreview();
+          } catch (upErr) {
+            console.error('Lỗi upload ảnh lên Cloudinary khi lưu:', upErr);
+            alert('❌ Không thể tải ảnh lên Cloudinary: ' + upErr.message + '\n\nĐể bảo vệ dữ liệu Google Sheet, hệ thống không lưu trực tiếp ảnh dung lượng lớn. Vui lòng kiểm tra lại mạng hoặc thử lại!');
+            if (btn) { btn.disabled = false; btn.textContent = origText; }
+            return;
+          }
+        }
       }
 
       let videoSanPham = document.getElementById('modalVideoSanPham')?.value.trim() || '';
@@ -2736,6 +2730,23 @@ class GoldApp {
         }
       } else if (videoSanPham.startsWith('blob:')) {
         alert('⚠️ Video chưa được tải lên đám mây Cloudinary. Vui lòng đợi hoàn tất trước khi bấm Lưu!');
+        return;
+      }
+
+      // Xử lý đóng gói nhiều ảnh & video
+      let anhSanPham = '';
+      if (this.currentProductImages && this.currentProductImages.length > 0) {
+        if (this.currentProductImages.length === 1) {
+          anhSanPham = this.currentProductImages[0];
+        } else {
+          anhSanPham = JSON.stringify(this.currentProductImages);
+        }
+      }
+
+      // Tuyệt đối không gửi chuỗi base64 khổng lồ làm lỗi Google Sheet
+      if (typeof anhSanPham === 'string' && anhSanPham.startsWith('data:image')) {
+        alert('⚠️ Ảnh chưa được tải lên Cloudinary. Vui lòng chụp lại ảnh hoặc kiểm tra kết nối mạng!');
+        if (btn) { btn.disabled = false; btn.textContent = origText; }
         return;
       }
 
