@@ -6,8 +6,12 @@
 const CloudinaryService = {
   STORAGE_CLOUD_NAME: 'pmqlv_cloudinary_cloud_name',
   STORAGE_PRESET: 'pmqlv_cloudinary_preset',
+  STORAGE_API_KEY: 'pmqlv_cloudinary_api_key',
+  STORAGE_API_SECRET: 'pmqlv_cloudinary_api_secret',
   DEFAULT_CLOUD_NAME: 'mjgp9vci',
   DEFAULT_UPLOAD_PRESET: 'pmqlv_upload',
+  DEFAULT_API_KEY: '448884212172351',
+  DEFAULT_API_SECRET: 'PQRaSLsY03iUQmTbYhu_7OayRlM',
 
   getCloudName() {
     const local = localStorage.getItem(this.STORAGE_CLOUD_NAME);
@@ -33,13 +37,43 @@ const CloudinaryService = {
     return this.DEFAULT_UPLOAD_PRESET;
   },
 
-  setConfig(cloudName, preset) {
+  getApiKey() {
+    const local = localStorage.getItem(this.STORAGE_API_KEY);
+    if (local && local.trim()) return local.trim();
+    if (window.app && window.app.storeConfig && window.app.storeConfig.cloudinaryApiKey) {
+      return String(window.app.storeConfig.cloudinaryApiKey).trim();
+    }
+    if (window.DEFAULT_STORE_CONFIG && window.DEFAULT_STORE_CONFIG.cloudinaryApiKey) {
+      return String(window.DEFAULT_STORE_CONFIG.cloudinaryApiKey).trim();
+    }
+    return this.DEFAULT_API_KEY;
+  },
+
+  getApiSecret() {
+    const local = localStorage.getItem(this.STORAGE_API_SECRET);
+    if (local && local.trim()) return local.trim();
+    if (window.app && window.app.storeConfig && window.app.storeConfig.cloudinaryApiSecret) {
+      return String(window.app.storeConfig.cloudinaryApiSecret).trim();
+    }
+    if (window.DEFAULT_STORE_CONFIG && window.DEFAULT_STORE_CONFIG.cloudinaryApiSecret) {
+      return String(window.DEFAULT_STORE_CONFIG.cloudinaryApiSecret).trim();
+    }
+    return this.DEFAULT_API_SECRET;
+  },
+
+  setConfig(cloudName, preset, apiKey = '', apiSecret = '') {
     if (cloudName !== undefined) localStorage.setItem(this.STORAGE_CLOUD_NAME, String(cloudName).trim());
     if (preset !== undefined) localStorage.setItem(this.STORAGE_PRESET, String(preset).trim());
+    if (apiKey !== undefined && apiKey !== '') localStorage.setItem(this.STORAGE_API_KEY, String(apiKey).trim());
+    if (apiSecret !== undefined && apiSecret !== '') localStorage.setItem(this.STORAGE_API_SECRET, String(apiSecret).trim());
   },
 
   isConfigured() {
     return !!(this.getCloudName() && this.getUploadPreset());
+  },
+
+  hasAdminCredentials() {
+    return !!(this.getCloudName() && this.getApiKey() && this.getApiSecret());
   },
 
   /**
@@ -184,7 +218,115 @@ const CloudinaryService = {
       }
       return { success: false, message: `❌ ${msg}` };
     }
+  },
+
+  /**
+   * Tính mã băm SHA-1 cho chuỗi ký tự bằng Web Crypto API
+   */
+  async sha1(str) {
+    const enc = new TextEncoder();
+    const data = enc.encode(str);
+    const hashBuffer = await crypto.subtle.digest('SHA-1', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  },
+
+  /**
+   * Trích xuất public_id và resource_type ('image'|'video') từ đường dẫn Cloudinary URL
+   */
+  extractCloudinaryInfo(url) {
+    if (!url || typeof url !== 'string' || !url.includes('cloudinary.com')) return null;
+    try {
+      const cleanUrl = url.split('?')[0].split('#')[0];
+      const isVideo = cleanUrl.includes('/video/upload/');
+      const resourceType = isVideo ? 'video' : 'image';
+      
+      const uploadKeyword = '/upload/';
+      const uploadIdx = cleanUrl.indexOf(uploadKeyword);
+      if (uploadIdx === -1) return null;
+      
+      let afterUpload = cleanUrl.substring(uploadIdx + uploadKeyword.length);
+      const segments = afterUpload.split('/');
+      const validSegments = [];
+      let foundFolderOrFile = false;
+      for (const seg of segments) {
+        if (!foundFolderOrFile) {
+          if (/^v\d+$/.test(seg) || (seg.includes('_') && !seg.includes('pmqlv')) || seg.includes(',')) {
+            continue;
+          }
+        }
+        foundFolderOrFile = true;
+        validSegments.push(seg);
+      }
+      
+      const fullPath = validSegments.length > 0 ? validSegments.join('/') : segments[segments.length - 1];
+      const lastDot = fullPath.lastIndexOf('.');
+      const publicId = lastDot > 0 ? fullPath.substring(0, lastDot) : fullPath;
+      
+      return {
+        resourceType,
+        publicId: decodeURIComponent(publicId)
+      };
+    } catch (e) {
+      console.warn('Lỗi phân tích Cloudinary URL:', e);
+      return null;
+    }
+  },
+
+  /**
+   * Gửi lệnh tiêu hủy (Destroy) file vĩnh viễn trên Cloudinary có chữ ký SHA-1
+   */
+  async deleteMedia(publicId, resourceType = 'image') {
+    const cloudName = this.getCloudName();
+    const apiKey = this.getApiKey();
+    const apiSecret = this.getApiSecret();
+    if (!cloudName || !apiKey || !apiSecret) {
+      throw new Error('Chưa cấu hình API Key và API Secret của Cloudinary.');
+    }
+    const timestamp = Math.floor(Date.now() / 1000);
+    const toSign = `public_id=${publicId}&timestamp=${timestamp}${apiSecret}`;
+    const signature = await this.sha1(toSign);
+
+    const formData = new FormData();
+    formData.append('public_id', publicId);
+    formData.append('timestamp', timestamp);
+    formData.append('api_key', apiKey);
+    formData.append('signature', signature);
+
+    const endpoint = `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/destroy`;
+    const resp = await fetch(endpoint, {
+      method: 'POST',
+      body: formData
+    });
+    const result = await resp.json();
+    return result;
+  },
+
+  /**
+   * Kiểm tra quyền quản trị API Key & Secret
+   */
+  async testAdminConnection() {
+    const cloudName = this.getCloudName();
+    const apiKey = this.getApiKey();
+    const apiSecret = this.getApiSecret();
+    if (!cloudName || !apiKey || !apiSecret) {
+      return { success: false, message: 'Vui lòng nhập đầy đủ Cloud Name, API Key và API Secret!' };
+    }
+    try {
+      // Thử gọi lệnh destroy một ID ngẫu nhiên không tồn tại để kiểm tra xác thực
+      const res = await this.deleteMedia('pmqlv/ping_test_auth_check_' + Date.now(), 'image');
+      if (res && (res.result === 'ok' || res.result === 'not found')) {
+        return {
+          success: true,
+          message: `✅ Xác thực quyền Quản trị Cloudinary thành công! Sẵn sàng dọn dẹp.`
+        };
+      }
+      return { success: false, message: `Cloudinary báo lỗi: ${res?.error?.message || JSON.stringify(res)}` };
+    } catch (err) {
+      return { success: false, message: `❌ Lỗi xác thực: ${err.message}` };
+    }
   }
 };
 
 window.CloudinaryService = CloudinaryService;
+

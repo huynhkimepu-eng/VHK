@@ -643,6 +643,19 @@
               <small style="color: #64748B; font-size: 11px;">Vào Settings (⚙️) ➔ mục <b>Upload</b> ➔ kéo xuống <b>Upload presets</b> ➔ Add upload preset (Chọn <b>Unsigned</b>) ➔ Save.</small>
             </div>
 
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+              <div>
+                <label style="font-size: 12px; font-weight: bold; color: #1E293B;">3. API Key (Quản trị & Xóa file):</label>
+                <input type="text" id="cfgCloudinaryApiKey" class="form-control" placeholder="VD: 448884212172351" style="font-weight: 600;">
+                <small style="color: #64748B; font-size: 11px;">Dùng để cấp quyền dọn dẹp và xóa ảnh/video tự động.</small>
+              </div>
+              <div>
+                <label style="font-size: 12px; font-weight: bold; color: #1E293B;">4. API Secret (Khóa bí mật):</label>
+                <input type="password" id="cfgCloudinaryApiSecret" class="form-control" placeholder="VD: PQRaSLsY..." style="font-weight: 600;">
+                <small style="color: #64748B; font-size: 11px;">Khóa bí mật xác thực quyền xóa (Lưu an toàn trên máy).</small>
+              </div>
+            </div>
+
             <div id="cloudinaryTestStatus" style="display: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; margin-bottom: 12px; font-weight: 600;"></div>
 
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
@@ -650,12 +663,101 @@
                 💾 Lưu Cấu Hình Cloudinary
               </button>
               <button type="button" class="btn btn-sm btn-outline-secondary" onclick="app.testCloudinaryConnection()" style="font-weight: 600;">
-                🧪 Kiểm Tra Kết Nối
+                🧪 Kiểm Tra Tải Lên
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-success" onclick="app.testCloudinaryAdminConnection()" style="font-weight: 600;">
+                🔑 Kiểm Tra Quyền Xóa (Admin)
               </button>
               <a href="https://cloudinary.com/users/register_free" target="_blank" class="btn btn-sm btn-outline-primary" style="text-decoration: none; display: inline-flex; align-items: center; gap: 4px; font-weight: 600;">
                 🔗 Đăng Ký Miễn Phí (1 Phút)
               </a>
             </div>
+          </div>
+        </div>
+
+        <!-- CÔNG CỤ DỌN DẸP ĐÁM MÂY CLOUDINARY (XÓA ẢNH & VIDEO CỦA SẢN PHẨM ĐÃ BÁN / ĐÃ XÓA) -->
+        <div class="card admin-only" style="border-left: 4px solid #DC2626;">
+          <div class="card-header" style="background: linear-gradient(135deg, #DC2626, #991B1B); color: white;">
+            <div class="card-title" style="color: white; display: flex; align-items: center; gap: 8px;">
+              🧹 Công Cụ Dọn Dẹp Đám Mây Cloudinary (Giải Phóng Bộ Nhớ)
+            </div>
+          </div>
+          <div class="card-body">
+            <div style="background: #FEF2F2; border: 1px solid #FECACA; border-radius: 6px; padding: 10px; margin-bottom: 14px; font-size: 12px; color: #991B1B; line-height: 1.5;">
+              <b>🛡️ Nguyên tắc bảo toàn kho hàng:</b> Chức năng này chỉ xóa ảnh và video của các món <b>ĐÃ BÁN</b> hoặc <b>ĐÃ XÓA</b> khỏi kho. Toàn bộ sản phẩm <b>Đang tồn kho được giữ nguyên 100%</b>.
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-bottom: 14px; align-items: flex-end;">
+              <div>
+                <label style="font-size: 12px; font-weight: bold; color: #1E293B;">Khoảng thời gian sản phẩm đã bán:</label>
+                <select id="cleanupTimeFilter" class="form-control" onchange="app.onCleanupTimeFilterChanged()" style="font-weight: 600;">
+                  <option value="all">Tất cả thời gian (Toàn bộ đã bán)</option>
+                  <option value="30days">Đã bán cách đây hơn 30 ngày</option>
+                  <option value="60days">Đã bán cách đây hơn 60 ngày</option>
+                  <option value="90days">Đã bán cách đây hơn 90 ngày</option>
+                  <option value="custom">📅 Tùy chọn khoảng ngày (Từ ngày... Đến ngày...)</option>
+                </select>
+              </div>
+
+              <div id="cleanupCustomDateGroup" style="display: none; gap: 8px;">
+                <div style="flex: 1;">
+                  <label style="font-size: 11px; font-weight: bold; color: #475569;">Từ ngày bán:</label>
+                  <input type="date" id="cleanupDateFrom" class="form-control form-control-sm">
+                </div>
+                <div style="flex: 1;">
+                  <label style="font-size: 11px; font-weight: bold; color: #475569;">Đến ngày bán:</label>
+                  <input type="date" id="cleanupDateTo" class="form-control form-control-sm">
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-bottom: 14px;">
+              <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: #334155; cursor: pointer;">
+                <input type="checkbox" id="cleanupIncludeOrphaned" checked style="width: 16px; height: 16px; accent-color: #DC2626;">
+                Dọn dẹp cả ảnh & video của các sản phẩm không còn tồn tại trong kho (đã xóa hẳn)
+              </label>
+            </div>
+
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px;">
+              <button type="button" class="btn btn-sm btn-outline-danger" onclick="app.scanCloudinaryCleanup()" style="font-weight: 600;">
+                🔍 Quét Kiểm Tra Trước
+              </button>
+              <button type="button" id="btnStartCleanup" class="btn btn-sm btn-danger" onclick="app.executeCloudinaryCleanup()" style="display: none; font-weight: 700; background: #DC2626;">
+                🧹 Bắt Đầu Dọn Dẹp Ngay
+              </button>
+            </div>
+
+            <!-- Khung trạng thái / Tiến trình dọn dẹp -->
+            <div id="cleanupProgressBox" style="display: none; margin-bottom: 14px; background: #FFF5F5; border: 1px solid #FED7D7; border-radius: 6px; padding: 10px;">
+              <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: bold; margin-bottom: 6px;">
+                <span id="cleanupProgressText" style="color: #DC2626;">Đang dọn dẹp...</span>
+                <span id="cleanupProgressPct" style="color: #DC2626;">0%</span>
+              </div>
+              <div style="width: 100%; height: 10px; background: #E2E8F0; border-radius: 5px; overflow: hidden;">
+                <div id="cleanupProgressBar" style="width: 0%; height: 100%; background: #DC2626; transition: width 0.2s;"></div>
+              </div>
+            </div>
+
+            <!-- Khung danh sách xem trước kết quả quét -->
+            <div id="cleanupPreviewBox" style="display: none; border-top: 1px solid #E2E8F0; padding-top: 12px;">
+              <div id="cleanupSummaryText" style="font-weight: 700; font-size: 13px; color: #1E293B; margin-bottom: 8px;"></div>
+              <div style="max-height: 240px; overflow-y: auto; border: 1px solid #CBD5E1; border-radius: 6px;">
+                <table class="table table-sm table-striped" style="font-size: 12px; margin-bottom: 0;">
+                  <thead style="background: #F1F5F9; position: sticky; top: 0;">
+                    <tr>
+                      <th>Mã hàng</th>
+                      <th>Tên món</th>
+                      <th>Ngày bán</th>
+                      <th style="text-align: center;">Ảnh</th>
+                      <th style="text-align: center;">Video</th>
+                      <th>Trạng thái</th>
+                    </tr>
+                  </thead>
+                  <tbody id="cleanupPreviewTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+
           </div>
         </div>
 
@@ -1195,10 +1297,10 @@
   </div>
 
   <!-- Scripts -->
-  <script src="js/defaultData.js?v=49"></script>
-  <script src="js/googleSheetService.js?v=49"></script>
-  <script src="js/cloudinaryService.js?v=49"></script>
-  <script src="js/barcodeLabel.js?v=49"></script>
-  <script src="js/app.js?v=49"></script>
+  <script src="js/defaultData.js?v=50"></script>
+  <script src="js/googleSheetService.js?v=50"></script>
+  <script src="js/cloudinaryService.js?v=50"></script>
+  <script src="js/barcodeLabel.js?v=50"></script>
+  <script src="js/app.js?v=50"></script>
 </body>
 </html>

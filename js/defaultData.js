@@ -33,6 +33,8 @@ window.DEFAULT_STORE_CONFIG = {
   currencyUnitMultiplier: 1000,
   cloudinaryCloudName: "mjgp9vci",
   cloudinaryPreset: "pmqlv_upload",
+  cloudinaryApiKey: "448884212172351",
+  cloudinaryApiSecret: "PQRaSLsY03iUQmTbYhu_7OayRlM",
   printTagConfig: {
     storeName: "HO\u00c0NG KIM",
     showLaborCost: true,

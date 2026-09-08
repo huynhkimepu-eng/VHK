@@ -319,6 +319,14 @@ class GoldApp {
     if (inpCloudPreset && typeof CloudinaryService !== 'undefined') {
       inpCloudPreset.value = CloudinaryService.getUploadPreset();
     }
+    const inpCloudApiKey = document.getElementById('cfgCloudinaryApiKey');
+    if (inpCloudApiKey && typeof CloudinaryService !== 'undefined') {
+      inpCloudApiKey.value = CloudinaryService.getApiKey();
+    }
+    const inpCloudApiSecret = document.getElementById('cfgCloudinaryApiSecret');
+    if (inpCloudApiSecret && typeof CloudinaryService !== 'undefined') {
+      inpCloudApiSecret.value = CloudinaryService.getApiSecret();
+    }
 
     // Tag configuration init
     const savedTagCfg = localStorage.getItem('pmqlv_tag_config');
@@ -1998,14 +2006,18 @@ class GoldApp {
   async saveCloudinaryConfig() {
     const cloudName = document.getElementById('cfgCloudinaryCloudName')?.value?.trim() || '';
     const preset = document.getElementById('cfgCloudinaryPreset')?.value?.trim() || '';
+    const apiKey = document.getElementById('cfgCloudinaryApiKey')?.value?.trim() || '';
+    const apiSecret = document.getElementById('cfgCloudinaryApiSecret')?.value?.trim() || '';
 
     if (typeof CloudinaryService !== 'undefined') {
-      CloudinaryService.setConfig(cloudName, preset);
+      CloudinaryService.setConfig(cloudName, preset, apiKey, apiSecret);
     }
 
     if (!this.storeConfig) this.storeConfig = {};
     this.storeConfig.cloudinaryCloudName = cloudName;
     this.storeConfig.cloudinaryPreset = preset;
+    this.storeConfig.cloudinaryApiKey = apiKey;
+    this.storeConfig.cloudinaryApiSecret = apiSecret;
     localStorage.setItem('pmqlv_store_config', JSON.stringify(this.storeConfig));
 
     let cloudMsg = '';
@@ -2020,7 +2032,7 @@ class GoldApp {
       }
     }
 
-    alert(`✅ Đã lưu cấu hình Cloudinary thành công!${cloudMsg}\nTừ bây giờ, video quay & ảnh tải lên sẽ lưu trực tiếp vào Cloudinary siêu tốc.`);
+    alert(`✅ Đã lưu cấu hình Cloudinary thành công!${cloudMsg}\nTừ bây giờ, video & ảnh sẽ được quản lý và dọn dẹp trực tiếp qua Cloudinary.`);
   }
 
   async testCloudinaryConnection() {
@@ -2036,8 +2048,10 @@ class GoldApp {
     // Tự động lưu cấu hình trước khi test
     const cloudName = document.getElementById('cfgCloudinaryCloudName')?.value?.trim() || '';
     const preset = document.getElementById('cfgCloudinaryPreset')?.value?.trim() || '';
+    const apiKey = document.getElementById('cfgCloudinaryApiKey')?.value?.trim() || '';
+    const apiSecret = document.getElementById('cfgCloudinaryApiSecret')?.value?.trim() || '';
     if (typeof CloudinaryService !== 'undefined') {
-      CloudinaryService.setConfig(cloudName, preset);
+      CloudinaryService.setConfig(cloudName, preset, apiKey, apiSecret);
     }
 
     if (!cloudName || !preset) {
@@ -2064,6 +2078,309 @@ class GoldApp {
         statusDiv.innerHTML = `${res.message}`;
       }
     }
+  }
+
+  async testCloudinaryAdminConnection() {
+    const statusDiv = document.getElementById('cloudinaryTestStatus');
+    if (statusDiv) {
+      statusDiv.style.display = 'block';
+      statusDiv.style.background = '#EFF6FF';
+      statusDiv.style.color = '#1D4ED8';
+      statusDiv.style.border = '1px solid #BFDBFE';
+      statusDiv.innerHTML = '⏳ Đang kiểm tra xác thực quyền Quản trị (API Key & Secret)...';
+    }
+
+    const cloudName = document.getElementById('cfgCloudinaryCloudName')?.value?.trim() || '';
+    const preset = document.getElementById('cfgCloudinaryPreset')?.value?.trim() || '';
+    const apiKey = document.getElementById('cfgCloudinaryApiKey')?.value?.trim() || '';
+    const apiSecret = document.getElementById('cfgCloudinaryApiSecret')?.value?.trim() || '';
+
+    if (typeof CloudinaryService !== 'undefined') {
+      CloudinaryService.setConfig(cloudName, preset, apiKey, apiSecret);
+    }
+
+    const res = await CloudinaryService.testAdminConnection();
+    if (statusDiv) {
+      if (res.success) {
+        statusDiv.style.background = '#ECFDF5';
+        statusDiv.style.color = '#047857';
+        statusDiv.style.border = '1px solid #A7F3D0';
+        statusDiv.innerHTML = res.message;
+      } else {
+        statusDiv.style.background = '#FEF2F2';
+        statusDiv.style.color = '#B91C1C';
+        statusDiv.style.border = '1px solid #FECACA';
+        statusDiv.innerHTML = res.message;
+      }
+    }
+  }
+
+  // ================= DỌN DẸP ĐÁM MÂY CLOUDINARY =================
+
+  onCleanupTimeFilterChanged() {
+    const filter = document.getElementById('cleanupTimeFilter')?.value;
+    const customGroup = document.getElementById('cleanupCustomDateGroup');
+    if (customGroup) {
+      customGroup.style.display = (filter === 'custom') ? 'flex' : 'none';
+    }
+  }
+
+  getOrderDateForProduct(maHang) {
+    if (!this.orders || !Array.isArray(this.orders)) return null;
+    for (const o of this.orders) {
+      if (!o.items) continue;
+      let itemsArr = o.items;
+      if (typeof itemsArr === 'string') {
+        try { itemsArr = JSON.parse(itemsArr); } catch(e) { continue; }
+      }
+      if (Array.isArray(itemsArr) && itemsArr.some(it => it && String(it.maHang) === String(maHang))) {
+        return o.ngayBan;
+      }
+    }
+    return null;
+  }
+
+  parseDateString(str) {
+    if (!str) return null;
+    try {
+      if (str.match(/^\d{4}-\d{2}-\d{2}/)) {
+        return new Date(str.replace(' ', 'T'));
+      }
+      const parts = str.split(' ')[0].split('/');
+      if (parts.length === 3) {
+        return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+      }
+      const d = new Date(str);
+      return isNaN(d.getTime()) ? null : d;
+    } catch(e) {
+      return null;
+    }
+  }
+
+  scanCloudinaryCleanup() {
+    if (typeof CloudinaryService === 'undefined' || !CloudinaryService.hasAdminCredentials()) {
+      alert('⚠️ Vui lòng nhập đầy đủ API Key và API Secret của Cloudinary ở mục trên trước khi quét dọn dẹp!');
+      return;
+    }
+
+    const timeFilter = document.getElementById('cleanupTimeFilter')?.value || 'all';
+    const dateFromVal = document.getElementById('cleanupDateFrom')?.value;
+    const dateToVal = document.getElementById('cleanupDateTo')?.value;
+
+    const fromDate = dateFromVal ? new Date(dateFromVal + 'T00:00:00') : null;
+    const toDate = dateToVal ? new Date(dateToVal + 'T23:59:59') : null;
+
+    const nowMs = Date.now();
+    const msDay = 24 * 60 * 60 * 1000;
+
+    const targets = [];
+    const processedCodes = new Set();
+
+    // Quét từ danh sách sản phẩm
+    (this.products || []).forEach(p => {
+      const isSoldOrCancelled = (p.trangThai === 'Đã bán' || p.trangThai === 'Đã hủy');
+      if (!isSoldOrCancelled) return; // Tuyệt đối bỏ qua sản phẩm còn tồn kho!
+
+      const hasCloudImage = p.anhSanPham && String(p.anhSanPham).includes('cloudinary.com');
+      const hasCloudVideo = p.videoSanPham && String(p.videoSanPham).includes('cloudinary.com');
+      if (!hasCloudImage && !hasCloudVideo) return;
+
+      // Xác định ngày bán
+      const soldDateStr = this.getOrderDateForProduct(p.maHang) || p.ngayNhap || '';
+      const soldDate = this.parseDateString(soldDateStr);
+
+      // Kiểm tra bộ lọc thời gian
+      let matchTime = false;
+      if (timeFilter === 'all') {
+        matchTime = true;
+      } else if (timeFilter === '30days') {
+        matchTime = soldDate ? (nowMs - soldDate.getTime() >= 30 * msDay) : true;
+      } else if (timeFilter === '60days') {
+        matchTime = soldDate ? (nowMs - soldDate.getTime() >= 60 * msDay) : true;
+      } else if (timeFilter === '90days') {
+        matchTime = soldDate ? (nowMs - soldDate.getTime() >= 90 * msDay) : true;
+      } else if (timeFilter === 'custom') {
+        if (!soldDate) {
+          matchTime = true;
+        } else {
+          matchTime = (!fromDate || soldDate >= fromDate) && (!toDate || soldDate <= toDate);
+        }
+      }
+
+      if (!matchTime) return;
+
+      // Đếm số ảnh Cloudinary
+      let images = [];
+      try {
+        if (p.anhSanPham.startsWith('[')) {
+          images = JSON.parse(p.anhSanPham).filter(u => u && u.includes('cloudinary.com'));
+        } else if (hasCloudImage) {
+          images = [p.anhSanPham];
+        }
+      } catch(e) {
+        if (hasCloudImage) images = [p.anhSanPham];
+      }
+
+      targets.push({
+        maHang: p.maHang,
+        tenHang: p.tenHang || 'Sản phẩm',
+        ngayBan: soldDateStr || 'Đã bán',
+        trangThai: p.trangThai,
+        images: images,
+        video: hasCloudVideo ? p.videoSanPham : null,
+        productRef: p
+      });
+      processedCodes.add(p.maHang);
+    });
+
+    this.cleanupTargets = targets;
+
+    // Hiển thị kết quả lên giao diện
+    const previewBox = document.getElementById('cleanupPreviewBox');
+    const summaryText = document.getElementById('cleanupSummaryText');
+    const tableBody = document.getElementById('cleanupPreviewTableBody');
+    const btnStart = document.getElementById('btnStartCleanup');
+
+    if (previewBox) previewBox.style.display = 'block';
+
+    if (targets.length === 0) {
+      if (summaryText) summaryText.innerHTML = '🎉 <span style="color: #059669;">Không tìm thấy ảnh/video nào của sản phẩm đã bán phù hợp với tiêu chí lọc này!</span>';
+      if (tableBody) tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #94A3B8; padding: 16px;">Tất cả ảnh & video hiện tại đều thuộc các sản phẩm còn tồn kho hoặc đã được dọn sạch.</td></tr>';
+      if (btnStart) btnStart.style.display = 'none';
+      return;
+    }
+
+    let totalImages = 0;
+    let totalVideos = 0;
+    targets.forEach(t => {
+      totalImages += t.images.length;
+      if (t.video) totalVideos++;
+    });
+
+    const totalMedia = totalImages + totalVideos;
+    if (summaryText) {
+      summaryText.innerHTML = `🔍 Tìm thấy <b>${targets.length}</b> sản phẩm đã bán phù hợp (Gồm <b>${totalImages} ảnh</b> và <b>${totalVideos} video</b> trên Cloudinary).`;
+    }
+
+    if (tableBody) {
+      tableBody.innerHTML = targets.map(t => `
+        <tr>
+          <td><b>${t.maHang}</b></td>
+          <td>${t.tenHang}</td>
+          <td>${t.ngayBan}</td>
+          <td style="text-align: center;">${t.images.length > 0 ? `<span class="badge" style="background:#DBEAFE;color:#1E40AF;padding:2px 6px;border-radius:4px;font-size:11px;">${t.images.length} ảnh</span>` : '--'}</td>
+          <td style="text-align: center;">${t.video ? '<span class="badge" style="background:#FEF3C7;color:#92400E;padding:2px 6px;border-radius:4px;font-size:11px;">1 video</span>' : '--'}</td>
+          <td><span class="badge" style="background:#FEE2E2;color:#991B1B;padding:2px 6px;border-radius:4px;font-size:11px;">${t.trangThai}</span></td>
+        </tr>
+      `).join('');
+    }
+
+    if (btnStart) {
+      btnStart.style.display = 'inline-block';
+      btnStart.innerHTML = `🧹 Bắt Đầu Dọn Dẹp (${totalMedia} file)`;
+    }
+  }
+
+  async executeCloudinaryCleanup() {
+    if (!this.cleanupTargets || this.cleanupTargets.length === 0) return;
+
+    let totalImages = 0;
+    let totalVideos = 0;
+    this.cleanupTargets.forEach(t => {
+      totalImages += t.images.length;
+      if (t.video) totalVideos++;
+    });
+    const totalFiles = totalImages + totalVideos;
+
+    const ok = confirm(`⚠️ BẠN CÓ CHẮC CHẮN MUỐN DỌN DẸP?\n\n- Sẽ xóa vĩnh viễn ${totalFiles} file (${totalImages} ảnh, ${totalVideos} video) của ${this.cleanupTargets.length} sản phẩm đã bán trên đám mây Cloudinary.\n- Toàn bộ sản phẩm CÒN TỒN KHO được giữ nguyên 100% không bị ảnh hưởng.\n\nBấm "OK" để bắt đầu xóa.`);
+    if (!ok) return;
+
+    const progressBox = document.getElementById('cleanupProgressBox');
+    const progressBar = document.getElementById('cleanupProgressBar');
+    const progressPct = document.getElementById('cleanupProgressPct');
+    const progressText = document.getElementById('cleanupProgressText');
+    const btnStart = document.getElementById('btnStartCleanup');
+
+    if (progressBox) progressBox.style.display = 'block';
+    if (btnStart) btnStart.disabled = true;
+
+    let deletedCount = 0;
+    let failedCount = 0;
+
+    for (let i = 0; i < this.cleanupTargets.length; i++) {
+      const target = this.cleanupTargets[i];
+
+      // 1. Xóa tất cả ảnh của sản phẩm này
+      for (const imgUrl of target.images) {
+        const info = CloudinaryService.extractCloudinaryInfo(imgUrl);
+        if (info && info.publicId) {
+          try {
+            await CloudinaryService.deleteMedia(info.publicId, info.resourceType || 'image');
+            deletedCount++;
+          } catch(err) {
+            console.warn('Lỗi xóa ảnh Cloudinary:', info.publicId, err);
+            failedCount++;
+          }
+        }
+        const pct = Math.round((deletedCount / totalFiles) * 100);
+        if (progressBar) progressBar.style.width = `${pct}%`;
+        if (progressPct) progressPct.innerText = `${pct}%`;
+        if (progressText) progressText.innerText = `Đang dọn dẹp: ${deletedCount}/${totalFiles} file...`;
+      }
+
+      // 2. Xóa video nếu có
+      if (target.video) {
+        const info = CloudinaryService.extractCloudinaryInfo(target.video);
+        if (info && info.publicId) {
+          try {
+            await CloudinaryService.deleteMedia(info.publicId, 'video');
+            deletedCount++;
+          } catch(err) {
+            console.warn('Lỗi xóa video Cloudinary:', info.publicId, err);
+            failedCount++;
+          }
+        }
+        const pct = Math.round((deletedCount / totalFiles) * 100);
+        if (progressBar) progressBar.style.width = `${pct}%`;
+        if (progressPct) progressPct.innerText = `${pct}%`;
+        if (progressText) progressText.innerText = `Đang dọn dẹp: ${deletedCount}/${totalFiles} file...`;
+      }
+
+      // 3. Xóa đường dẫn ảnh/video trong đối tượng sản phẩm để không còn link chết
+      if (target.productRef) {
+        target.productRef.anhSanPham = '';
+        target.productRef.videoSanPham = '';
+      }
+    }
+
+    // 4. Lưu lại dữ liệu cục bộ
+    this.saveProductsToLocal();
+
+    // 5. Cập nhật đồng bộ các sản phẩm này lên Google Sheet nếu có kết nối
+    if (typeof GoogleSheetService !== 'undefined' && GoogleSheetService.isConfigured()) {
+      if (progressText) progressText.innerText = `☁️ Đang đồng bộ cập nhật lại Google Sheet...`;
+      for (const target of this.cleanupTargets) {
+        if (target.productRef) {
+          try {
+            await GoogleSheetService.saveProduct(target.productRef);
+          } catch(sheetErr) {
+            console.warn('Lỗi cập nhật Google Sheet sau khi dọn dẹp:', sheetErr);
+          }
+        }
+      }
+    }
+
+    if (progressBar) { progressBar.style.width = '100%'; progressBar.style.background = '#059669'; }
+    if (progressPct) progressPct.innerText = '100%';
+    if (progressText) progressText.innerText = `✅ Hoàn tất dọn dẹp: Đã xóa ${deletedCount} file trên Cloudinary!`;
+
+    this.showToast(`✅ Đã dọn dẹp thành công ${deletedCount} file trên Cloudinary!`, 'success');
+
+    setTimeout(() => {
+      if (progressBox) progressBox.style.display = 'none';
+      if (btnStart) { btnStart.style.display = 'none'; btnStart.disabled = false; }
+      this.scanCloudinaryCleanup(); // Quét lại để cập nhật bảng
+    }, 2500);
   }
 
   // ================= 7. MODALS & FORMS =================
@@ -2839,8 +3156,37 @@ class GoldApp {
   async deleteProduct(maHang) {
     if (!confirm(`Bạn có chắc muốn xóa sản phẩm ${maHang}?`)) return;
 
-    this.showGlobalLoading('Đang xóa trực tiếp trên Google Sheet...');
+    this.showGlobalLoading('Đang xóa sản phẩm và giải phóng Cloudinary...');
     
+    // 1. Tự động xóa ảnh & video của sản phẩm này trên Cloudinary
+    const prod = this.products.find(p => p.maHang === maHang);
+    if (prod && typeof CloudinaryService !== 'undefined' && CloudinaryService.hasAdminCredentials()) {
+      try {
+        if (prod.anhSanPham) {
+          let imgs = [];
+          if (prod.anhSanPham.startsWith('[')) {
+            try { imgs = JSON.parse(prod.anhSanPham); } catch(e) { imgs = [prod.anhSanPham]; }
+          } else {
+            imgs = [prod.anhSanPham];
+          }
+          for (const imgUrl of imgs) {
+            const info = CloudinaryService.extractCloudinaryInfo(imgUrl);
+            if (info && info.publicId) {
+              await CloudinaryService.deleteMedia(info.publicId, info.resourceType || 'image').catch(e => console.warn(e));
+            }
+          }
+        }
+        if (prod.videoSanPham) {
+          const info = CloudinaryService.extractCloudinaryInfo(prod.videoSanPham);
+          if (info && info.publicId) {
+            await CloudinaryService.deleteMedia(info.publicId, 'video').catch(e => console.warn(e));
+          }
+        }
+      } catch(cloudErr) {
+        console.warn('Lỗi khi xóa media trên Cloudinary:', cloudErr);
+      }
+    }
+
     if (GoogleSheetService.isConfigured()) {
       const res = await GoogleSheetService.deleteProduct(maHang);
       if (!res || !res.success) {
@@ -2857,7 +3203,7 @@ class GoldApp {
     this.updateReportStats();
     
     this.hideGlobalLoading();
-    alert('Đã xóa thành công!');
+    alert('Đã xóa sản phẩm và giải phóng ảnh/video trên Cloudinary thành công!');
   }
 
   // ================= 8. CAMERA SCANNER =================
