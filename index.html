@@ -829,23 +829,56 @@
             </div>
           </div>
 
-          <!-- Ảnh sản phẩm -->
-          <div style="margin-bottom: 10px; background: #F8FAFC; padding: 10px; border-radius: var(--radius-sm); border: 1px dashed #CBD5E1;">
-            <label style="font-size: 12px; font-weight: bold; display: block; margin-bottom: 6px;">Ảnh Sản Phẩm (Link hoặc Chụp/Chọn ảnh)</label>
-            <div style="display: flex; gap: 10px; align-items: flex-start;">
-              <div id="modalImagePreview" style="width: 60px; height: 60px; border-radius: 4px; background: #E2E8F0; display: flex; align-items: center; justify-content: center; overflow: hidden;">
-                <span style="color: #94A3B8; font-size: 10px;">No IMG</span>
+          <!-- QUẢN LÝ MEDIA SẢN PHẨM (NHIỀU ẢNH & VIDEO) -->
+          <div style="margin-bottom: 12px; background: #F8FAFC; padding: 12px; border-radius: 8px; border: 1.5px dashed #CBD5E1;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <label style="font-size: 12.5px; font-weight: bold; color: #0F172A; display: flex; align-items: center; gap: 6px; margin: 0;">
+                <span>📸</span> Album Ảnh Sản Phẩm (<span id="modalImgCountBadge">0 ảnh</span>)
+              </label>
+              <small style="color: #64748B; font-size: 11px;">Ảnh đầu tiên (⭐) sẽ là ảnh đại diện</small>
+            </div>
+
+            <!-- Khung danh sách ảnh thu nhỏ (Gallery Grid) -->
+            <div id="modalImagesGrid" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; min-height: 64px; background: #FFFFFF; padding: 8px; border-radius: 6px; border: 1px solid #E2E8F0; align-items: center;">
+              <!-- Sẽ render các thumbnail ảnh bằng JS -->
+              <div id="modalImagesEmptyHint" style="font-size: 11.5px; color: #94A3B8; text-align: center; width: 100%; padding: 10px 0;">
+                Chưa có ảnh nào. Bạn hãy tải ảnh lên hoặc dán link ảnh bên dưới.
               </div>
-              <div style="flex: 1; display: flex; flex-direction: column; gap: 6px;">
-                <input type="url" id="modalAnhSanPhamUrl" class="form-control" placeholder="Dán link ảnh (http...) hoặc tải lên bên dưới" oninput="app.updateImagePreview(this.value)">
-                <div style="display: flex; gap: 6px;">
-                  <label class="btn btn-sm btn-secondary" style="margin: 0; cursor: pointer; flex: 1; text-align: center;">
-                    📷 Chụp / Chọn Ảnh
-                    <input type="file" id="modalAnhSanPhamFile" accept="image/*" capture="environment" style="display: none;" onchange="app.handleImageUpload(event)">
-                  </label>
-                  <button type="button" class="btn btn-sm btn-danger" onclick="app.clearImagePreview()">Xóa</button>
-                </div>
+            </div>
+
+            <!-- Điều khiển Thêm Ảnh -->
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <div style="display: flex; gap: 8px;">
+                <input type="url" id="modalAddImageUrlInput" class="form-control form-control-sm" placeholder="Dán đường link ảnh (http://...) vào đây...">
+                <button type="button" class="btn btn-sm btn-outline-primary" onclick="app.addImageFromInputUrl()" style="white-space: nowrap; font-weight: 600;">
+                  ➕ Thêm Link
+                </button>
               </div>
+              <div style="display: flex; gap: 8px;">
+                <label class="btn btn-sm btn-primary" style="margin: 0; cursor: pointer; flex: 1; text-align: center; font-weight: 600;">
+                  📷 Tải Lên Nhiều Ảnh (Chọn nhiều file)
+                  <input type="file" id="modalMultiImageFile" accept="image/*" multiple style="display: none;" onchange="app.handleMultipleImageUpload(event)">
+                </label>
+                <label class="btn btn-sm btn-outline-secondary" style="margin: 0; cursor: pointer; text-align: center; font-weight: 600;" title="Mở máy ảnh chụp nhanh">
+                  📸 Chụp Camera
+                  <input type="file" id="modalCameraImageFile" accept="image/*" capture="environment" style="display: none;" onchange="app.handleMultipleImageUpload(event)">
+                </label>
+              </div>
+            </div>
+
+            <!-- Mục Video Sản Phẩm -->
+            <div style="margin-top: 12px; padding-top: 10px; border-top: 1px dashed #E2E8F0;">
+              <label style="font-size: 12px; font-weight: bold; color: #B45309; display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+                <span>🎬</span> Video Giới Thiệu / Xoay Cận Cảnh (Tùy chọn):
+              </label>
+              <div style="display: flex; gap: 8px;">
+                <input type="url" id="modalVideoSanPham" class="form-control form-control-sm" placeholder="Dán link YouTube, Shorts, TikTok, Drive hoặc link file .mp4..." onchange="app.testModalVideoPreview()">
+                <button type="button" class="btn btn-sm btn-outline-warning" onclick="app.testModalVideoPreview()" style="white-space: nowrap; font-weight: 600;" title="Xem thử khung video">
+                  ▶️ Xem thử
+                </button>
+              </div>
+              <!-- Vùng hiển thị xem thử video -->
+              <div id="modalVideoPreviewBox" style="display: none; margin-top: 8px; border-radius: 6px; overflow: hidden; background: #000; text-align: center; max-height: 200px;"></div>
             </div>
           </div>
 
@@ -1088,9 +1121,9 @@
   </div>
 
   <!-- Scripts -->
-  <script src="js/defaultData.js?v=37"></script>
-  <script src="js/googleSheetService.js?v=37"></script>
-  <script src="js/barcodeLabel.js?v=37"></script>
-  <script src="js/app.js?v=37"></script>
+  <script src="js/defaultData.js?v=38"></script>
+  <script src="js/googleSheetService.js?v=38"></script>
+  <script src="js/barcodeLabel.js?v=38"></script>
+  <script src="js/app.js?v=38"></script>
 </body>
 </html>

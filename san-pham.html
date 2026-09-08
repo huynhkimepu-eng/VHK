@@ -284,6 +284,140 @@
       100% { transform: translateY(-8px); }
     }
 
+    /* Gallery Carousel & Navigation */
+    .gallery-nav-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid #E2E8F0;
+      color: #1E293B;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 18px;
+      font-weight: 900;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+      transition: all 0.15s ease;
+      z-index: 5;
+    }
+    .gallery-nav-btn:hover {
+      background: #FFFFFF;
+      color: #D97706;
+      transform: translateY(-50%) scale(1.1);
+    }
+    .gallery-nav-prev { left: 8px; }
+    .gallery-nav-next { right: 8px; }
+
+    .gallery-counter-pill {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(4px);
+      color: #FFFFFF;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 999px;
+      z-index: 4;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Dải Thumbnails */
+    .spotlight-thumb-strip {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      overflow-x: auto;
+      padding: 4px 2px;
+      max-width: 360px;
+      width: 100%;
+      scrollbar-width: thin;
+    }
+    .spotlight-thumb-item {
+      width: 60px;
+      height: 60px;
+      border-radius: 8px;
+      border: 2px solid #E2E8F0;
+      overflow: hidden;
+      cursor: pointer;
+      flex-shrink: 0;
+      position: relative;
+      background: #FFFFFF;
+      transition: all 0.2s ease;
+    }
+    .spotlight-thumb-item:hover {
+      border-color: #F59E0B;
+      transform: translateY(-2px);
+    }
+    .spotlight-thumb-item.active {
+      border-color: #D97706;
+      box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.35);
+    }
+    .spotlight-thumb-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .spotlight-thumb-video {
+      background: linear-gradient(135deg, #1E293B, #0F172A);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #FCD34D;
+      font-size: 10px;
+      font-weight: 800;
+      gap: 2px;
+    }
+    .spotlight-thumb-video span { font-size: 18px; }
+
+    /* Video player container on main stage */
+    .spotlight-video-stage {
+      width: 100%;
+      height: 100%;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .spotlight-video-stage iframe,
+    .spotlight-video-stage video {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+
+    /* Catalog Card Badges */
+    .catalog-media-badges {
+      position: absolute;
+      bottom: 8px;
+      left: 8px;
+      display: flex;
+      gap: 4px;
+      z-index: 2;
+    }
+    .catalog-badge-item {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(4px);
+      color: #FFFFFF;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+    }
+
     /* Mã Vạch Trực Quan Dưới Ảnh */
     .barcode-display-box {
       margin-top: 20px;
@@ -1064,8 +1198,10 @@
         <!-- Cột Ảnh & Barcode -->
         <div class="product-media-col">
           <div class="product-img-wrapper" id="spotlightImgWrapper">
-            <!-- Sẽ render img hoặc monogram HK -->
+            <!-- Sẽ render img hoặc video hoặc monogram HK -->
           </div>
+          <!-- Dải ảnh thu nhỏ (Thumbnails) & Nút xem Video -->
+          <div id="spotlightThumbStrip" class="spotlight-thumb-strip"></div>
           <div class="barcode-display-box">
             <div class="barcode-svg-wrap" id="spotlightBarcodeSvg">
               <!-- SVG Barcode 128 -->
@@ -1235,8 +1371,8 @@
   </div>
 
   <!-- Thư viện Dữ Liệu Gốc & Đồng Bộ -->
-  <script src="js/defaultData.js?v=37"></script>
-  <script src="js/googleSheetService.js?v=37"></script>
+  <script src="js/defaultData.js?v=38"></script>
+  <script src="js/googleSheetService.js?v=38"></script>
 
   <script>
     // State Quản Lý
@@ -1245,6 +1381,7 @@
     let storeConfig = {};
     let activeGoldFilter = 'ALL';
     let currentSpotlightProduct = null;
+    let currentSpotlightMediaIndex = 0; // 0..n: index ảnh, -1: video
 
     const STORAGE_KEY_PRODUCTS = 'pmqlv_products';
     const STORAGE_KEY_PRICES = 'pmqlv_gold_prices';
@@ -1421,6 +1558,152 @@
       return 'Chuẩn định lượng';
     }
 
+    // Hỗ trợ phân tích nhiều ảnh
+    function parseProductImages(val) {
+      if (!val) return [];
+      if (Array.isArray(val)) return val.filter(Boolean);
+      if (typeof val === 'string') {
+        val = val.trim();
+        if (!val) return [];
+        if (val.startsWith('[') && val.endsWith(']')) {
+          try {
+            const arr = JSON.parse(val);
+            if (Array.isArray(arr)) return arr.filter(Boolean);
+          } catch (e) {}
+        }
+        if (val.includes('\n')) {
+          return val.split('\n').map(s => s.trim()).filter(Boolean);
+        }
+        if (val.includes(',') && !val.startsWith('data:image')) {
+          return val.split(',').map(s => s.trim()).filter(Boolean);
+        }
+        return [val];
+      }
+      return [];
+    }
+
+    // Hỗ trợ nhúng video YouTube, Drive, MP4
+    function extractVideoEmbed(url) {
+      if (!url || typeof url !== 'string') return null;
+      url = url.trim();
+      let ytMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+      if (ytMatch && ytMatch[1]) {
+        return {
+          type: 'youtube',
+          embedUrl: `https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1&rel=0`
+        };
+      }
+      let driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+      if (driveMatch && driveMatch[1]) {
+        return {
+          type: 'drive',
+          embedUrl: `https://drive.google.com/file/d/${driveMatch[1]}/preview`
+        };
+      }
+      if (url.match(/\.(mp4|webm|ogg)(\?.*)?$/i)) {
+        return {
+          type: 'direct',
+          embedUrl: url
+        };
+      }
+      return {
+        type: 'generic',
+        embedUrl: url
+      };
+    }
+
+    // Render sân khấu Media (Ảnh lớn / Trình phát Video)
+    function renderSpotlightMediaStage() {
+      const imgWrap = document.getElementById('spotlightImgWrapper');
+      const thumbStrip = document.getElementById('spotlightThumbStrip');
+      if (!imgWrap || !currentSpotlightProduct) return;
+
+      const p = currentSpotlightProduct;
+      const images = parseProductImages(p.anhSanPham);
+      const hasVideo = !!(p.videoSanPham && String(p.videoSanPham).trim());
+
+      // 1. Chế độ Video nếu đang chọn index = -1
+      if (currentSpotlightMediaIndex === -1 && hasVideo) {
+        const embed = extractVideoEmbed(p.videoSanPham);
+        if (embed) {
+          if (embed.type === 'direct') {
+            imgWrap.innerHTML = `
+              <div class="spotlight-video-stage">
+                <video src="${embed.embedUrl}" controls autoplay playsinline style="width:100%; height:100%; object-fit:contain; background:#000;"></video>
+              </div>
+            `;
+          } else {
+            imgWrap.innerHTML = `
+              <div class="spotlight-video-stage">
+                <iframe src="${embed.embedUrl}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+              </div>
+            `;
+          }
+        }
+      } else {
+        // 2. Chế độ Ảnh
+        if (images.length > 0) {
+          if (currentSpotlightMediaIndex < 0 || currentSpotlightMediaIndex >= images.length) {
+            currentSpotlightMediaIndex = 0;
+          }
+          const activeImg = images[currentSpotlightMediaIndex] || images[0];
+          const hasMultiple = images.length > 1;
+
+          imgWrap.innerHTML = `
+            <img src="${activeImg}" alt="${p.tenHang || ''}" class="product-main-img" onerror="renderSpotlightFallbackMonogram()" />
+            ${hasMultiple ? `
+              <button class="gallery-nav-btn gallery-nav-prev" onclick="changeSpotlightImage(-1)" title="Ảnh trước">‹</button>
+              <button class="gallery-nav-btn gallery-nav-next" onclick="changeSpotlightImage(1)" title="Ảnh kế tiếp">›</button>
+              <div class="gallery-counter-pill">📸 ${currentSpotlightMediaIndex + 1} / ${images.length}</div>
+            ` : ''}
+          `;
+        } else {
+          renderSpotlightFallbackMonogram();
+        }
+      }
+
+      // 3. Render Dải Thumbnails bên dưới
+      if (thumbStrip) {
+        const totalItems = images.length + (hasVideo ? 1 : 0);
+        if (totalItems <= 1 && !hasVideo) {
+          thumbStrip.innerHTML = '';
+          thumbStrip.style.display = 'none';
+        } else {
+          thumbStrip.style.display = 'flex';
+          let thumbsHtml = images.map((src, idx) => `
+            <div class="spotlight-thumb-item ${idx === currentSpotlightMediaIndex ? 'active' : ''}" onclick="selectSpotlightMedia(${idx})" title="Ảnh ${idx + 1}">
+              <img src="${src}" alt="Thumb ${idx + 1}" />
+            </div>
+          `).join('');
+
+          if (hasVideo) {
+            thumbsHtml += `
+              <div class="spotlight-thumb-item spotlight-thumb-video ${currentSpotlightMediaIndex === -1 ? 'active' : ''}" onclick="selectSpotlightMedia(-1)" title="Xem video giới thiệu sản phẩm">
+                <span>▶️</span>
+                <div>VIDEO</div>
+              </div>
+            `;
+          }
+          thumbStrip.innerHTML = thumbsHtml;
+        }
+      }
+    }
+
+    function selectSpotlightMedia(idx) {
+      currentSpotlightMediaIndex = idx;
+      renderSpotlightMediaStage();
+    }
+
+    function changeSpotlightImage(delta) {
+      const images = parseProductImages(currentSpotlightProduct?.anhSanPham);
+      if (images.length <= 1) return;
+      let newIdx = currentSpotlightMediaIndex + delta;
+      if (newIdx < 0) newIdx = images.length - 1;
+      if (newIdx >= images.length) newIdx = 0;
+      currentSpotlightMediaIndex = newIdx;
+      renderSpotlightMediaStage();
+    }
+
     // 6. Hiển thị chi tiết 1 sản phẩm (Spotlight)
     function showProductByCode(code) {
       if (!code) return;
@@ -1442,15 +1725,9 @@
       // Cập nhật Breadcrumb
       document.getElementById('breadcrumbCurrent').textContent = `${product.loaiVang || 'Trang Sức'} > ${product.tenHang || product.maHang}`;
 
-      // 1. Ảnh sản phẩm hoặc Logo Monogram HK
-      const imgWrap = document.getElementById('spotlightImgWrapper');
-      if (product.anhSanPham && product.anhSanPham.trim()) {
-        imgWrap.innerHTML = `
-          <img src="${product.anhSanPham.trim()}" alt="${product.tenHang || ''}" class="product-main-img" onerror="renderSpotlightFallbackMonogram()" />
-        `;
-      } else {
-        renderSpotlightFallbackMonogram();
-      }
+      // 1. Ảnh sản phẩm & Video
+      currentSpotlightMediaIndex = 0;
+      renderSpotlightMediaStage();
 
       // 2. Barcode
       document.getElementById('spotlightBarcodeText').textContent = product.maHang || '---';
@@ -1606,8 +1883,13 @@
         const priceCalc = calculateProductPrice(p);
         const formattedPrice = priceCalc.total.toLocaleString('vi-VN') + ' đ';
 
-        const thumbHtml = (p.anhSanPham && p.anhSanPham.trim())
-          ? `<img src="${p.anhSanPham.trim()}" alt="${p.tenHang || ''}" class="catalog-thumb-img" onerror="this.parentElement.innerHTML='<div class=\\\'catalog-thumb-hk\\\'><span class=\\\'hk-crown\\\'>👑</span><span class=\\\'hk-text\\\'>HK</span></div>'" />`
+        const pImages = parseProductImages(p.anhSanPham);
+        const primaryImg = pImages[0] || '';
+        const imgCount = pImages.length;
+        const hasVideo = !!(p.videoSanPham && String(p.videoSanPham).trim());
+
+        const thumbHtml = (primaryImg && primaryImg.trim())
+          ? `<img src="${primaryImg.trim()}" alt="${p.tenHang || ''}" class="catalog-thumb-img" onerror="this.parentElement.innerHTML='<div class=\\\'catalog-thumb-hk\\\'><span class=\\\'hk-crown\\\'>👑</span><span class=\\\'hk-text\\\'>HK</span></div>'" />`
           : `<div class="catalog-thumb-hk"><span class="hk-crown">👑</span><span class="hk-text">HK</span></div>`;
 
         return `
@@ -1615,6 +1897,12 @@
             <div class="catalog-thumb-box">
               <span class="catalog-tag-gold">${p.loaiVang || 'Vàng'}</span>
               ${thumbHtml}
+              ${(imgCount > 1 || hasVideo) ? `
+                <div class="catalog-media-badges">
+                  ${imgCount > 1 ? `<span class="catalog-badge-item">📸 ${imgCount} ảnh</span>` : ''}
+                  ${hasVideo ? `<span class="catalog-badge-item" style="background:rgba(217,119,6,0.9);">🎬 Video</span>` : ''}
+                </div>
+              ` : ''}
             </div>
             <div class="catalog-card-body">
               <div>

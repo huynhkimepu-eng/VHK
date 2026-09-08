@@ -486,10 +486,22 @@ class GoldApp {
         const priceCalc = this.calcProductPrice(p);
         const formattedTotal = priceCalc.total.toLocaleString('vi-VN') + ' đ';
 
+        const pImages = this.parseProductImages(p.anhSanPham);
+        const primaryImg = pImages.length > 0 ? pImages[0] : '';
+        const extraImgs = pImages.length > 1 ? pImages.length - 1 : 0;
+        const hasVideo = !!(p.videoSanPham && String(p.videoSanPham).trim());
+
         const fallbackHk = `<div class="pos-thumb-hk" title="Tiệm Vàng Hoàng Kim"><span class="hk-crown">👑</span><span class="hk-text">HK</span></div>`;
-        const thumbHtml = (p.anhSanPham && p.anhSanPham.trim())
-          ? `<div class="pos-thumb-wrap"><img src="${p.anhSanPham.trim().replace(/"/g, '&quot;')}" alt="${(p.tenHang || '').replace(/"/g, '&quot;')}" class="pos-thumb-img" onerror="this.parentElement.innerHTML='<div class=\\\'pos-thumb-hk\\\'><span class=\\\'hk-crown\\\'>👑</span><span class=\\\'hk-text\\\'>HK</span></div>'" /></div>`
-          : `<div class="pos-thumb-wrap">${fallbackHk}</div>`;
+        const thumbHtml = (primaryImg && primaryImg.trim())
+          ? `<div class="pos-thumb-wrap" style="position: relative;">
+               <img src="${primaryImg.trim().replace(/"/g, '&quot;')}" alt="${(p.tenHang || '').replace(/"/g, '&quot;')}" class="pos-thumb-img" onerror="this.parentElement.innerHTML='<div class=\\\'pos-thumb-hk\\\'><span class=\\\'hk-crown\\\'>👑</span><span class=\\\'hk-text\\\'>HK</span></div>'" />
+               ${extraImgs > 0 ? `<span style="position: absolute; bottom: 2px; right: 2px; background: rgba(0,0,0,0.75); color: #FFF; font-size: 9px; font-weight: 800; border-radius: 3px; padding: 0 3px;">+${extraImgs}</span>` : ''}
+               ${hasVideo ? `<span style="position: absolute; top: 2px; right: 2px; font-size: 11px; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));" title="Có video sản phẩm">🎬</span>` : ''}
+             </div>`
+          : `<div class="pos-thumb-wrap" style="position: relative;">
+               ${fallbackHk}
+               ${hasVideo ? `<span style="position: absolute; top: 2px; right: 2px; font-size: 11px;" title="Có video sản phẩm">🎬</span>` : ''}
+             </div>`;
 
         return `
           <div class="product-card-pos" onclick="app.addToCart('${p.maHang}')">
@@ -873,7 +885,22 @@ class GoldApp {
             <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="app.toggleSelectProduct('${p.maHang}', this.checked)">
           </td>
           <td style="text-align: center;">
-            ${p.anhSanPham ? `<img src="${p.anhSanPham}" style="width: 32px; height: 32px; object-fit: cover; border-radius: 6px; border: 1px solid #E2E8F0;" alt="${p.maHang}">` : '<div style="width:32px;height:32px;background:linear-gradient(135deg,#FFFDF0,#FEF3C7);border:1px solid #F59E0B;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#B45309;font-family:\'Cinzel\',serif;box-shadow:inset 0 1px 1px #FFF;" title="Tiệm Vàng Hoàng Kim">HK</div>'}
+            ${(() => {
+              const pImgs = this.parseProductImages(p.anhSanPham);
+              const primImg = pImgs[0] || '';
+              const extraCount = pImgs.length > 1 ? pImgs.length - 1 : 0;
+              const hasVid = !!(p.videoSanPham && String(p.videoSanPham).trim());
+              return primImg
+                ? `<div style="position:relative; display:inline-block; width:32px; height:32px;">
+                     <img src="${primImg}" style="width: 32px; height: 32px; object-fit: cover; border-radius: 6px; border: 1px solid #E2E8F0;" alt="${p.maHang}">
+                     ${extraCount > 0 ? `<span style="position:absolute; bottom:-2px; right:-2px; background:#D97706; color:#FFF; font-size:8.5px; border-radius:3px; padding:0 2px; font-weight:800; line-height:1;">+${extraCount}</span>` : ''}
+                     ${hasVid ? `<span style="position:absolute; top:-3px; right:-3px; font-size:10px;" title="Có video">🎬</span>` : ''}
+                   </div>`
+                : `<div style="position:relative; display:inline-block; width:32px; height:32px;">
+                     <div style="width:32px;height:32px;background:linear-gradient(135deg,#FFFDF0,#FEF3C7);border:1px solid #F59E0B;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#B45309;font-family:\'Cinzel\',serif;box-shadow:inset 0 1px 1px #FFF;" title="Tiệm Vàng Hoàng Kim">HK</div>
+                     ${hasVid ? `<span style="position:absolute; top:-3px; right:-3px; font-size:10px;" title="Có video">🎬</span>` : ''}
+                   </div>`;
+            })()}
           </td>
           <td><b>${p.maHang}</b></td>
           <td>${p.tenHang || '--'}</td>
@@ -1948,9 +1975,18 @@ class GoldApp {
     document.getElementById('productForm').reset();
     document.getElementById('modalMaHang').readOnly = false;
     document.getElementById('modalMaHang').value = 'I' + Math.floor(1000000 + Math.random() * 9000000);
-    this.currentProductImage = '';
-    document.getElementById('modalAnhSanPhamUrl').value = '';
-    this.updateImagePreview('');
+    
+    // Reset Album ảnh & Video
+    this.currentProductImages = [];
+    this.currentProductVideo = '';
+    const addUrlInput = document.getElementById('modalAddImageUrlInput');
+    if (addUrlInput) addUrlInput.value = '';
+    const videoInput = document.getElementById('modalVideoSanPham');
+    if (videoInput) videoInput.value = '';
+    const videoBox = document.getElementById('modalVideoPreviewBox');
+    if (videoBox) { videoBox.style.display = 'none'; videoBox.innerHTML = ''; }
+    this.renderModalMediaPreview();
+
     if (document.getElementById('modalChiNhanh')) {
       document.getElementById('modalChiNhanh').value = (this.currentBranch === 'Chi nhánh 2' ? 'Chi nhánh 2' : 'Chi nhánh 1');
     }
@@ -2021,9 +2057,19 @@ class GoldApp {
       }
     }
     
-    this.currentProductImage = p.anhSanPham || '';
-    document.getElementById('modalAnhSanPhamUrl').value = p.anhSanPham && p.anhSanPham.startsWith('http') ? p.anhSanPham : '';
-    this.updateImagePreview(this.currentProductImage);
+    // Nạp Album ảnh & Video của sản phẩm
+    this.currentProductImages = this.parseProductImages(p.anhSanPham);
+    this.currentProductVideo = p.videoSanPham || '';
+    const addUrlInput = document.getElementById('modalAddImageUrlInput');
+    if (addUrlInput) addUrlInput.value = '';
+    const videoInput = document.getElementById('modalVideoSanPham');
+    if (videoInput) videoInput.value = this.currentProductVideo;
+    const videoBox = document.getElementById('modalVideoPreviewBox');
+    if (videoBox) { videoBox.style.display = 'none'; videoBox.innerHTML = ''; }
+    this.renderModalMediaPreview();
+    if (this.currentProductVideo) {
+      this.testModalVideoPreview();
+    }
 
     document.getElementById('productModal').classList.add('active');
   }
@@ -2084,61 +2130,220 @@ class GoldApp {
     document.getElementById('productModal').classList.remove('active');
   }
 
-  updateImagePreview(src) {
-    const preview = document.getElementById('modalImagePreview');
-    if (!src) {
-      preview.innerHTML = '<span style="color: #94A3B8; font-size: 10px;">No IMG</span>';
-      this.currentProductImage = '';
-    } else {
-      preview.innerHTML = `<img src="${src}" style="width: 100%; height: 100%; object-fit: cover;">`;
-      this.currentProductImage = src;
+  parseProductImages(val) {
+    if (!val) return [];
+    if (Array.isArray(val)) return val.filter(Boolean);
+    if (typeof val === 'string') {
+      val = val.trim();
+      if (!val) return [];
+      if (val.startsWith('[') && val.endsWith(']')) {
+        try {
+          const arr = JSON.parse(val);
+          if (Array.isArray(arr)) return arr.filter(Boolean);
+        } catch (e) {}
+      }
+      if (val.includes('\n')) {
+        return val.split('\n').map(s => s.trim()).filter(Boolean);
+      }
+      if (val.includes(',') && !val.startsWith('data:image')) {
+        return val.split(',').map(s => s.trim()).filter(Boolean);
+      }
+      return [val];
+    }
+    return [];
+  }
+
+  getPrimaryProductImage(product) {
+    const imgs = this.parseProductImages(product?.anhSanPham);
+    return imgs.length > 0 ? imgs[0] : '';
+  }
+
+  renderModalMediaPreview() {
+    const grid = document.getElementById('modalImagesGrid');
+    const badge = document.getElementById('modalImgCountBadge');
+    if (!grid) return;
+
+    const count = (this.currentProductImages && Array.isArray(this.currentProductImages)) ? this.currentProductImages.length : 0;
+    if (badge) {
+      badge.textContent = `${count} ảnh`;
+    }
+
+    if (!this.currentProductImages || this.currentProductImages.length === 0) {
+      grid.innerHTML = `
+        <div id="modalImagesEmptyHint" style="font-size: 11.5px; color: #94A3B8; text-align: center; width: 100%; padding: 12px 0;">
+          Chưa có ảnh nào. Bạn hãy bấm "📷 Tải Lên Nhiều Ảnh" hoặc dán link ảnh bên dưới.
+        </div>
+      `;
+      return;
+    }
+
+    grid.innerHTML = this.currentProductImages.map((src, idx) => {
+      const isPrimary = (idx === 0);
+      return `
+        <div style="position: relative; width: 68px; height: 68px; border-radius: 6px; border: 2px solid ${isPrimary ? '#D97706' : '#CBD5E1'}; overflow: hidden; background: #000; box-shadow: 0 1px 4px rgba(0,0,0,0.1); flex-shrink: 0;">
+          <img src="${src}" style="width: 100%; height: 100%; object-fit: cover;" alt="Ảnh ${idx + 1}">
+          ${isPrimary ? `
+            <div style="position: absolute; top: 0; left: 0; right: 0; background: #D97706; color: #FFF; font-size: 9px; font-weight: 800; text-align: center; padding: 1px 0; letter-spacing: 0.5px;">
+              ⭐ CHÍNH
+            </div>
+          ` : `
+            <button type="button" onclick="app.setPrimaryImage(${idx})" title="Đặt làm ảnh đại diện chính" style="position: absolute; bottom: 2px; left: 2px; background: rgba(0,0,0,0.7); color: #FDE047; border: none; border-radius: 3px; font-size: 10px; cursor: pointer; padding: 1px 4px;">
+              ⭐
+            </button>
+          `}
+          <button type="button" onclick="app.removeImageAtIndex(${idx})" title="Xóa ảnh này" style="position: absolute; top: 2px; right: 2px; background: rgba(220,38,38,0.9); color: #FFF; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1;">
+            ✕
+          </button>
+        </div>
+      `;
+    }).join('');
+  }
+
+  addImageFromInputUrl() {
+    const input = document.getElementById('modalAddImageUrlInput');
+    if (!input) return;
+    const url = input.value.trim();
+    if (!url) {
+      alert('Vui lòng dán đường link ảnh trước!');
+      return;
+    }
+    if (!this.currentProductImages) this.currentProductImages = [];
+    this.currentProductImages.push(url);
+    input.value = '';
+    this.renderModalMediaPreview();
+  }
+
+  removeImageAtIndex(index) {
+    if (this.currentProductImages && this.currentProductImages[index] !== undefined) {
+      this.currentProductImages.splice(index, 1);
+      this.renderModalMediaPreview();
     }
   }
 
-  clearImagePreview() {
-    document.getElementById('modalAnhSanPhamUrl').value = '';
-    document.getElementById('modalAnhSanPhamFile').value = '';
-    this.updateImagePreview('');
+  setPrimaryImage(index) {
+    if (this.currentProductImages && this.currentProductImages[index]) {
+      const chosen = this.currentProductImages.splice(index, 1)[0];
+      this.currentProductImages.unshift(chosen);
+      this.renderModalMediaPreview();
+    }
   }
 
-  handleImageUpload(e) {
-    const file = e.target.files[0];
-    if (!file) return;
+  handleMultipleImageUpload(e) {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        // Resize image if it's too large to save space in Google Sheets
-        const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 300;
-        const MAX_HEIGHT = 300;
-        let width = img.width;
-        let height = img.height;
+    let processedCount = 0;
+    const totalFiles = files.length;
 
-        if (width > height) {
-          if (width > MAX_WIDTH) {
-            height *= MAX_WIDTH / width;
-            width = MAX_WIDTH;
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const MAX_DIM = 600;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_DIM) {
+              height = Math.round(height * (MAX_DIM / width));
+              width = MAX_DIM;
+            }
+          } else {
+            if (height > MAX_DIM) {
+              width = Math.round(width * (MAX_DIM / height));
+              height = MAX_DIM;
+            }
           }
-        } else {
-          if (height > MAX_HEIGHT) {
-            width *= MAX_HEIGHT / height;
-            height = MAX_HEIGHT;
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.72);
+          if (!this.currentProductImages) this.currentProductImages = [];
+          this.currentProductImages.push(dataUrl);
+
+          processedCount++;
+          if (processedCount === totalFiles) {
+            this.renderModalMediaPreview();
+            e.target.value = '';
           }
-        }
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-        
-        // Convert to base64 jpeg
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
-        this.updateImagePreview(dataUrl);
+        };
+        img.src = event.target.result;
       };
-      img.src = event.target.result;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  extractVideoEmbed(url) {
+    if (!url || typeof url !== 'string') return null;
+    url = url.trim();
+
+    // 1. YouTube standard, Shorts, youtu.be
+    let ytMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    if (ytMatch && ytMatch[1]) {
+      return {
+        type: 'youtube',
+        embedUrl: `https://www.youtube.com/embed/${ytMatch[1]}?autoplay=0&rel=0`,
+        videoId: ytMatch[1]
+      };
+    }
+
+    // 2. Google Drive video preview
+    let driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+    if (driveMatch && driveMatch[1]) {
+      return {
+        type: 'drive',
+        embedUrl: `https://drive.google.com/file/d/${driveMatch[1]}/preview`
+      };
+    }
+
+    // 3. Direct video file (.mp4, .webm, .ogg)
+    if (url.match(/\.(mp4|webm|ogg)(\?.*)?$/i)) {
+      return {
+        type: 'direct',
+        embedUrl: url
+      };
+    }
+
+    // 4. Fallback
+    return {
+      type: 'generic',
+      embedUrl: url
     };
-    reader.readAsDataURL(file);
+  }
+
+  testModalVideoPreview() {
+    const input = document.getElementById('modalVideoSanPham');
+    const box = document.getElementById('modalVideoPreviewBox');
+    if (!input || !box) return;
+
+    const url = input.value.trim();
+    if (!url) {
+      box.style.display = 'none';
+      box.innerHTML = '';
+      return;
+    }
+
+    const embedInfo = this.extractVideoEmbed(url);
+    if (!embedInfo) {
+      box.style.display = 'none';
+      return;
+    }
+
+    box.style.display = 'block';
+    if (embedInfo.type === 'direct') {
+      box.innerHTML = `
+        <video src="${embedInfo.embedUrl}" controls style="width:100%; max-height:180px; display:block; margin:0 auto;"></video>
+      `;
+    } else {
+      box.innerHTML = `
+        <iframe src="${embedInfo.embedUrl}" style="width:100%; height:180px; border:none; display:block;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      `;
+    }
   }
 
   async saveProductFromModal() {
@@ -2174,7 +2379,17 @@ class GoldApp {
       const congVon = parseFloat(document.getElementById('modalCongVon').value) || 0;
       const giaVangNhap = parseFloat(document.getElementById('modalGiaVangNhap')?.value) || 0;
       const giaVon = parseFloat(document.getElementById('modalGiaVon').value) || 0;
-      const anhSanPham = this.currentProductImage || document.getElementById('modalAnhSanPhamUrl').value.trim();
+
+      // Xử lý đóng gói nhiều ảnh & video
+      let anhSanPham = '';
+      if (this.currentProductImages && this.currentProductImages.length > 0) {
+        if (this.currentProductImages.length === 1) {
+          anhSanPham = this.currentProductImages[0];
+        } else {
+          anhSanPham = JSON.stringify(this.currentProductImages);
+        }
+      }
+      const videoSanPham = document.getElementById('modalVideoSanPham')?.value.trim() || '';
 
       const existingIndex = this.products.findIndex(p => p.maHang === maHang);
       const productData = {
@@ -2199,6 +2414,7 @@ class GoldApp {
         cuaHang: this.storeConfig.storeName,
         chiNhanh: chiNhanh,
         anhSanPham: anhSanPham,
+        videoSanPham: videoSanPham,
         quayLon: '2HOANGKIM2',
         ngayNhap: new Date().toISOString().slice(0, 10)
       };

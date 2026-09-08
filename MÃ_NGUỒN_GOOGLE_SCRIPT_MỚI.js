@@ -109,7 +109,7 @@ function doPost(e) {
         'maHang', 'tenHang', 'loaiHang', 'loaiVang', 'nhomHang', 'trangThai',
         'tlTong', 'tlHot', 'tlVang', 'ni', 'congBan', 'congVon', 'giaBanMon',
         'giaVon', 'cuaHang', 'quayLon', 'quayNho', 'ngayNhap',
-        'chiNhanh', 'anhSanPham', 'nhaSanXuat', 'nhaCungCap'
+        'chiNhanh', 'anhSanPham', 'videoSanPham', 'nhaSanXuat', 'nhaCungCap'
       ];
 
       const rows = [headers];
@@ -135,6 +135,7 @@ function doPost(e) {
           p.ngayNhap || '',
           p.chiNhanh || '',
           p.anhSanPham || '',
+          p.videoSanPham || '',
           p.nhaSanXuat || '',
           p.nhaCungCap || ''
         ]);
@@ -176,6 +177,7 @@ function doPost(e) {
       };
       checkAndAddCol('chiNhanh');
       checkAndAddCol('anhSanPham');
+      checkAndAddCol('videoSanPham');
       checkAndAddCol('nhaSanXuat');
       checkAndAddCol('nhaCungCap');
 
@@ -200,6 +202,7 @@ function doPost(e) {
         ngayNhap: p.ngayNhap || '',
         chiNhanh: p.chiNhanh || '',
         anhSanPham: p.anhSanPham || '',
+        videoSanPham: p.videoSanPham || '',
         nhaSanXuat: p.nhaSanXuat || '',
         nhaCungCap: p.nhaCungCap || ''
       };
@@ -402,7 +405,7 @@ function initSheetsIfNotExist() {
       'maHang', 'tenHang', 'loaiHang', 'loaiVang', 'nhomHang', 'trangThai',
       'tlTong', 'tlHot', 'tlVang', 'ni', 'congBan', 'congVon', 'giaBanMon',
       'giaVon', 'cuaHang', 'quayLon', 'quayNho', 'ngayNhap',
-      'chiNhanh', 'anhSanPham', 'nhaSanXuat', 'nhaCungCap'
+      'chiNhanh', 'anhSanPham', 'videoSanPham', 'nhaSanXuat', 'nhaCungCap'
     ];
     s.appendRow(headers);
     formatHeaderRow(s, headers.length);
