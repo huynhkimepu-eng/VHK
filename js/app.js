@@ -2177,6 +2177,8 @@ class GoldApp {
     } else {
       if (statusBadge) statusBadge.innerText = 'Chưa có video';
       if (btnClearVideo) btnClearVideo.style.display = 'none';
+    }
+
     const cloudBadge = document.getElementById('modalCloudinaryActiveBadge');
     if (cloudBadge) {
       const isCloud = (typeof CloudinaryService !== 'undefined' && CloudinaryService.isConfigured());
