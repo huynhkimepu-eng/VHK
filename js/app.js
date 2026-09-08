@@ -476,16 +476,28 @@ class GoldApp {
         const priceCalc = this.calcProductPrice(p);
         const formattedTotal = priceCalc.total.toLocaleString('vi-VN') + ' đ';
 
+        const fallbackHk = `<div class="pos-thumb-hk" title="Tiệm Vàng Hoàng Kim"><span class="hk-crown">👑</span><span class="hk-text">HK</span></div>`;
+        const thumbHtml = (p.anhSanPham && p.anhSanPham.trim())
+          ? `<div class="pos-thumb-wrap"><img src="${p.anhSanPham.trim().replace(/"/g, '&quot;')}" alt="${(p.tenHang || '').replace(/"/g, '&quot;')}" class="pos-thumb-img" onerror="this.parentElement.innerHTML='<div class=\\\'pos-thumb-hk\\\'><span class=\\\'hk-crown\\\'>👑</span><span class=\\\'hk-text\\\'>HK</span></div>'" /></div>`
+          : `<div class="pos-thumb-wrap">${fallbackHk}</div>`;
+
         return `
           <div class="product-card-pos" onclick="app.addToCart('${p.maHang}')">
             <span class="tag-gold">${p.loaiVang || 'Vàng'}</span>
             <div class="code">Mã: ${p.maHang}</div>
-            <div class="name">${p.tenHang || 'Sản phẩm'}</div>
-            <div class="weight-info">
-              <span>TL Vàng: <b>${Number(p.tlVang || 0).toFixed(3)}c</b></span>
-              <span>Công: ${priceCalc.laborCost ? priceCalc.laborCost.toLocaleString('vi-VN') + 'đ' : '0đ'}</span>
+            <div class="card-main-content">
+              <div class="card-info">
+                <div class="name" title="${p.tenHang || ''}">${p.tenHang || 'Sản phẩm'}</div>
+                <div class="weight-info">
+                  <span>TL Vàng: <b>${Number(p.tlVang || 0).toFixed(3)}c</b></span>
+                  <span>Công: ${priceCalc.laborCost ? priceCalc.laborCost.toLocaleString('vi-VN') + 'đ' : '0đ'}</span>
+                </div>
+                <div class="price-tag">${formattedTotal}</div>
+              </div>
+              <div class="card-thumb-container">
+                ${thumbHtml}
+              </div>
             </div>
-            <div class="price-tag">${formattedTotal}</div>
           </div>
         `;
       }).join('');
@@ -848,7 +860,7 @@ class GoldApp {
             <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="app.toggleSelectProduct('${p.maHang}', this.checked)">
           </td>
           <td style="text-align: center;">
-            ${p.anhSanPham ? `<img src="${p.anhSanPham}" style="width: 30px; height: 30px; object-fit: cover; border-radius: 4px; border: 1px solid #E2E8F0;" alt="${p.maHang}">` : '<div style="width:30px;height:30px;background:#F1F5F9;border-radius:4px;display:inline-block;"></div>'}
+            ${p.anhSanPham ? `<img src="${p.anhSanPham}" style="width: 32px; height: 32px; object-fit: cover; border-radius: 6px; border: 1px solid #E2E8F0;" alt="${p.maHang}">` : '<div style="width:32px;height:32px;background:linear-gradient(135deg,#FFFDF0,#FEF3C7);border:1px solid #F59E0B;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#B45309;font-family:\'Cinzel\',serif;box-shadow:inset 0 1px 1px #FFF;" title="Tiệm Vàng Hoàng Kim">HK</div>'}
           </td>
           <td><b>${p.maHang}</b></td>
           <td>${p.tenHang || '--'}</td>

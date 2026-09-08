@@ -142,6 +142,39 @@ const GoogleSheetService = {
     }
   },
 
+  // Tải riêng Bảng Giá Vàng siêu tốc phục vụ hiển thị TV thời gian thực
+  async fetchGoldPrices() {
+    if (!this.isConfigured()) return null;
+
+    try {
+      const url = this.getUrl();
+      // Gọi getGoldPrices (chỉ tải riêng giá vàng, phản hồi siêu nhanh 0.1s)
+      const response = await fetch(`${url}?action=getGoldPrices&t=${Date.now()}`, {
+        method: 'GET',
+        mode: 'cors',
+        redirect: 'follow'
+      });
+      const text = await response.text();
+      let res;
+      try { res = JSON.parse(text); } catch(e) { res = null; }
+      if (res && res.success && res.data && Array.isArray(res.data.goldPrices) && res.data.goldPrices.length > 0) {
+        return res.data.goldPrices;
+      }
+
+      // Fallback nếu bản Google Script trên Google Sheet chưa được update action mới
+      const all = await this.fetchAllData();
+      return (all && all.goldPrices) ? all.goldPrices : null;
+    } catch (err) {
+      console.warn('Lỗi khi fetchGoldPrices:', err);
+      try {
+        const all = await this.fetchAllData();
+        return (all && all.goldPrices) ? all.goldPrices : null;
+      } catch (e) {
+        return null;
+      }
+    }
+  },
+
   // Đồng bộ toàn bộ sản phẩm lên Google Sheet (1.174 món)
   async syncAllProducts(products) {
     const url = this.getUrl();

@@ -32,6 +32,17 @@ function doGet(e) {
       return jsonResponse({ success: true, message: 'PMQLV Google Sheet API đang hoạt động bình thường!' });
     }
 
+    if (action === 'getGoldPrices') {
+      initSheetsIfNotExist();
+      const goldPrices = getSheetData(SHEET_NAMES.GIA_VANG);
+      return jsonResponse({
+        success: true,
+        data: {
+          goldPrices: goldPrices
+        }
+      });
+    }
+
     if (action === 'getData') {
       initSheetsIfNotExist();
       const products = getSheetData(SHEET_NAMES.SAN_PHAM);

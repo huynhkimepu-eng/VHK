@@ -387,18 +387,18 @@ body {
   background: #FFF;
   border: 1px solid #E2E8F0;
   border-radius: var(--radius-sm);
-  padding: 12px;
+  padding: 10px 12px;
   cursor: pointer;
   transition: all 0.15s ease-in-out;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   position: relative;
+  min-height: 122px;
 }
 
 .product-card-pos:hover {
   border-color: var(--primary-gold);
-  box-shadow: 0 4px 12px rgba(212,175,55,0.2);
+  box-shadow: 0 4px 12px rgba(212,175,55,0.25);
   transform: translateY(-2px);
 }
 
@@ -412,26 +412,48 @@ body {
   color: #92400E;
   padding: 2px 6px;
   border-radius: 4px;
+  z-index: 2;
 }
 
 .product-card-pos .code {
   font-size: 11px;
   font-weight: 700;
   color: #64748B;
+  margin-bottom: 2px;
+}
+
+.product-card-pos .card-main-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex: 1;
+}
+
+.product-card-pos .card-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .product-card-pos .name {
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 700;
-  margin: 4px 0 6px 0;
+  margin: 2px 0 4px 0;
   color: var(--navy-bg);
   line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .product-card-pos .weight-info {
   font-size: 11px;
   color: #475569;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -441,6 +463,69 @@ body {
   font-size: 14px;
   font-weight: 800;
   color: #B45309;
+}
+
+/* POS Card Thumbnail & HK Logo */
+.product-card-pos .card-thumb-container {
+  flex-shrink: 0;
+  width: 66px;
+  height: 66px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.pos-thumb-wrap {
+  width: 66px;
+  height: 66px;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #F8FAFC;
+}
+
+.pos-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #E2E8F0;
+  background: #FFF;
+}
+
+.pos-thumb-hk {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #FFFDF0 0%, #FEF3C7 50%, #FDE68A 100%);
+  border: 1.5px solid #F59E0B;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.9), 0 2px 5px rgba(245, 158, 11, 0.15);
+  user-select: none;
+}
+
+.pos-thumb-hk .hk-crown {
+  font-size: 11px;
+  line-height: 1;
+  margin-bottom: 2px;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.15));
+}
+
+.pos-thumb-hk .hk-text {
+  font-family: 'Cinzel', 'Montserrat', serif;
+  font-size: 19px;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+  line-height: 1;
+  background: linear-gradient(135deg, #92400E 0%, #B45309 50%, #78350F 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 /* POS CART (GIỎ HÀNG) */

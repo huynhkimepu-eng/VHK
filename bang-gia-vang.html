@@ -9,17 +9,18 @@
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg-dark: #0B1120;
-      --card-bg: rgba(15, 23, 42, 0.85);
-      --gold-primary: #F59E0B;
-      --gold-light: #FDE68A;
-      --gold-dark: #D97706;
-      --gold-gradient: linear-gradient(135deg, #FBBF24 0%, #D97706 50%, #B45309 100%);
-      --text-main: #F8FAFC;
-      --text-muted: #94A3B8;
-      --border-gold: rgba(245, 158, 11, 0.35);
-      --buy-color: #10B981;
-      --sell-color: #EF4444;
+      --bg-main: radial-gradient(circle at 50% 10%, #FFFFFF 0%, #FAF6EE 55%, #F4ECE0 100%);
+      --card-bg: #FFFFFF;
+      --gold-primary: #D97706;
+      --gold-dark: #B45309;
+      --gold-light: #FEF3C7;
+      --gold-gradient: linear-gradient(135deg, #F59E0B 0%, #D97706 50%, #B45309 100%);
+      --text-main: #0F172A;
+      --text-muted: #64748B;
+      --border-gold: #E5C378;
+      --border-light: #EFE4CF;
+      --buy-color: #047857;
+      --sell-color: #DC2626;
     }
 
     * {
@@ -30,7 +31,7 @@
 
     body {
       font-family: 'Montserrat', sans-serif;
-      background: radial-gradient(circle at 50% 20%, #1E293B 0%, #0B1120 75%, #020617 100%);
+      background: var(--bg-main);
       color: var(--text-main);
       min-height: 100vh;
       display: flex;
@@ -68,7 +69,7 @@
       align-items: center;
       justify-content: center;
       font-size: 38px;
-      box-shadow: 0 0 25px rgba(245, 158, 11, 0.4);
+      box-shadow: 0 4px 20px rgba(217, 119, 6, 0.35);
       flex-shrink: 0;
     }
 
@@ -88,13 +89,13 @@
       font-size: 34px;
       font-weight: 900;
       letter-spacing: 2px;
-      background: linear-gradient(135deg, #FFFBEB 0%, #FDE68A 40%, #F59E0B 80%, #D97706 100%);
+      background: linear-gradient(135deg, #78350F 0%, #B45309 45%, #D97706 75%, #92400E 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       text-transform: uppercase;
       margin-bottom: 0;
-      text-shadow: 0 0 30px rgba(245, 158, 11, 0.3);
       line-height: 1.15;
+      filter: drop-shadow(0 1px 1px rgba(255, 255, 255, 0.8));
     }
 
     /* Thời gian hiển thị nho nhỏ sau chữ Hoàng Kim */
@@ -102,60 +103,92 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      background: rgba(15, 23, 42, 0.85);
-      border: 1px solid rgba(245, 158, 11, 0.4);
-      padding: 5px 14px;
+      background: #FFFFFF;
+      border: 2px solid #F59E0B;
+      padding: 5px 15px;
       border-radius: 20px;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 4px 15px rgba(217, 119, 6, 0.15);
     }
 
     .header-clock-pill .clock-icon {
-      font-size: 15px;
+      font-size: 16px;
     }
 
     .header-clock-pill .clock-time-inline {
       font-family: 'Montserrat', monospace;
       font-size: 20px;
-      font-weight: 800;
-      color: #FFFFFF;
+      font-weight: 900;
+      color: #0F172A;
       letter-spacing: 1px;
     }
 
     .header-clock-pill .clock-sep {
-      color: var(--border-gold);
+      color: #D97706;
       font-size: 13px;
-      opacity: 0.7;
+      font-weight: 700;
     }
 
     .header-clock-pill .clock-date-inline {
       font-size: 14px;
-      color: var(--gold-light);
-      font-weight: 600;
+      color: #B45309;
+      font-weight: 700;
     }
 
     .brand-titles .slogan {
       font-size: 14px;
-      color: var(--gold-light);
-      letter-spacing: 1px;
-      font-weight: 500;
+      color: #78350F;
+      letter-spacing: 0.5px;
+      font-weight: 600;
       display: flex;
       align-items: center;
       gap: 15px;
       margin-top: 4px;
+      flex-wrap: wrap;
     }
 
     .brand-titles .slogan span.contact {
-      color: var(--text-muted);
-      font-size: 13px;
+      color: #64748B;
+      font-size: 13.5px;
+      font-weight: 500;
+    }
+
+    /* Live Sync Status Badge */
+    .live-status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #047857;
+      background: #ECFDF5;
+      border: 1px solid #A7F3D0;
+      padding: 3px 10px;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(4, 120, 87, 0.1);
+    }
+
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10B981;
+      display: inline-block;
+      animation: pulseDot 1.5s infinite;
+    }
+
+    @keyframes pulseDot {
+      0% { opacity: 0.4; transform: scale(0.9); }
+      50% { opacity: 1; transform: scale(1.2); }
+      100% { opacity: 0.4; transform: scale(0.9); }
     }
 
     /* Rates Table Card */
     .rates-card {
       flex: 1;
-      background: var(--card-bg);
+      background: #FFFFFF;
       border-radius: 20px;
-      border: 1.5px solid var(--border-gold);
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      border: 2px solid #E5C378;
+      box-shadow: 0 20px 50px rgba(180, 83, 9, 0.08), 0 4px 12px rgba(0, 0, 0, 0.03);
       overflow: hidden;
       display: flex;
       flex-direction: column;
@@ -168,15 +201,16 @@
     }
 
     .rates-table thead th {
-      background: linear-gradient(180deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.95) 100%);
-      color: var(--gold-light);
+      background: linear-gradient(135deg, #92400E 0%, #B45309 45%, #78350F 100%);
+      color: #FFFFFF;
       font-family: 'Cinzel', serif;
-      font-size: 17px;
+      font-size: 17.5px;
       font-weight: 800;
       letter-spacing: 1.5px;
-      padding: 20px 24px;
-      border-bottom: 2px solid var(--border-gold);
+      padding: 18px 24px;
+      border-bottom: 3px solid #D97706;
       text-transform: uppercase;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
     }
 
     .rates-table thead th.th-right {
@@ -188,20 +222,21 @@
     }
 
     .rates-table tbody tr {
-      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-      transition: background 0.15s ease;
+      border-bottom: 1px solid #EFE4CF;
+      background: #FFFFFF;
+      transition: background 0.2s ease;
     }
 
     .rates-table tbody tr:nth-child(even) {
-      background: rgba(255, 255, 255, 0.02);
+      background: #FCF9F2;
     }
 
     .rates-table tbody tr:hover {
-      background: rgba(245, 158, 11, 0.08);
+      background: #FEF3C7;
     }
 
     .rates-table td {
-      padding: 20px 24px;
+      padding: 18px 24px;
       vertical-align: middle;
       font-size: 19px;
     }
@@ -213,67 +248,67 @@
     }
 
     .gold-bullet {
-      width: 12px;
-      height: 12px;
+      width: 14px;
+      height: 14px;
       border-radius: 50%;
-      background: var(--gold-gradient);
-      box-shadow: 0 0 10px rgba(245, 158, 11, 0.8);
+      background: linear-gradient(135deg, #F59E0B, #B45309);
+      box-shadow: 0 0 10px rgba(217, 119, 6, 0.4);
       flex-shrink: 0;
     }
 
     .gold-title {
-      font-size: 22px;
-      font-weight: 800;
-      color: #FFFFFF;
+      font-size: 23px;
+      font-weight: 900;
+      color: #0F172A;
       letter-spacing: 0.5px;
     }
 
     .gold-sub {
-      font-size: 13px;
-      color: var(--text-muted);
+      font-size: 13.5px;
+      color: #64748B;
+      font-weight: 600;
       margin-top: 2px;
     }
 
     .purity-badge {
       display: inline-block;
-      padding: 5px 12px;
-      border-radius: 8px;
-      background: rgba(245, 158, 11, 0.15);
-      border: 1px solid rgba(245, 158, 11, 0.35);
-      color: var(--gold-light);
-      font-size: 17px;
-      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: 10px;
+      background: #FEF3C7;
+      border: 1.5px solid #FCD34D;
+      color: #92400E;
+      font-size: 18px;
+      font-weight: 800;
       letter-spacing: 0.5px;
+      box-shadow: 0 1px 3px rgba(180, 83, 9, 0.1);
     }
 
     .unit-tag {
-      font-size: 16px;
-      color: var(--text-muted);
-      font-weight: 600;
+      font-size: 17px;
+      color: #334155;
+      font-weight: 700;
     }
 
     .price-cell {
       text-align: right;
       font-family: 'Montserrat', sans-serif;
-      font-size: 26px;
-      font-weight: 800;
-      letter-spacing: 1px;
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: 0.5px;
     }
 
     .price-buy {
-      color: #34D399;
-      text-shadow: 0 0 15px rgba(52, 211, 153, 0.3);
+      color: #047857;
     }
 
     .price-sell {
-      color: #F87171;
-      text-shadow: 0 0 15px rgba(248, 113, 113, 0.3);
+      color: #DC2626;
     }
 
     .price-vnd-sub {
-      font-size: 13px;
-      color: var(--text-muted);
-      font-weight: 500;
+      font-size: 13.5px;
+      color: #64748B;
+      font-weight: 600;
       margin-top: 2px;
     }
 
@@ -281,28 +316,30 @@
     .empty-state {
       padding: 60px 20px;
       text-align: center;
-      color: var(--text-muted);
+      color: #64748B;
       font-size: 18px;
     }
 
     /* Bottom Ticker Marquee */
     .bottom-ticker {
-      background: #020617;
-      border-top: 1px solid var(--border-gold);
+      background: linear-gradient(90deg, #78350F 0%, #92400E 100%);
+      border-top: 2px solid #F59E0B;
       padding: 12px 20px;
       display: flex;
       align-items: center;
       gap: 15px;
       font-size: 14.5px;
       overflow: hidden;
-      margin-top: 20px;
+      margin-top: 18px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(120, 53, 15, 0.2);
     }
 
     .ticker-badge {
-      background: var(--gold-gradient);
-      color: #000;
+      background: #FDE68A;
+      color: #78350F;
       font-size: 12px;
-      font-weight: 800;
+      font-weight: 900;
       padding: 4px 10px;
       border-radius: 4px;
       white-space: nowrap;
@@ -320,7 +357,7 @@
       display: inline-block;
       padding-left: 100%;
       animation: tickerAnimation 30s linear infinite;
-      color: var(--gold-light);
+      color: #FFFBEB;
       font-weight: 600;
     }
 
@@ -329,7 +366,15 @@
       100% { transform: translateX(-100%); }
     }
 
-
+    /* Flash highlight when prices change */
+    @keyframes flashUpdatedRow {
+      0% { background-color: #FEF08A; }
+      50% { background-color: #FDE047; }
+      100% { background-color: transparent; }
+    }
+    .price-updated-flash {
+      animation: flashUpdatedRow 2s ease-out;
+    }
 
     /* Responsive for TV / Tablet / Mobile */
     @media (max-width: 1024px) {
@@ -373,6 +418,10 @@
         <div class="slogan">
           <span id="tvStoreSlogan">Uy Tín Trọn Niềm Tin - Vàng Chuẩn Tuổi</span>
           <span class="contact" id="tvStoreContact">| Hotline: 0988.888.888</span>
+          <div class="live-status-pill" id="liveStatusPill" title="Tự động cập nhật giá vàng trực tiếp">
+            <span class="live-dot"></span>
+            <span id="liveStatusText">Trực tiếp</span>
+          </div>
         </div>
       </div>
     </header>
@@ -430,29 +479,29 @@
       // Render giao diện bảng giá
       renderTVDisplay();
 
-      // Đồng bộ từ Google Sheet (nếu có cấu hình)
+      // Đồng bộ từ Google Sheet: 5 giây kiểm tra 1 lần để cập nhật siêu tốc
       fetchLatestFromCloud();
-      setInterval(fetchLatestFromCloud, 30000); // 30s đồng bộ 1 lần
+      setInterval(fetchLatestFromCloud, 5000);
 
-      // Lắng nghe thay đổi dữ liệu từ các tab/cửa sổ khác
+      // Lắng nghe thay đổi dữ liệu từ các tab/cửa sổ khác (cùng máy)
       window.addEventListener('storage', (e) => {
         if (e.key === STORAGE_KEY_PRICES || e.key === STORAGE_KEY_CONFIG || e.key === STORAGE_KEY_VISIBLE) {
           loadData();
-          renderTVDisplay();
+          renderTVDisplay(true);
         }
       });
 
       // Lắng nghe nhấp đúp để bật/tắt toàn màn hình nếu cần
       document.addEventListener('dblclick', toggleFullScreen);
 
-      // Kiểm tra cập nhật bộ nhớ cục bộ mỗi 2 giây
+      // Kiểm tra cập nhật bộ nhớ cục bộ mỗi 1 giây
       setInterval(() => {
         const currentSaved = localStorage.getItem(STORAGE_KEY_PRICES);
         if (currentSaved && currentSaved !== JSON.stringify(goldPrices)) {
           loadData();
-          renderTVDisplay();
+          renderTVDisplay(true);
         }
-      }, 2000);
+      }, 1000);
     }
 
     // 2. Tải dữ liệu từ LocalStorage
@@ -554,7 +603,7 @@
     ];
 
     // 3. Render bảng hiển thị TV: Luôn hiển thị cố định đúng 5 loại vàng
-    function renderTVDisplay() {
+    function renderTVDisplay(highlight = false) {
       const tbody = document.getElementById('ratesTableBody');
       const emptyMsg = document.getElementById('emptyRatesMessage');
       if (!tbody) return;
@@ -575,7 +624,7 @@
         const banVndStr = (ban * multiplier).toLocaleString('vi-VN') + ' đ';
 
         return `
-          <tr>
+          <tr class="${highlight ? 'price-updated-flash' : ''}">
             <td>
               <div class="gold-name-box">
                 <span class="gold-bullet"></span>
@@ -604,30 +653,55 @@
       }).join('');
     }
 
-    // 4. Đồng bộ dữ liệu từ Google Sheet (khi mở trên TV / thiết bị riêng)
+    // 4. Đồng bộ dữ liệu từ Google Sheet siêu tốc (mỗi 5s kiểm tra 1 lần)
+    let isFetchingCloud = false;
     async function fetchLatestFromCloud() {
-      if (window.GoogleSheetService && typeof GoogleSheetService.fetchAllData === 'function' && GoogleSheetService.isConfigured()) {
-        try {
-          const data = await GoogleSheetService.fetchAllData();
-          if (data) {
-            let hasChanged = false;
-            if (data.goldPrices && Array.isArray(data.goldPrices)) {
-              goldPrices = data.goldPrices;
-              localStorage.setItem(STORAGE_KEY_PRICES, JSON.stringify(goldPrices));
-              hasChanged = true;
-            }
-            if (data.config && typeof data.config === 'object') {
-              storeConfig = { ...storeConfig, ...data.config };
-              localStorage.setItem(STORAGE_KEY_CONFIG, JSON.stringify(storeConfig));
-              hasChanged = true;
-            }
-            if (hasChanged) {
-              renderTVDisplay();
-            }
-          }
-        } catch (e) {
-          console.warn('TV Cloud Sync warning:', e);
+      if (isFetchingCloud) return;
+      if (!window.GoogleSheetService || !GoogleSheetService.isConfigured()) return;
+
+      isFetchingCloud = true;
+      try {
+        let prices = null;
+        if (typeof GoogleSheetService.fetchGoldPrices === 'function') {
+          prices = await GoogleSheetService.fetchGoldPrices();
+        } else if (typeof GoogleSheetService.fetchAllData === 'function') {
+          const all = await GoogleSheetService.fetchAllData();
+          prices = all ? all.goldPrices : null;
         }
+
+        if (prices && Array.isArray(prices) && prices.length > 0) {
+          const currentStr = JSON.stringify(goldPrices);
+          const newStr = JSON.stringify(prices);
+          if (currentStr !== newStr) {
+            console.log('⚡ TV: Phát hiện bảng giá vàng mới từ Google Sheet -> Cập nhật hiển thị!');
+            goldPrices = prices;
+            localStorage.setItem(STORAGE_KEY_PRICES, newStr);
+            renderTVDisplay(true);
+          }
+          updateLiveStatus(true);
+        }
+      } catch (e) {
+        console.warn('TV Cloud Sync warning:', e);
+        updateLiveStatus(false);
+      } finally {
+        isFetchingCloud = false;
+      }
+    }
+
+    function updateLiveStatus(isLive) {
+      const pill = document.getElementById('liveStatusPill');
+      const text = document.getElementById('liveStatusText');
+      if (!pill || !text) return;
+      if (isLive) {
+        pill.style.background = '#ECFDF5';
+        pill.style.borderColor = '#A7F3D0';
+        pill.style.color = '#047857';
+        text.textContent = 'Trực tiếp';
+      } else {
+        pill.style.background = '#FEF2F2';
+        pill.style.borderColor = '#FECACA';
+        pill.style.color = '#DC2626';
+        text.textContent = 'Mất kết nối';
       }
     }
 
