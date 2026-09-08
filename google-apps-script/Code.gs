@@ -465,15 +465,15 @@ function doPost(e) {
         }
 
         const file = folder.createFile(blob);
-        file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
         const fileId = file.getId();
-        const previewUrl = 'https://drive.google.com/file/d/' + fileId + '/preview';
+        const isImage = (mimeType && mimeType.indexOf('image') > -1) || fileName.match(/\.(jpg|jpeg|png|webp|gif)$/i);
+        const finalUrl = isImage ? ('https://lh3.googleusercontent.com/d/' + fileId + '=s1000') : ('https://drive.google.com/file/d/' + fileId + '/preview');
 
         return jsonResponse({
           success: true,
           fileId: fileId,
-          url: previewUrl,
-          message: 'Tải video lên Google Drive thành công!'
+          url: finalUrl,
+          message: (isImage ? 'Tải ảnh' : 'Tải video') + ' lên Google Drive thành công!'
         });
       } catch (uploadErr) {
         return jsonResponse({

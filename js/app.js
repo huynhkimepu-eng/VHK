@@ -2151,25 +2151,35 @@ class GoldApp {
     document.getElementById('productModal').classList.remove('active');
   }
 
+  normalizeImageUrl(url) {
+    if (!url || typeof url !== 'string') return '';
+    url = url.trim();
+    const driveMatch = url.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?id=)([a-zA-Z0-9_-]+)/);
+    if (driveMatch && driveMatch[1]) {
+      return `https://lh3.googleusercontent.com/d/${driveMatch[1]}=s1000`;
+    }
+    return url;
+  }
+
   parseProductImages(val) {
     if (!val) return [];
-    if (Array.isArray(val)) return val.filter(Boolean);
+    if (Array.isArray(val)) return val.filter(Boolean).map(u => this.normalizeImageUrl(u));
     if (typeof val === 'string') {
       val = val.trim();
       if (!val) return [];
       if (val.startsWith('[') && val.endsWith(']')) {
         try {
           const arr = JSON.parse(val);
-          if (Array.isArray(arr)) return arr.filter(Boolean);
+          if (Array.isArray(arr)) return arr.filter(Boolean).map(u => this.normalizeImageUrl(u));
         } catch (e) {}
       }
       if (val.includes('\n')) {
-        return val.split('\n').map(s => s.trim()).filter(Boolean);
+        return val.split('\n').map(s => s.trim()).filter(Boolean).map(u => this.normalizeImageUrl(u));
       }
       if (val.includes(',') && !val.startsWith('data:image')) {
-        return val.split(',').map(s => s.trim()).filter(Boolean);
+        return val.split(',').map(s => s.trim()).filter(Boolean).map(u => this.normalizeImageUrl(u));
       }
-      return [val];
+      return [this.normalizeImageUrl(val)];
     }
     return [];
   }

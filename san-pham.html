@@ -1558,26 +1558,37 @@
       return 'Chuẩn định lượng';
     }
 
-    // Hỗ trợ phân tích nhiều ảnh
+    // Chuẩn hóa link ảnh Google Drive sang link hiển thị trực tiếp chất lượng cao
+    function normalizeImageUrl(url) {
+      if (!url || typeof url !== 'string') return '';
+      url = url.trim();
+      const driveMatch = url.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?id=)([a-zA-Z0-9_-]+)/);
+      if (driveMatch && driveMatch[1]) {
+        return `https://lh3.googleusercontent.com/d/${driveMatch[1]}=s1000`;
+      }
+      return url;
+    }
+
+    // Phân tích danh sách ảnh
     function parseProductImages(val) {
       if (!val) return [];
-      if (Array.isArray(val)) return val.filter(Boolean);
+      if (Array.isArray(val)) return val.filter(Boolean).map(normalizeImageUrl);
       if (typeof val === 'string') {
         val = val.trim();
         if (!val) return [];
         if (val.startsWith('[') && val.endsWith(']')) {
           try {
             const arr = JSON.parse(val);
-            if (Array.isArray(arr)) return arr.filter(Boolean);
+            if (Array.isArray(arr)) return arr.filter(Boolean).map(normalizeImageUrl);
           } catch (e) {}
         }
         if (val.includes('\n')) {
-          return val.split('\n').map(s => s.trim()).filter(Boolean);
+          return val.split('\n').map(s => s.trim()).filter(Boolean).map(normalizeImageUrl);
         }
         if (val.includes(',') && !val.startsWith('data:image')) {
-          return val.split(',').map(s => s.trim()).filter(Boolean);
+          return val.split(',').map(s => s.trim()).filter(Boolean).map(normalizeImageUrl);
         }
-        return [val];
+        return [normalizeImageUrl(val)];
       }
       return [];
     }
@@ -1650,7 +1661,7 @@
           const hasMultiple = images.length > 1;
 
           imgWrap.innerHTML = `
-            <img src="${activeImg}" alt="${p.tenHang || ''}" class="product-main-img" onerror="renderSpotlightFallbackMonogram()" />
+            <img src="${activeImg}" alt="${p.tenHang || ''}" class="product-main-img" onerror="if(this.src.includes('lh3.googleusercontent.com/d/')){ const id = this.src.split('/d/')[1].split('=')[0]; this.src='https://drive.google.com/thumbnail?id='+id+'&sz=w1000'; } else { renderSpotlightFallbackMonogram(); }" />
             ${hasMultiple ? `
               <button class="gallery-nav-btn gallery-nav-prev" onclick="changeSpotlightImage(-1)" title="Ảnh trước">‹</button>
               <button class="gallery-nav-btn gallery-nav-next" onclick="changeSpotlightImage(1)" title="Ảnh kế tiếp">›</button>
@@ -1672,7 +1683,7 @@
           thumbStrip.style.display = 'flex';
           let thumbsHtml = images.map((src, idx) => `
             <div class="spotlight-thumb-item ${idx === currentSpotlightMediaIndex ? 'active' : ''}" onclick="selectSpotlightMedia(${idx})" title="Ảnh ${idx + 1}">
-              <img src="${src}" alt="Thumb ${idx + 1}" />
+              <img src="${src}" alt="Thumb ${idx + 1}" onerror="this.onerror=null; if(this.src.includes('lh3.googleusercontent.com/d/')){ const id = this.src.split('/d/')[1].split('=')[0]; this.src='https://drive.google.com/thumbnail?id='+id+'&sz=w300'; }" />
             </div>
           `).join('');
 
