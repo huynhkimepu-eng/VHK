@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>PMQLV - Phần Mềm Quản Lý & Bán Hàng Vàng Bạc Đá Quý</title>
-  <link rel="stylesheet" href="css/style.css?v=31">
+  <link rel="stylesheet" href="css/style.css?v=33">
   <!-- HTML5 QR Code & Barcode Scanner for Camera -->
     <script>
     window.onerror = function(msg, src, line, col, err) {
@@ -413,7 +413,7 @@
                     <input type="checkbox" id="tagCfgShowLabor" checked onchange="app.updateTagConfig()"> Tiền công / Giá bán
                   </label>
                   <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; grid-column: span 2; background: #ECFDF5; padding: 3px 6px; border-radius: 4px; color: #065F46; font-weight: 600;">
-                    <input type="checkbox" id="tagCfgShowManufacturer" checked onchange="app.updateTagConfig()"> 🏭 In Nhà SX, NCC & TCCS (Nếu có)
+                    <input type="checkbox" id="tagCfgShowManufacturer" checked onchange="app.updateTagConfig()"> 🏷️ In thông tin NCC & TCCS trên đuôi tem (Nếu có)
                   </label>
                 </div>
               </div>
@@ -874,19 +874,17 @@
             </div>
           </div>
 
-          <!-- Nhà sản xuất & Nhà cung cấp -->
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; background: #F0FDF4; padding: 8px 10px; border-radius: var(--radius-sm); border: 1px dashed #86EFAC;">
-            <div>
-              <label style="font-size: 12px; font-weight: bold; color: #166534;">Nhà Sản Xuất (In Tem)</label>
-              <select id="modalNhaSanXuat" class="form-select" style="font-size: 12px;">
-                <option value="">(Không có - Mặc định)</option>
-                <option value="HK">CTTNHH VB&TS Hoàng Kim (HK)</option>
-              </select>
-            </div>
-            <div>
-              <label style="font-size: 12px; font-weight: bold; color: #166534;">Nhà Cung Cấp (Tùy chọn)</label>
-              <input type="text" id="modalNhaCungCap" class="form-control" placeholder="Để trống nếu không có" style="font-size: 12px;">
-            </div>
+          <!-- Nhà cung cấp (Tùy chọn in đuôi tem) -->
+          <div style="margin-bottom: 10px; background: #F0FDF4; padding: 8px 10px; border-radius: var(--radius-sm); border: 1px dashed #86EFAC;">
+            <label style="font-size: 12px; font-weight: bold; color: #166534; display: block; margin-bottom: 4px;">
+              🏢 Nhà Cung Cấp (In Đuôi Tem)
+            </label>
+            <select id="modalNhaCungCap" class="form-select" style="font-size: 12px; font-weight: 600;" onchange="app.onModalNhaCungCapChange()">
+              <option value="">(Không có - Mặc định)</option>
+              <option value="HK">HK - CTTNHH VB&TS HOÀNG KIM</option>
+              <option value="OTHER">Nhà cung cấp khác (Tự nhập)...</option>
+            </select>
+            <input type="text" id="modalNhaCungCapCustom" class="form-control" placeholder="Nhập tên nhà cung cấp khác..." style="font-size: 12px; margin-top: 6px; display: none;">
           </div>
 
           <!-- Trọng lượng -->
@@ -1073,9 +1071,9 @@
   </div>
 
   <!-- Scripts -->
-  <script src="js/defaultData.js?v=32"></script>
-  <script src="js/googleSheetService.js?v=32"></script>
-  <script src="js/barcodeLabel.js?v=32"></script>
-  <script src="js/app.js?v=32"></script>
+  <script src="js/defaultData.js?v=33"></script>
+  <script src="js/googleSheetService.js?v=33"></script>
+  <script src="js/barcodeLabel.js?v=33"></script>
+  <script src="js/app.js?v=33"></script>
 </body>
 </html>

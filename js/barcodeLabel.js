@@ -229,22 +229,22 @@ const BarcodeLabel = {
       </div>
     `;
 
-    // Xử lý Nhà sản xuất / Nhà cung cấp / Tiêu chuẩn cơ sở (TCCS)
+    // Xử lý Nhà cung cấp (NCC) / Tiêu chuẩn cơ sở (TCCS) / Sản xuất
     const showMfg = config.showManufacturer !== false;
-    const nhaSX = product.nhaSanXuat || '';
-    const nhaCC = product.nhaCungCap || '';
-    const hasMfg = Boolean(nhaSX || nhaCC);
+    const nhaCC = (product.nhaCungCap || '').trim();
+    const hasMfg = Boolean(nhaCC);
 
     let mfgTailHtml = '';
     if (showMfg && hasMfg) {
+      const isHK = nhaCC.toUpperCase() === 'HK' || nhaCC.toUpperCase().includes('HOÀNG KIM') || nhaCC.toUpperCase().includes('HOANG KIM');
       const sxText = 'SX: Việt Nam';
-      const nccText = nhaCC ? `NCC: ${nhaCC}` : '';
-      const tccsText = nhaSX === 'HK' ? 'TCCS: 01:2025/HK' : (nhaSX ? `TCCS: ${nhaSX}` : '');
+      const nccText = isHK ? 'NCC: CTTNHH VB&TS HOÀNG KIM' : `NCC: ${nhaCC}`;
+      const tccsText = isHK ? 'TCCS: 01:2025/HK' : '';
 
       mfgTailHtml = `
-        <div class="tag-mfg-info" style="font-size: ${(fontSize * 0.75).toFixed(1)}pt;">
+        <div class="tag-mfg-info" style="font-size: ${(fontSize * 0.72).toFixed(1)}pt; font-family: 'Arial Narrow', Arial, sans-serif; letter-spacing: -0.15px;">
           <div class="mfg-line"><b>${sxText}</b></div>
-          ${nccText ? `<div class="mfg-line"><b>${nccText}</b></div>` : ''}
+          <div class="mfg-line"><b>${nccText}</b></div>
           ${tccsText ? `<div class="mfg-line"><b>${tccsText}</b></div>` : ''}
         </div>
       `;
@@ -467,6 +467,8 @@ const BarcodeLabel = {
             text-align: left;
             line-height: 1.05;
             color: #000;
+            font-family: 'Arial Narrow', Arial, sans-serif;
+            letter-spacing: -0.15px;
           }
 
           .mfg-line {

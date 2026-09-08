@@ -1877,11 +1877,12 @@ class GoldApp {
     if (document.getElementById('modalChiNhanh')) {
       document.getElementById('modalChiNhanh').value = (this.currentBranch === 'Chi nhánh 2' ? 'Chi nhánh 2' : 'Chi nhánh 1');
     }
-    if (document.getElementById('modalNhaSanXuat')) {
-      document.getElementById('modalNhaSanXuat').value = '';
-    }
     if (document.getElementById('modalNhaCungCap')) {
       document.getElementById('modalNhaCungCap').value = '';
+    }
+    if (document.getElementById('modalNhaCungCapCustom')) {
+      document.getElementById('modalNhaCungCapCustom').value = '';
+      document.getElementById('modalNhaCungCapCustom').style.display = 'none';
     }
     if (document.getElementById('modalGiaVangNhap')) {
       document.getElementById('modalGiaVangNhap').value = '';
@@ -1903,11 +1904,25 @@ class GoldApp {
     if (document.getElementById('modalChiNhanh')) {
       document.getElementById('modalChiNhanh').value = p.chiNhanh || 'Chi nhánh 1';
     }
-    if (document.getElementById('modalNhaSanXuat')) {
-      document.getElementById('modalNhaSanXuat').value = p.nhaSanXuat || '';
-    }
-    if (document.getElementById('modalNhaCungCap')) {
-      document.getElementById('modalNhaCungCap').value = p.nhaCungCap || '';
+    
+    // Thiết lập Nhà Cung Cấp
+    const selNCC = document.getElementById('modalNhaCungCap');
+    const customNCC = document.getElementById('modalNhaCungCapCustom');
+    if (selNCC) {
+      const nccVal = (p.nhaCungCap || '').trim();
+      if (!nccVal) {
+        selNCC.value = '';
+        if (customNCC) { customNCC.value = ''; customNCC.style.display = 'none'; }
+      } else if (nccVal.toUpperCase() === 'HK' || nccVal.toUpperCase().includes('HOÀNG KIM') || nccVal.toUpperCase().includes('HOANG KIM')) {
+        selNCC.value = 'HK';
+        if (customNCC) { customNCC.value = ''; customNCC.style.display = 'none'; }
+      } else {
+        selNCC.value = 'OTHER';
+        if (customNCC) {
+          customNCC.value = nccVal;
+          customNCC.style.display = 'block';
+        }
+      }
     }
     document.getElementById('modalNi').value = p.ni || 0;
     document.getElementById('modalTlTong').value = p.tlTong || 0;
@@ -1972,6 +1987,22 @@ class GoldApp {
       }
     }
   }
+
+  onModalNhaCungCapChange() {
+    const sel = document.getElementById('modalNhaCungCap');
+    const customInp = document.getElementById('modalNhaCungCapCustom');
+    if (!sel || !customInp) return;
+    if (sel.value === 'OTHER') {
+      customInp.style.display = 'block';
+      customInp.focus();
+    } else {
+      customInp.style.display = 'none';
+      if (sel.value === 'HK') {
+        customInp.value = '';
+      }
+    }
+  }
+
   closeProductModal() {
     document.getElementById('productModal').classList.remove('active');
   }
@@ -2045,8 +2076,18 @@ class GoldApp {
       const loaiVang = document.getElementById('modalLoaiVang').value;
       const quayNho = document.getElementById('modalQuayNho').value;
       const chiNhanh = document.getElementById('modalChiNhanh') ? document.getElementById('modalChiNhanh').value : this.currentBranch;
-      const nhaSanXuat = document.getElementById('modalNhaSanXuat') ? document.getElementById('modalNhaSanXuat').value : '';
-      const nhaCungCap = document.getElementById('modalNhaCungCap') ? document.getElementById('modalNhaCungCap').value.trim() : '';
+      let nhaCungCap = '';
+      const selNCC = document.getElementById('modalNhaCungCap');
+      if (selNCC) {
+        if (selNCC.value === 'HK') {
+          nhaCungCap = 'HK';
+        } else if (selNCC.value === 'OTHER') {
+          nhaCungCap = document.getElementById('modalNhaCungCapCustom') ? document.getElementById('modalNhaCungCapCustom').value.trim() : '';
+        } else {
+          nhaCungCap = selNCC.value.trim();
+        }
+      }
+      const nhaSanXuat = '';
       const ni = parseInt(document.getElementById('modalNi').value) || 0;
       const tlTong = parseFloat(document.getElementById('modalTlTong').value) || 0;
       const tlHot = parseFloat(document.getElementById('modalTlHot').value) || 0;
