@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>PMQLV - Phần Mềm Quản Lý & Bán Hàng Vàng Bạc Đá Quý</title>
-  <link rel="stylesheet" href="css/style.css?v=54">
+  <link rel="stylesheet" href="css/style.css?v=55">
   <!-- HTML5 QR Code & Barcode Scanner for Camera -->
     <script>
     window.onerror = function(msg, src, line, col, err) {
@@ -515,6 +515,9 @@
         <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
           <div class="card-title">📈 Bảng Giá Vàng Hôm Nay (Đơn vị: 1.000 VNĐ / Chỉ)</div>
           <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button type="button" class="btn btn-warning btn-sm admin-only" onclick="app.openGoldTypeModal()" style="font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
+              ➕ Thêm Loại Vàng
+            </button>
             <a href="bang-gia-vang.html" target="_blank" class="btn btn-sm btn-dark" style="background: linear-gradient(135deg, #B45309, #D97706); color: white; border: none; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; padding: 6px 14px; border-radius: 6px;" title="Mở Màn Hình Bảng Giá Điện Tử Chiếu TV">
               📺 Mở Màn Hình Bảng Giá TV
             </a>
@@ -525,20 +528,20 @@
         </div>
         <div class="card-body">
           <p style="font-size: 13px; color: #64748B; margin-bottom: 14px;">
-            Giá bán ở bảng này sẽ tự động được áp dụng tại màn hình Bán Hàng khi tính tiền theo công thức: <b>Thành tiền = (TL Vàng * Giá Bán) + Tiền Công</b>. Cột <b>Chiếu TV</b> cho phép bạn chủ động chọn loại vàng nào được chiếu lên màn hình TV của tiệm.
+            Giá bán ở bảng này sẽ tự động được áp dụng tại màn hình Bán Hàng khi tính tiền theo công thức: <b>Thành tiền = (TL Vàng * Giá Bán) + Tiền Công</b>. Bấm vào <b>Tên loại vàng</b> để nhập nhanh Giá Mua / Giá Bán.
           </p>
 
           <div class="table-responsive">
             <table class="table-custom">
               <thead>
                 <tr>
-                  <th style="width: 100px; text-align: center;" title="Tích chọn loại vàng này có hiển thị trên Bảng Giá TV không">Chiếu TV</th>
                   <th>Loại Vàng / Sản Phẩm</th>
                   <th>Hàm Lượng</th>
-                  <th style="width: 180px; text-align: right;">Giá Mua Vào (x1.000đ)</th>
-                  <th style="width: 180px; text-align: right;">Giá Bán Ra (x1.000đ)</th>
+                  <th style="width: 170px; text-align: right;">Giá Mua Vào (x1.000đ)</th>
+                  <th style="width: 170px; text-align: right;">Giá Bán Ra (x1.000đ)</th>
                   <th>Đơn Vị</th>
                   <th style="text-align: right;">Quy Đổi VNĐ (Bán Ra)</th>
+                  <th style="text-align: center; width: 140px;">Thao Tác</th>
                 </tr>
               </thead>
               <tbody id="goldRatesTableBody">
@@ -966,10 +969,6 @@
         <span class="icon">📦</span>
         <span>Kho hàng</span>
       </button>
-      <button class="mobile-nav-btn" data-tab="tab-tags" onclick="app.switchTab('tab-tags')">
-        <span class="icon">🏷️</span>
-        <span>In tem</span>
-      </button>
       <button class="mobile-nav-btn" data-tab="tab-gold-rates" onclick="app.switchTab('tab-gold-rates')">
         <span class="icon">📈</span>
         <span>Giá vàng</span>
@@ -977,10 +976,6 @@
       <button class="mobile-nav-btn" data-tab="tab-reports" onclick="app.switchTab('tab-reports')">
         <span class="icon">📊</span>
         <span>Báo cáo</span>
-      </button>
-      <button class="mobile-nav-btn" data-tab="tab-settings" onclick="app.switchTab('tab-settings')">
-        <span class="icon">⚙️</span>
-        <span>Cài đặt</span>
       </button>
     </div>
   </nav>
@@ -1325,6 +1320,116 @@
     </div>
   </div>
 
+  <!-- ================= MODAL: NHẬP GIÁ MUA / GIÁ BÁN CHO LOẠI VÀNG ================= -->
+  <div class="modal-overlay" id="goldQuickPriceModal">
+    <div class="modal-content" style="max-width: 420px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="goldQuickPriceTitle">💰 Cập Nhật Giá Vàng</h3>
+        <button type="button" class="modal-close" onclick="app.closeQuickPriceModal()">&times;</button>
+      </div>
+      <div class="modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 18px 20px;">
+        <div style="background: #FEF3C7; border: 1px solid #FCD34D; border-radius: 8px; padding: 10px 14px;">
+          <div style="font-size: 11px; color: #92400E; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">LOẠI VÀNG</div>
+          <div id="goldQuickName" style="font-size: 16px; font-weight: 800; color: #B45309; margin-top: 2px;">Vàng 24K</div>
+          <div id="goldQuickHamLuong" style="font-size: 12px; color: #78350F; margin-top: 2px;">Hàm lượng: 99.99%</div>
+        </div>
+
+        <input type="hidden" id="goldQuickIndex" value="-1">
+
+        <div>
+          <label style="font-size: 13px; font-weight: 700; color: #1E293B; display: block; margin-bottom: 5px;">
+            Giá Mua Vào (x1.000đ / đơn vị):
+          </label>
+          <div style="position: relative;">
+            <input type="number" id="goldQuickGiaMua" class="form-control" style="font-size: 16px; font-weight: 700; padding: 9px 12px;" placeholder="Ví dụ: 7600">
+            <span style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 12px; color: #64748B; pointer-events: none;">x1.000đ</span>
+          </div>
+        </div>
+
+        <div>
+          <label style="font-size: 13px; font-weight: 700; color: #1E293B; display: block; margin-bottom: 5px;">
+            Giá Bán Ra (x1.000đ / đơn vị):
+          </label>
+          <div style="position: relative;">
+            <input type="number" id="goldQuickGiaBan" class="form-control" style="font-size: 16px; font-weight: 700; color: #B45309; padding: 9px 12px;" placeholder="Ví dụ: 7850">
+            <span style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 12px; color: #64748B; pointer-events: none;">x1.000đ</span>
+          </div>
+        </div>
+
+        <div style="background: #F8FAFC; border: 1px dashed #CBD5E1; border-radius: 8px; padding: 10px 12px; font-size: 12.5px; color: #475569;">
+          <div>Quy đổi VNĐ (Bán ra): <b id="goldQuickBanPreview" style="color: #0284C7; font-size: 14.5px;">0 đ</b></div>
+        </div>
+      </div>
+      <div class="modal-footer" style="display: flex; gap: 8px; justify-content: flex-end; padding: 12px 20px;">
+        <button type="button" class="btn btn-secondary" onclick="app.closeQuickPriceModal()">Đóng</button>
+        <button type="button" class="btn btn-primary" onclick="app.saveQuickPrice()" style="font-weight: 700; padding: 8px 18px;">
+          💾 Lưu Giá Này
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: THÊM / SỬA LOẠI VÀNG ================= -->
+  <div class="modal-overlay" id="goldTypeModal">
+    <div class="modal-content" style="max-width: 440px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="goldTypeModalTitle">➕ Thêm Loại Vàng Mới</h3>
+        <button type="button" class="modal-close" onclick="app.closeGoldTypeModal()">&times;</button>
+      </div>
+      <div class="modal-body" style="display: flex; flex-direction: column; gap: 13px; padding: 18px 20px;">
+        <input type="hidden" id="goldTypeEditIndex" value="-1">
+
+        <div>
+          <label style="font-size: 12.5px; font-weight: 700; color: #1E293B; margin-bottom: 4px; display: block;">
+            Tên Loại Vàng <span style="color: #DC2626;">*</span>
+          </label>
+          <input type="text" id="goldTypeNameInput" class="form-control" placeholder="Ví dụ: Vàng 24K, Vàng Ý 18K, Bạc..." style="font-weight: 600;">
+        </div>
+
+        <div>
+          <label style="font-size: 12.5px; font-weight: 700; color: #1E293B; margin-bottom: 4px; display: block;">
+            Hàm Lượng Vàng / Tuổi Vàng
+          </label>
+          <input type="text" id="goldTypeHamLuongInput" class="form-control" placeholder="Ví dụ: 99.99%, 75.0%, 58.5%...">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div>
+            <label style="font-size: 12.5px; font-weight: 700; color: #1E293B; margin-bottom: 4px; display: block;">
+              Giá Mua (x1.000đ)
+            </label>
+            <input type="number" id="goldTypeGiaMuaInput" class="form-control" placeholder="7600">
+          </div>
+          <div>
+            <label style="font-size: 12.5px; font-weight: 700; color: #1E293B; margin-bottom: 4px; display: block;">
+              Giá Bán (x1.000đ)
+            </label>
+            <input type="number" id="goldTypeGiaBanInput" class="form-control" placeholder="7850" style="font-weight: 700; color: #B45309;">
+          </div>
+        </div>
+
+        <div>
+          <label style="font-size: 12.5px; font-weight: 700; color: #1E293B; margin-bottom: 4px; display: block;">
+            Đơn Vị Tính
+          </label>
+          <select id="goldTypeDonViInput" class="form-select">
+            <option value="chỉ">chỉ</option>
+            <option value="lượng">lượng</option>
+            <option value="phân">phân</option>
+            <option value="gram">gram</option>
+            <option value="món">món</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer" style="display: flex; gap: 8px; justify-content: flex-end; padding: 12px 20px;">
+        <button type="button" class="btn btn-secondary" onclick="app.closeGoldTypeModal()">Hủy</button>
+        <button type="button" class="btn btn-primary" onclick="app.saveGoldType()" style="font-weight: 700; padding: 8px 18px;">
+          💾 Lưu Thông Tin
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- ================= PRINTABLE INVOICE (ẨN, CHỈ HIỆN KHI IN) ================= -->
   <div id="printable-invoice">
     <div class="invoice-header">
@@ -1388,6 +1493,6 @@
   <script src="js/googleSheetService.js?v=51"></script>
   <script src="js/cloudinaryService.js?v=51"></script>
   <script src="js/barcodeLabel.js?v=51"></script>
-  <script src="js/app.js?v=54"></script>
+  <script src="js/app.js?v=55"></script>
 </body>
 </html>

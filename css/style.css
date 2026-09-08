@@ -1532,3 +1532,27 @@ body {
   text-decoration: none;
 }
 
+/* Nút bấm tên Loại Vàng trong bảng giá */
+.gold-name-btn {
+  background: #EFF6FF;
+  color: #1D4ED8;
+  border: 1px solid #BFDBFE;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  font-size: 13.5px;
+}
+.gold-name-btn:hover {
+  background: #DBEAFE;
+  border-color: #60A5FA;
+  color: #1E40AF;
+  box-shadow: 0 1px 3px rgba(37,99,235,0.15);
+}
+
+

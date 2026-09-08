@@ -189,14 +189,8 @@ class GoldApp {
       try { loadedPrices = JSON.parse(savedPrices); } catch (e) { loadedPrices = []; }
     }
     const defaultPrices = (window.DEFAULT_GOLD_PRICES && window.DEFAULT_GOLD_PRICES.length > 0) ? window.DEFAULT_GOLD_PRICES : [];
-    if (!loadedPrices || loadedPrices.length === 0) {
+    if (!savedPrices || !loadedPrices || loadedPrices.length === 0) {
       loadedPrices = defaultPrices;
-    } else {
-      defaultPrices.forEach(def => {
-        if (!loadedPrices.some(p => p.loaiVang === def.loaiVang)) {
-          loadedPrices.push(def);
-        }
-      });
     }
     this.goldPrices = loadedPrices;
     localStorage.setItem('pmqlv_gold_prices', JSON.stringify(this.goldPrices));
@@ -1617,20 +1611,18 @@ class GoldApp {
 
     const multiplier = this.storeConfig.currencyUnitMultiplier || 1000;
     const isAdmin = this.currentUser && this.currentUser.role === 'admin';
-    const visibleTypes = this.getTvVisibleTypes();
 
     tbody.innerHTML = this.goldPrices.map((g, idx) => {
       const banVnd = (Number(g.giaBan) * multiplier).toLocaleString('vi-VN') + ' đ';
-      const isVisible = visibleTypes.includes(g.loaiVang);
 
       return `
         <tr>
-          <td style="text-align: center;">
-            <input type="checkbox" style="width: 18px; height: 18px; cursor: pointer; accent-color: #D97706;" 
-              ${isVisible ? 'checked' : ''} ${isAdmin ? '' : 'disabled'}
-              onchange="app.toggleTvDisplay('${g.loaiVang}', this.checked)" title="Tích để hiển thị loại vàng này trên Bảng giá TV">
+          <td>
+            <a href="javascript:void(0)" onclick="app.openQuickPriceModal(${idx})" class="gold-name-btn" title="Click để nhập nhanh Giá Mua / Giá Bán">
+              <span><b>${g.loaiVang}</b></span>
+              <span style="font-size: 11px; opacity: 0.85;">✏️</span>
+            </a>
           </td>
-          <td><b>${g.loaiVang}</b></td>
           <td>${g.hamLuong || '--'}</td>
           <td style="text-align: right;">
             <input type="number" class="form-control" style="text-align: right; width: 130px; display: inline-block;" 
@@ -1642,9 +1634,181 @@ class GoldApp {
           </td>
           <td>${g.donVi || 'chỉ'}</td>
           <td style="text-align: right; font-weight: 800; color: #0284C7;">${banVnd}</td>
+          <td style="text-align: center; white-space: nowrap;">
+            <button type="button" class="btn btn-outline btn-xs admin-only" onclick="app.openGoldTypeModal(${idx})" title="Sửa tên loại vàng" style="padding: 4px 8px; font-size: 11.5px; margin-right: 4px; border-radius: 6px;">
+              ✏️ Sửa Tên
+            </button>
+            <button type="button" class="btn btn-danger btn-xs admin-only" onclick="app.deleteGoldType(${idx})" title="Xóa loại vàng này" style="padding: 4px 8px; font-size: 11.5px; border-radius: 6px;">
+              🗑️ Xóa
+            </button>
+          </td>
         </tr>
       `;
     }).join('');
+
+    this.syncGoldTypeSelects();
+  }
+
+  openQuickPriceModal(index) {
+    const g = this.goldPrices[index];
+    if (!g) return;
+    const modal = document.getElementById('goldQuickPriceModal');
+    if (!modal) return;
+
+    document.getElementById('goldQuickIndex').value = index;
+    document.getElementById('goldQuickPriceTitle').textContent = `💰 Cập Nhật Giá: ${g.loaiVang}`;
+    document.getElementById('goldQuickName').textContent = g.loaiVang;
+    document.getElementById('goldQuickHamLuong').textContent = `Hàm lượng: ${g.hamLuong || '--'}`;
+    const giaMuaInput = document.getElementById('goldQuickGiaMua');
+    const giaBanInput = document.getElementById('goldQuickGiaBan');
+    giaMuaInput.value = g.giaMua || '';
+    giaBanInput.value = g.giaBan || '';
+
+    const multiplier = this.storeConfig.currencyUnitMultiplier || 1000;
+    const updatePreview = () => {
+      const ban = Number(giaBanInput.value) || 0;
+      document.getElementById('goldQuickBanPreview').textContent = (ban * multiplier).toLocaleString('vi-VN') + ' đ';
+    };
+    giaBanInput.oninput = updatePreview;
+    updatePreview();
+
+    modal.classList.add('active');
+    giaMuaInput.focus();
+  }
+
+  closeQuickPriceModal() {
+    const modal = document.getElementById('goldQuickPriceModal');
+    if (modal) modal.classList.remove('active');
+  }
+
+  async saveQuickPrice() {
+    const idx = parseInt(document.getElementById('goldQuickIndex').value, 10);
+    if (isNaN(idx) || !this.goldPrices[idx]) return;
+    const giaMua = Number(document.getElementById('goldQuickGiaMua').value) || 0;
+    const giaBan = Number(document.getElementById('goldQuickGiaBan').value) || 0;
+
+    this.goldPrices[idx].giaMua = giaMua;
+    this.goldPrices[idx].giaBan = giaBan;
+
+    this.closeQuickPriceModal();
+    await this.saveGoldPrices();
+  }
+
+  openGoldTypeModal(index = -1) {
+    const modal = document.getElementById('goldTypeModal');
+    if (!modal) return;
+    document.getElementById('goldTypeEditIndex').value = index;
+
+    if (index >= 0 && this.goldPrices[index]) {
+      const g = this.goldPrices[index];
+      document.getElementById('goldTypeModalTitle').textContent = '✏️ Sửa Loại Vàng';
+      document.getElementById('goldTypeNameInput').value = g.loaiVang || '';
+      document.getElementById('goldTypeHamLuongInput').value = g.hamLuong || '';
+      document.getElementById('goldTypeGiaMuaInput').value = g.giaMua || '';
+      document.getElementById('goldTypeGiaBanInput').value = g.giaBan || '';
+      document.getElementById('goldTypeDonViInput').value = g.donVi || 'chỉ';
+    } else {
+      document.getElementById('goldTypeModalTitle').textContent = '➕ Thêm Loại Vàng Mới';
+      document.getElementById('goldTypeNameInput').value = '';
+      document.getElementById('goldTypeHamLuongInput').value = '';
+      document.getElementById('goldTypeGiaMuaInput').value = '';
+      document.getElementById('goldTypeGiaBanInput').value = '';
+      document.getElementById('goldTypeDonViInput').value = 'chỉ';
+    }
+
+    modal.classList.add('active');
+    document.getElementById('goldTypeNameInput').focus();
+  }
+
+  closeGoldTypeModal() {
+    const modal = document.getElementById('goldTypeModal');
+    if (modal) modal.classList.remove('active');
+  }
+
+  async saveGoldType() {
+    const idx = parseInt(document.getElementById('goldTypeEditIndex').value, 10);
+    const loaiVang = (document.getElementById('goldTypeNameInput').value || '').trim();
+    const hamLuong = (document.getElementById('goldTypeHamLuongInput').value || '').trim();
+    const giaMua = Number(document.getElementById('goldTypeGiaMuaInput').value) || 0;
+    const giaBan = Number(document.getElementById('goldTypeGiaBanInput').value) || 0;
+    const donVi = document.getElementById('goldTypeDonViInput').value || 'chỉ';
+
+    if (!loaiVang) {
+      alert('Vui lòng nhập tên loại vàng!');
+      return;
+    }
+
+    if (idx >= 0 && this.goldPrices[idx]) {
+      const oldLoaiVang = this.goldPrices[idx].loaiVang;
+      this.goldPrices[idx].loaiVang = loaiVang;
+      this.goldPrices[idx].hamLuong = hamLuong;
+      this.goldPrices[idx].giaMua = giaMua;
+      this.goldPrices[idx].giaBan = giaBan;
+      this.goldPrices[idx].donVi = donVi;
+
+      // Cập nhật tên trong các sản phẩm đang có nếu được đổi tên
+      if (oldLoaiVang !== loaiVang) {
+        this.products.forEach(p => {
+          if (p.loaiVang === oldLoaiVang) p.loaiVang = loaiVang;
+        });
+        this.saveProductsToLocal();
+      }
+    } else {
+      // Kiểm tra trùng tên
+      if (this.goldPrices.some(g => (g.loaiVang || '').toLowerCase() === loaiVang.toLowerCase())) {
+        alert('Loại vàng này đã tồn tại trong danh sách!');
+        return;
+      }
+      this.goldPrices.push({
+        loaiVang,
+        hamLuong,
+        giaMua,
+        giaBan,
+        donVi
+      });
+    }
+
+    this.closeGoldTypeModal();
+    this.syncGoldTypeSelects();
+    await this.saveGoldPrices();
+  }
+
+  async deleteGoldType(index) {
+    const g = this.goldPrices[index];
+    if (!g) return;
+
+    if (!confirm(`Bạn có chắc chắn muốn xóa loại vàng "${g.loaiVang}" khỏi hệ thống không?`)) {
+      return;
+    }
+
+    this.goldPrices.splice(index, 1);
+    this.syncGoldTypeSelects();
+    await this.saveGoldPrices();
+  }
+
+  syncGoldTypeSelects() {
+    if (!this.goldPrices || !this.goldPrices.length) return;
+
+    // 1. Dropdown modal Thêm / Sửa sản phẩm
+    const modalSel = document.getElementById('modalLoaiVang');
+    if (modalSel) {
+      const currentVal = modalSel.value;
+      modalSel.innerHTML = this.goldPrices.map(g => `<option value="${g.loaiVang}">${g.loaiVang}</option>`).join('');
+      if (currentVal && this.goldPrices.some(g => g.loaiVang === currentVal)) {
+        modalSel.value = currentVal;
+      }
+    }
+
+    // 2. Dropdown lọc Loại vàng ở Kho hàng
+    const invSel = document.getElementById('invGoldTypeFilter');
+    if (invSel) {
+      const currentVal = invSel.value;
+      invSel.innerHTML = '<option value="ALL">Tất cả loại vàng</option>' + 
+        this.goldPrices.map(g => `<option value="${g.loaiVang}">${g.loaiVang}</option>`).join('');
+      if (currentVal && (currentVal === 'ALL' || this.goldPrices.some(g => g.loaiVang === currentVal))) {
+        invSel.value = currentVal;
+      }
+    }
   }
 
   updateGoldPriceVal(index, field, value) {
