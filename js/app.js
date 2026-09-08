@@ -2417,6 +2417,7 @@ class GoldApp {
       if (progressText) progressText.innerText = `☁️ Đang đọc file video... (${sizeMB} MB)`;
       if (progressBar) progressBar.style.width = '35%';
       if (progressPct) progressPct.innerText = '35%';
+      this.isVideoUploading = true;
 
       const reader = new FileReader();
       reader.onload = async (readEvt) => {
@@ -2441,6 +2442,7 @@ class GoldApp {
           });
 
           const result = await resp.json();
+          this.isVideoUploading = false;
           if (result && result.success && result.url) {
             if (progressBar) { progressBar.style.width = '100%'; progressBar.style.background = '#059669'; }
             if (progressPct) progressPct.innerText = '100%';
@@ -2461,6 +2463,7 @@ class GoldApp {
             if (progressText) progressText.innerText = `⚠️ Đã lưu video trên máy này (Drive: ${errMsg})`;
           }
         } catch (uploadErr) {
+          this.isVideoUploading = false;
           console.warn('Lỗi upload video lên Google Drive:', uploadErr);
           if (progressBar) { progressBar.style.width = '100%'; progressBar.style.background = '#F59E0B'; }
           if (progressPct) progressPct.innerText = '100%';
@@ -2469,6 +2472,7 @@ class GoldApp {
       };
       reader.readAsDataURL(file);
     } else {
+      this.isVideoUploading = false;
       if (progressBar) { progressBar.style.width = '100%'; progressBar.style.background = '#059669'; }
       if (progressPct) progressPct.innerText = '100%';
       if (progressText) progressText.innerText = `✅ Đã nạp video từ điện thoại (Lưu trữ trên máy này)`;
@@ -2557,7 +2561,16 @@ class GoldApp {
           anhSanPham = JSON.stringify(this.currentProductImages);
         }
       }
+      if (this.isVideoUploading) {
+        alert('⏳ Video đang được tải lên Google Drive của tiệm, vui lòng đợi vài giây cho thanh tiến trình hoàn tất 100% rồi bấm Lưu lại nhé!');
+        return;
+      }
+
       const videoSanPham = document.getElementById('modalVideoSanPham')?.value.trim() || '';
+
+      if (videoSanPham.startsWith('blob:')) {
+        console.warn('Video đang là link blob cục bộ:', videoSanPham);
+      }
 
       const existingIndex = this.products.findIndex(p => p.maHang === maHang);
       const productData = {
