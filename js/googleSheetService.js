@@ -256,37 +256,50 @@ const GoogleSheetService = {
   async saveProduct(product) {
     if (!this.isConfigured()) return { success: false, notConfigured: true, message: 'Chưa cấu hình URL Google Sheet' };
 
-    try {
-      const url = this.getUrl();
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        redirect: 'follow',
-        body: JSON.stringify({
-          action: 'saveProduct',
-          product: product
-        })
-      });
-      const text = await response.text();
-      let res;
+    let lastErr = null;
+    const url = this.getUrl();
+
+    for (let attempt = 1; attempt <= 2; attempt++) {
       try {
-        res = JSON.parse(text);
-      } catch (jsonErr) {
-        if (text.includes('accounts.google.com') || text.includes('ServiceLogin')) {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          redirect: 'follow',
+          body: JSON.stringify({
+            action: 'saveProduct',
+            product: product
+          })
+        });
+        const text = await response.text();
+        let res;
+        try {
+          res = JSON.parse(text);
+        } catch (jsonErr) {
+          if (text.includes('accounts.google.com') || text.includes('ServiceLogin')) {
+            return {
+              success: false,
+              message: 'LỖI PHÂN QUYỀN: Web App cần được chọn quyền "Bất kỳ ai" (Anyone) khi Triển khai!'
+            };
+          }
           return {
             success: false,
-            message: 'LỖI PHÂN QUYỀN: Web App cần được chọn quyền "Bất kỳ ai" (Anyone) khi Triển khai!'
+            message: 'Lỗi phản hồi Google Sheet: ' + text.slice(0, 150)
           };
         }
-        return {
-          success: false,
-          message: 'Lỗi phản hồi Google Sheet: ' + text.slice(0, 150)
-        };
+        return res;
+      } catch (err) {
+        lastErr = err;
+        if (attempt === 1) {
+          // Nghỉ 1 giây rồi thử lại lần 2 nếu mạng di động bị nghẽn
+          await new Promise(r => setTimeout(r, 1000));
+        }
       }
-      return res;
-    } catch (err) {
-      return { success: false, message: err.toString() };
     }
+
+    return { 
+      success: false, 
+      message: 'Lỗi kết nối mạng: ' + (lastErr ? lastErr.message || lastErr.toString() : 'Không thể kết nối đến Google Sheet. Vui lòng kiểm tra lại mạng 4G/Wifi.') 
+    };
   },
 
   async deleteProduct(maHang) {

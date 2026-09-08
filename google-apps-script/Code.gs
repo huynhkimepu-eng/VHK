@@ -17,6 +17,19 @@
  * =========================================================================
  */
 
+/**
+ * HÀM CẤP QUYỀN TRUY CẬP GOOGLE DRIVE (Chạy 1 lần trong Apps Script)
+ * Hướng dẫn: Ở thanh menu bên trên ô soạn thảo, bấm vào ô chọn hàm (đang hiện doGet hoặc myFunction),
+ * chọn hàm "authorizePermissions" rồi bấm nút "Chạy" (Run ▶️).
+ * Khi Google hiện bảng "Cần có quyền truy cập", bấm:
+ * "Xem lại quyền" -> Chọn tài khoản -> "Nâng cao" (Advanced) -> "Đi tới... (không an toàn)" -> "Cho phép" (Allow).
+ */
+function authorizePermissions() {
+  DriveApp.getRootFolder();
+  SpreadsheetApp.getActiveSpreadsheet();
+  Logger.log("✅ ĐÃ CẤP QUYỀN GOOGLE DRIVE VÀ GOOGLE SHEET THÀNH CÔNG!");
+}
+
 const SHEET_NAMES = {
   SAN_PHAM: 'SanPham',
   HOA_DON: 'HoaDon',
