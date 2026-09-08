@@ -121,6 +121,11 @@ class GoldApp {
           localStorage.setItem('pmqlv_users', JSON.stringify(this.users));
         }
         if (data.orders && Array.isArray(data.orders)) this.orders = data.orders;
+        if (data.storeConfig && typeof data.storeConfig === 'object') {
+          this.storeConfig = Object.assign({}, this.storeConfig, data.storeConfig);
+          localStorage.setItem('pmqlv_store_config', JSON.stringify(this.storeConfig));
+          this.applyStoreConfig();
+        }
         this.saveProductsToLocal();
         this.saveOrdersToLocal();
         localStorage.setItem('pmqlv_gold_prices', JSON.stringify(this.goldPrices));
@@ -1837,6 +1842,11 @@ class GoldApp {
           this.orders = data.orders;
           this.saveOrdersToLocal();
         }
+        if (data.storeConfig && typeof data.storeConfig === 'object') {
+          this.storeConfig = Object.assign({}, this.storeConfig, data.storeConfig);
+          localStorage.setItem('pmqlv_store_config', JSON.stringify(this.storeConfig));
+          this.applyStoreConfig();
+        }
         
         this.filterPosProducts();
         this.filterInventory();
@@ -1885,7 +1895,17 @@ class GoldApp {
 
     localStorage.setItem('pmqlv_store_config', JSON.stringify(this.storeConfig));
     this.applyStoreConfig();
-    alert('Đã cập nhật cấu hình in ấn & tiệm vàng thành công!');
+
+    // Tự động lưu lên CSDL Google Sheet nếu có kết nối
+    if (window.GoogleSheetService && GoogleSheetService.isConfigured()) {
+      GoogleSheetService.saveStoreConfig(this.storeConfig).then(res => {
+        if (res && res.success) {
+          console.log('☁️ Đã đồng bộ cấu hình tiệm vàng lên CSDL Google Sheet');
+        }
+      }).catch(err => console.warn('Lỗi đồng bộ cấu hình lên đám mây:', err));
+    }
+
+    alert('Đã cập nhật cấu hình tiệm vàng & Bảng giá TV thành công!');
   }
 
   // ================= 7. MODALS & FORMS =================

@@ -21,8 +21,22 @@ const SHEET_NAMES = {
   SAN_PHAM: 'SanPham',
   HOA_DON: 'HoaDon',
   GIA_VANG: 'GiaVang',
-  NGUOI_DUNG: 'NguoiDung'
+  NGUOI_DUNG: 'NguoiDung',
+  CAU_HINH: 'CauHinh'
 };
+
+function getStoreConfigData() {
+  try {
+    const configRows = getSheetData(SHEET_NAMES.CAU_HINH);
+    if (configRows && configRows.length > 0) {
+      const found = configRows.find(r => r.key === 'storeConfig');
+      if (found && found.value) {
+        return JSON.parse(found.value);
+      }
+    }
+  } catch (e) {}
+  return null;
+}
 
 function doGet(e) {
   try {
@@ -32,12 +46,26 @@ function doGet(e) {
       return jsonResponse({ success: true, message: 'PMQLV Google Sheet API đang hoạt động bình thường!' });
     }
 
+    if (action === 'getGoldPrices') {
+      initSheetsIfNotExist();
+      const goldPrices = getSheetData(SHEET_NAMES.GIA_VANG);
+      const storeConfig = getStoreConfigData();
+      return jsonResponse({
+        success: true,
+        data: {
+          goldPrices: goldPrices,
+          storeConfig: storeConfig
+        }
+      });
+    }
+
     if (action === 'getData') {
       initSheetsIfNotExist();
       const products = getSheetData(SHEET_NAMES.SAN_PHAM);
       const goldPrices = getSheetData(SHEET_NAMES.GIA_VANG);
       const users = getSheetData(SHEET_NAMES.NGUOI_DUNG);
       const orders = getSheetData(SHEET_NAMES.HOA_DON);
+      const storeConfig = getStoreConfigData();
 
       return jsonResponse({
         success: true,
@@ -45,7 +73,8 @@ function doGet(e) {
           products: products,
           goldPrices: goldPrices,
           users: users,
-          orders: orders
+          orders: orders,
+          storeConfig: storeConfig
         }
       });
     }
@@ -79,7 +108,8 @@ function doPost(e) {
       const headers = [
         'maHang', 'tenHang', 'loaiHang', 'loaiVang', 'nhomHang', 'trangThai',
         'tlTong', 'tlHot', 'tlVang', 'ni', 'congBan', 'congVon', 'giaBanMon',
-        'giaVon', 'cuaHang', 'quayLon', 'quayNho', 'ngayNhap', 'chiNhanh', 'anhSanPham'
+        'giaVon', 'cuaHang', 'quayLon', 'quayNho', 'ngayNhap',
+        'chiNhanh', 'anhSanPham', 'nhaSanXuat', 'nhaCungCap'
       ];
 
       const rows = [headers];
@@ -104,7 +134,9 @@ function doPost(e) {
           p.quayNho || '',
           p.ngayNhap || '',
           p.chiNhanh || '',
-          p.anhSanPham || ''
+          p.anhSanPham || '',
+          p.nhaSanXuat || '',
+          p.nhaCungCap || ''
         ]);
       });
 
@@ -122,19 +154,57 @@ function doPost(e) {
       const data = sheet.getDataRange().getValues();
       let rowIndex = -1;
 
+      // Tìm dòng chứa mã hàng (so sánh không phân biệt hoa thường và khoảng trắng)
+      const targetCode = String(p.maHang || '').trim().toUpperCase();
       for (let i = 1; i < data.length; i++) {
-        if (String(data[i][0]) === String(p.maHang)) {
+        if (String(data[i][0]).trim().toUpperCase() === targetCode) {
           rowIndex = i + 1;
           break;
         }
       }
 
-      const rowValues = [
-        p.maHang, p.tenHang, p.loaiHang, p.loaiVang, p.nhomHang, p.trangThai || 'Còn tồn',
-        Number(p.tlTong) || 0, Number(p.tlHot) || 0, Number(p.tlVang) || 0, p.ni || 0,
-        Number(p.congBan) || 0, Number(p.congVon) || 0, Number(p.giaBanMon) || 0,
-        Number(p.giaVon) || 0, p.cuaHang, p.quayLon, p.quayNho, p.ngayNhap || '', p.chiNhanh || '', p.anhSanPham || ''
-      ];
+      // Lấy danh sách cột thực tế của Sheet
+      const headers = data[0].map(h => String(h).trim());
+      
+      // Tự động bổ sung các cột mới nếu Sheet chưa có
+      const checkAndAddCol = (colName) => {
+        if (headers.indexOf(colName) === -1) {
+          headers.push(colName);
+          sheet.getRange(1, headers.length).setValue(colName);
+          formatHeaderRow(sheet, headers.length);
+        }
+      };
+      checkAndAddCol('chiNhanh');
+      checkAndAddCol('anhSanPham');
+      checkAndAddCol('nhaSanXuat');
+      checkAndAddCol('nhaCungCap');
+
+      const fieldMap = {
+        maHang: p.maHang || '',
+        tenHang: p.tenHang || '',
+        loaiHang: p.loaiHang || '',
+        loaiVang: p.loaiVang || '',
+        nhomHang: p.nhomHang || '',
+        trangThai: p.trangThai || 'Còn tồn',
+        tlTong: Number(p.tlTong) || 0,
+        tlHot: Number(p.tlHot) || 0,
+        tlVang: Number(p.tlVang) || 0,
+        ni: p.ni || 0,
+        congBan: Number(p.congBan) || 0,
+        congVon: Number(p.congVon) || 0,
+        giaBanMon: Number(p.giaBanMon) || 0,
+        giaVon: Number(p.giaVon) || 0,
+        cuaHang: p.cuaHang || '',
+        quayLon: p.quayLon || '',
+        quayNho: p.quayNho || '',
+        ngayNhap: p.ngayNhap || '',
+        chiNhanh: p.chiNhanh || '',
+        anhSanPham: p.anhSanPham || '',
+        nhaSanXuat: p.nhaSanXuat || '',
+        nhaCungCap: p.nhaCungCap || ''
+      };
+
+      const rowValues = headers.map(h => fieldMap[h] !== undefined ? fieldMap[h] : '');
 
       if (rowIndex > 0) {
         sheet.getRange(rowIndex, 1, 1, rowValues.length).setValues([rowValues]);
@@ -173,7 +243,7 @@ function doPost(e) {
       // Clear contents but keep headers if they exist, or just clear all and re-add headers
       orderSheet.clearContents();
       
-      const headers = ['maHD', 'ngayBan', 'tenKhach', 'sdt', 'items', 'tongTien', 'tongVon', 'nhanVien', 'ghiChu', 'trangThai', 'lyDoHuy', 'maHoanHang', 'maHDGoc', 'chiNhanh'];
+      const headers = ['maHD', 'ngayBan', 'tenKhach', 'sdt', 'items', 'tongTien', 'tongVon', 'nhanVien', 'ghiChu', 'trangThai', 'lyDoHuy', 'maHoanHang', 'maHDGoc'];
       orderSheet.appendRow(headers);
 
       if (orders.length > 0) {
@@ -193,8 +263,7 @@ function doPost(e) {
           order.trangThai || 'Đã bán',
           order.lyDoHuy || '',
           order.maHoanHang || '',
-          order.maHDGoc || '',
-          order.chiNhanh || ''
+          order.maHDGoc || ''
         ]);
         
         orderSheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
@@ -223,8 +292,7 @@ function doPost(e) {
         'Đã bán', // trangThai
         '',       // lyDoHuy
         '',       // maHoanHang
-        '',       // maHDGoc
-        order.chiNhanh || '' // NEW: chiNhanh
+        ''        // maHDGoc
       ];
       orderSheet.appendRow(orderRow);
 
@@ -278,13 +346,43 @@ function doPost(e) {
         }
       }
 
-      const row = [user.username, user.password, user.fullName, user.role || 'nhanvien', user.phone || '', user.chiNhanh || 'Chi nhánh 1'];
+      const row = [user.username, user.password, user.fullName, user.role || 'nhanvien', user.phone || ''];
       if (foundIndex > 0) {
         sheet.getRange(foundIndex, 1, 1, row.length).setValues([row]);
       } else {
         sheet.appendRow(row);
       }
       return jsonResponse({ success: true, message: 'Lưu thông tin người dùng thành công!' });
+    }
+
+    // 7. Quản lý cấu hình thông tin tiệm vàng & Bảng giá TV
+    if (action === 'saveStoreConfig') {
+      const ss = SpreadsheetApp.getActiveSpreadsheet();
+      let sheet = ss.getSheetByName(SHEET_NAMES.CAU_HINH);
+      if (!sheet) {
+        initSheetsIfNotExist();
+        sheet = ss.getSheetByName(SHEET_NAMES.CAU_HINH);
+      }
+      const newConfig = contents.storeConfig;
+      if (!newConfig) {
+        return jsonResponse({ success: false, message: 'Dữ liệu cấu hình trống!' });
+      }
+      const range = sheet.getDataRange();
+      const values = range.getValues();
+      let foundRow = -1;
+      for (let i = 1; i < values.length; i++) {
+        if (values[i][0] === 'storeConfig') {
+          foundRow = i + 1;
+          break;
+        }
+      }
+      const valStr = JSON.stringify(newConfig);
+      if (foundRow > 0) {
+        sheet.getRange(foundRow, 2).setValue(valStr);
+      } else {
+        sheet.appendRow(['storeConfig', valStr]);
+      }
+      return jsonResponse({ success: true, message: 'Lưu thông tin tiệm vàng lên Google Sheet thành công!' });
     }
 
     return jsonResponse({ success: false, message: 'Hành động không hợp lệ: ' + action });
@@ -303,7 +401,8 @@ function initSheetsIfNotExist() {
     const headers = [
       'maHang', 'tenHang', 'loaiHang', 'loaiVang', 'nhomHang', 'trangThai',
       'tlTong', 'tlHot', 'tlVang', 'ni', 'congBan', 'congVon', 'giaBanMon',
-      'giaVon', 'cuaHang', 'quayLon', 'quayNho', 'ngayNhap', 'chiNhanh', 'anhSanPham'
+      'giaVon', 'cuaHang', 'quayLon', 'quayNho', 'ngayNhap',
+      'chiNhanh', 'anhSanPham', 'nhaSanXuat', 'nhaCungCap'
     ];
     s.appendRow(headers);
     formatHeaderRow(s, headers.length);
@@ -312,7 +411,7 @@ function initSheetsIfNotExist() {
   // 2. HoaDon
   if (!ss.getSheetByName(SHEET_NAMES.HOA_DON)) {
     const s = ss.insertSheet(SHEET_NAMES.HOA_DON);
-    const headers = ['maHD', 'ngayBan', 'tenKhach', 'sdt', 'items', 'tongTien', 'tongVon', 'nhanVien', 'ghiChu', 'trangThai', 'lyDoHuy', 'maHoanHang', 'maHDGoc', 'chiNhanh'];
+    const headers = ['maHD', 'ngayBan', 'tenKhach', 'sdt', 'items', 'tongTien', 'tongVon', 'nhanVien', 'ghiChu', 'trangThai', 'lyDoHuy', 'maHoanHang', 'maHDGoc'];
     s.appendRow(headers);
     formatHeaderRow(s, headers.length);
   }
@@ -347,6 +446,21 @@ function initSheetsIfNotExist() {
     s.appendRow(['admin', '123', 'Quản Lý Chung (Admin)', 'admin', '0988.888.888', 'ALL']);
     s.appendRow(['chinhanh1', '123', 'Quản Lý Chi Nhánh 1', 'chinhanh', '0911.111.111', 'Chi nhánh 1']);
     s.appendRow(['chinhanh2', '123', 'Quản Lý Chi Nhánh 2', 'chinhanh', '0922.222.222', 'Chi nhánh 2']);
+    formatHeaderRow(s, headers.length);
+  }
+
+  // 5. CauHinh (Lưu thông tin tiệm vàng & Bảng giá TV)
+  if (!ss.getSheetByName(SHEET_NAMES.CAU_HINH)) {
+    const s = ss.insertSheet(SHEET_NAMES.CAU_HINH);
+    const headers = ['key', 'value'];
+    s.appendRow(headers);
+    s.appendRow(['storeConfig', JSON.stringify({
+      storeName: 'TIỆM VÀNG HOÀNG KIM',
+      slogan: 'Uy Tín Trọn Niềm Tin - Vàng Chuẩn Tuổi',
+      address: '123 Đường Kim Hoàn, Quận 1, TP. Hồ Chí Minh',
+      phone: '0988.888.888',
+      tickerText: '✨ Kính chúc Quý khách Vạn Sự Như Ý - Phát Tài Phát Lộc! | Giá vàng niêm yết tại thời điểm giao dịch thực tế tại quầy | Nhận thu đổi, làm mới, đánh bóng trọn đời sản phẩm.'
+    })]);
     formatHeaderRow(s, headers.length);
   }
 }

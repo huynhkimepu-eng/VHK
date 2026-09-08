@@ -157,8 +157,15 @@ const GoogleSheetService = {
       const text = await response.text();
       let res;
       try { res = JSON.parse(text); } catch(e) { res = null; }
-      if (res && res.success && res.data && Array.isArray(res.data.goldPrices) && res.data.goldPrices.length > 0) {
-        return res.data.goldPrices;
+      if (res && res.success && res.data) {
+        if (res.data.storeConfig && typeof res.data.storeConfig === 'object') {
+          try {
+            localStorage.setItem('pmqlv_store_config', JSON.stringify(res.data.storeConfig));
+          } catch(e) {}
+        }
+        if (Array.isArray(res.data.goldPrices) && res.data.goldPrices.length > 0) {
+          return res.data.goldPrices;
+        }
       }
 
       // Fallback nếu bản Google Script trên Google Sheet chưa được update action mới
@@ -341,6 +348,28 @@ const GoogleSheetService = {
       const text = await response.text();
       return JSON.parse(text);
     } catch (err) {
+      return { success: false, message: err.toString() };
+    }
+  },
+
+  async saveStoreConfig(storeConfig) {
+    if (!this.isConfigured()) return { success: true, localOnly: true };
+
+    try {
+      const url = this.getUrl();
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        redirect: 'follow',
+        body: JSON.stringify({
+          action: 'saveStoreConfig',
+          storeConfig: storeConfig
+        })
+      });
+      const text = await response.text();
+      return JSON.parse(text);
+    } catch (err) {
+      console.warn('Lỗi lưu cấu hình lên Google Sheet:', err);
       return { success: false, message: err.toString() };
     }
   }

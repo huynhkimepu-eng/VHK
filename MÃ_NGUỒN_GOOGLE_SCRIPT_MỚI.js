@@ -21,8 +21,22 @@ const SHEET_NAMES = {
   SAN_PHAM: 'SanPham',
   HOA_DON: 'HoaDon',
   GIA_VANG: 'GiaVang',
-  NGUOI_DUNG: 'NguoiDung'
+  NGUOI_DUNG: 'NguoiDung',
+  CAU_HINH: 'CauHinh'
 };
+
+function getStoreConfigData() {
+  try {
+    const configRows = getSheetData(SHEET_NAMES.CAU_HINH);
+    if (configRows && configRows.length > 0) {
+      const found = configRows.find(r => r.key === 'storeConfig');
+      if (found && found.value) {
+        return JSON.parse(found.value);
+      }
+    }
+  } catch (e) {}
+  return null;
+}
 
 function doGet(e) {
   try {
@@ -35,10 +49,12 @@ function doGet(e) {
     if (action === 'getGoldPrices') {
       initSheetsIfNotExist();
       const goldPrices = getSheetData(SHEET_NAMES.GIA_VANG);
+      const storeConfig = getStoreConfigData();
       return jsonResponse({
         success: true,
         data: {
-          goldPrices: goldPrices
+          goldPrices: goldPrices,
+          storeConfig: storeConfig
         }
       });
     }
@@ -49,6 +65,7 @@ function doGet(e) {
       const goldPrices = getSheetData(SHEET_NAMES.GIA_VANG);
       const users = getSheetData(SHEET_NAMES.NGUOI_DUNG);
       const orders = getSheetData(SHEET_NAMES.HOA_DON);
+      const storeConfig = getStoreConfigData();
 
       return jsonResponse({
         success: true,
@@ -56,7 +73,8 @@ function doGet(e) {
           products: products,
           goldPrices: goldPrices,
           users: users,
-          orders: orders
+          orders: orders,
+          storeConfig: storeConfig
         }
       });
     }
@@ -337,6 +355,36 @@ function doPost(e) {
       return jsonResponse({ success: true, message: 'Lưu thông tin người dùng thành công!' });
     }
 
+    // 7. Quản lý cấu hình thông tin tiệm vàng & Bảng giá TV
+    if (action === 'saveStoreConfig') {
+      const ss = SpreadsheetApp.getActiveSpreadsheet();
+      let sheet = ss.getSheetByName(SHEET_NAMES.CAU_HINH);
+      if (!sheet) {
+        initSheetsIfNotExist();
+        sheet = ss.getSheetByName(SHEET_NAMES.CAU_HINH);
+      }
+      const newConfig = contents.storeConfig;
+      if (!newConfig) {
+        return jsonResponse({ success: false, message: 'Dữ liệu cấu hình trống!' });
+      }
+      const range = sheet.getDataRange();
+      const values = range.getValues();
+      let foundRow = -1;
+      for (let i = 1; i < values.length; i++) {
+        if (values[i][0] === 'storeConfig') {
+          foundRow = i + 1;
+          break;
+        }
+      }
+      const valStr = JSON.stringify(newConfig);
+      if (foundRow > 0) {
+        sheet.getRange(foundRow, 2).setValue(valStr);
+      } else {
+        sheet.appendRow(['storeConfig', valStr]);
+      }
+      return jsonResponse({ success: true, message: 'Lưu thông tin tiệm vàng lên Google Sheet thành công!' });
+    }
+
     return jsonResponse({ success: false, message: 'Hành động không hợp lệ: ' + action });
   } catch (err) {
     return jsonResponse({ success: false, error: err.toString() });
@@ -398,6 +446,21 @@ function initSheetsIfNotExist() {
     s.appendRow(['admin', '123', 'Quản Lý Chung (Admin)', 'admin', '0988.888.888', 'ALL']);
     s.appendRow(['chinhanh1', '123', 'Quản Lý Chi Nhánh 1', 'chinhanh', '0911.111.111', 'Chi nhánh 1']);
     s.appendRow(['chinhanh2', '123', 'Quản Lý Chi Nhánh 2', 'chinhanh', '0922.222.222', 'Chi nhánh 2']);
+    formatHeaderRow(s, headers.length);
+  }
+
+  // 5. CauHinh (Lưu thông tin tiệm vàng & Bảng giá TV)
+  if (!ss.getSheetByName(SHEET_NAMES.CAU_HINH)) {
+    const s = ss.insertSheet(SHEET_NAMES.CAU_HINH);
+    const headers = ['key', 'value'];
+    s.appendRow(headers);
+    s.appendRow(['storeConfig', JSON.stringify({
+      storeName: 'TIỆM VÀNG HOÀNG KIM',
+      slogan: 'Uy Tín Trọn Niềm Tin - Vàng Chuẩn Tuổi',
+      address: '123 Đường Kim Hoàn, Quận 1, TP. Hồ Chí Minh',
+      phone: '0988.888.888',
+      tickerText: '✨ Kính chúc Quý khách Vạn Sự Như Ý - Phát Tài Phát Lộc! | Giá vàng niêm yết tại thời điểm giao dịch thực tế tại quầy | Nhận thu đổi, làm mới, đánh bóng trọn đời sản phẩm.'
+    })]);
     formatHeaderRow(s, headers.length);
   }
 }
