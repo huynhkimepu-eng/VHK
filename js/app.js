@@ -483,7 +483,10 @@ class GoldApp {
 
         return `
           <div class="product-card-pos" onclick="app.addToCart('${p.maHang}')">
-            <span class="tag-gold">${p.loaiVang || 'Vàng'}</span>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+              <span class="tag-gold">${p.loaiVang || 'Vàng'}</span>
+              <button type="button" onclick="event.stopPropagation(); app.previewProductShowcase('${p.maHang}')" style="background: rgba(16, 185, 129, 0.15); color: #047857; border: 1px solid #A7F3D0; border-radius: 4px; padding: 1px 6px; font-size: 10.5px; font-weight: 700; cursor: pointer;" title="Mở trang thông tin sản phẩm riêng cho khách xem">👁️ Khách</button>
+            </div>
             <div class="code">Mã: ${p.maHang}</div>
             <div class="card-main-content">
               <div class="card-info">
@@ -879,6 +882,7 @@ class GoldApp {
             <span class="badge-status ${statusClass}">${p.trangThai || 'Còn tồn'}</span>
           </td>
           <td style="text-align: center; white-space: nowrap;">
+            <button class="btn btn-sm btn-outline-info" onclick="app.previewProductShowcase('${p.maHang}')" title="Xem trang giới thiệu sản phẩm riêng cho khách">👁️</button>
             <button class="btn btn-sm btn-dark" onclick="app.printSingleTag('${p.maHang}')" title="In tem đuôi chuột">🏷️ Tem</button>
             ${isAdmin ? `
               <button class="btn btn-sm btn-secondary" onclick="app.openEditProductModal('${p.maHang}')" title="Sửa">✏️</button>
@@ -1877,6 +1881,16 @@ class GoldApp {
   }
 
   // ================= 7. MODALS & FORMS =================
+
+  // Mở trang giới thiệu sản phẩm riêng cho khách xem (san-pham.html?ma=...)
+  previewProductShowcase(maHang) {
+    if (!maHang || !String(maHang).trim()) {
+      alert('Vui lòng chọn hoặc nhập mã sản phẩm trước!');
+      return;
+    }
+    const cleanMa = String(maHang).trim();
+    window.open(`san-pham.html?ma=${encodeURIComponent(cleanMa)}`, '_blank');
+  }
 
   openAddProductModal() {
     document.getElementById('productModalTitle').textContent = 'Thêm Sản Phẩm Mới';

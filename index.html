@@ -31,8 +31,13 @@
 
       <div class="header-right">
         <!-- Bảng Giá TV -->
-        <a href="bang-gia-vang.html" target="_blank" style="display: flex; align-items: center; gap: 6px; background: linear-gradient(135deg, #F59E0B, #D97706); color: #000; padding: 5px 12px; border-radius: 6px; margin-right: 12px; text-decoration: none; font-size: 12.5px; font-weight: 700; box-shadow: 0 2px 6px rgba(0,0,0,0.2);" title="Mở Màn Hình Bảng Giá Điện Tử Chiếu TV">
+        <a href="bang-gia-vang.html" target="_blank" style="display: flex; align-items: center; gap: 6px; background: linear-gradient(135deg, #F59E0B, #D97706); color: #000; padding: 5px 12px; border-radius: 6px; margin-right: 8px; text-decoration: none; font-size: 12.5px; font-weight: 700; box-shadow: 0 2px 6px rgba(0,0,0,0.2);" title="Mở Màn Hình Bảng Giá Điện Tử Chiếu TV">
           <span>📺</span> Bảng Giá TV
+        </a>
+
+        <!-- Trang Giới Thiệu Khách Xem -->
+        <a href="san-pham.html" target="_blank" style="display: flex; align-items: center; gap: 6px; background: linear-gradient(135deg, #10B981, #047857); color: #FFF; padding: 5px 12px; border-radius: 6px; margin-right: 12px; text-decoration: none; font-size: 12.5px; font-weight: 700; box-shadow: 0 2px 6px rgba(0,0,0,0.2);" title="Mở Trang Giới Thiệu Sản Phẩm Cho Khách Hàng">
+          <span>💎</span> Trang Khách Xem
         </a>
 
         <!-- Chọn Chi Nhánh -->
@@ -930,9 +935,14 @@
             </div>
           </div>
 
-          <div class="modal-footer" style="padding: 10px 0 0 0;">
-            <button type="button" class="btn btn-secondary" onclick="app.closeProductModal()">Hủy</button>
-            <button type="submit" class="btn btn-primary">Lưu Sản Phẩm</button>
+          <div class="modal-footer" style="padding: 10px 0 0 0; display: flex; justify-content: space-between; align-items: center;">
+            <button type="button" class="btn btn-sm btn-outline-info" onclick="app.previewProductShowcase(document.getElementById('modalMaHang')?.value)" title="Mở trang giới thiệu sản phẩm riêng cho khách xem">
+              👁️ Xem Trang Khách
+            </button>
+            <div style="display: flex; gap: 8px;">
+              <button type="button" class="btn btn-secondary" onclick="app.closeProductModal()">Hủy</button>
+              <button type="submit" class="btn btn-primary">Lưu Sản Phẩm</button>
+            </div>
           </div>
         </form>
       </div>

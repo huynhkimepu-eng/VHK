@@ -1,0 +1,1754 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Thông Tin Sản Phẩm Trang Sức - Tiệm Vàng Hoàng Kim</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👑</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --gold-primary: #D97706;
+      --gold-dark: #92400E;
+      --gold-deep: #78350F;
+      --gold-light: #FBBF24;
+      --gold-bg-light: #FFFBEB;
+      --gold-border: #E5C378;
+      --accent-green: #047857;
+      --accent-red: #B91C1C;
+      --text-main: #0F172A;
+      --text-muted: #64748B;
+      --text-light: #94A3B8;
+      --bg-page: #FBF8F2;
+      --bg-card: #FFFFFF;
+      --shadow-sm: 0 2px 8px rgba(180, 83, 9, 0.06);
+      --shadow-md: 0 10px 30px rgba(180, 83, 9, 0.1);
+      --shadow-lg: 0 20px 45px rgba(146, 64, 14, 0.15);
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: radial-gradient(circle at 50% 0%, #FFFDF7 0%, #F8F3EA 60%, #F1E8DA 100%);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      line-height: 1.5;
+    }
+
+    /* Header Thanh Lịch */
+    .showcase-header {
+      background: #FFFFFF;
+      border-bottom: 2px solid var(--gold-border);
+      box-shadow: 0 4px 20px rgba(180, 83, 9, 0.08);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(10px);
+      background: rgba(255, 255, 255, 0.95);
+    }
+
+    .header-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .brand-crown {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #D97706 0%, #78350F 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      box-shadow: 0 4px 12px rgba(217, 119, 6, 0.35);
+      flex-shrink: 0;
+    }
+
+    .brand-info h1 {
+      font-family: 'Cinzel', serif;
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      background: linear-gradient(135deg, #92400E 0%, #D97706 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1.2;
+    }
+
+    .brand-info p {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-nav {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: all 0.2s;
+      cursor: pointer;
+      border: 1px solid transparent;
+    }
+
+    .btn-nav-price {
+      background: #FEF3C7;
+      color: #92400E;
+      border-color: #FCD34D;
+    }
+
+    .btn-nav-price:hover {
+      background: #FDE68A;
+      transform: translateY(-1px);
+    }
+
+    .btn-nav-hotline {
+      background: linear-gradient(135deg, #059669 0%, #047857 100%);
+      color: #FFFFFF;
+      box-shadow: 0 3px 10px rgba(5, 150, 105, 0.25);
+    }
+
+    .btn-nav-hotline:hover {
+      opacity: 0.92;
+      transform: translateY(-1px);
+    }
+
+    /* Main Container */
+    .main-wrapper {
+      flex: 1;
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    /* BREADCRUMB */
+    .breadcrumb-nav {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 18px;
+      font-weight: 600;
+      flex-wrap: wrap;
+    }
+
+    .breadcrumb-nav a {
+      color: var(--gold-dark);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .breadcrumb-nav a:hover {
+      text-decoration: underline;
+    }
+
+    .breadcrumb-sep {
+      color: #CBD5E1;
+      font-size: 11px;
+    }
+
+    /* ========================================================
+       CHẾ ĐỘ XEM CHI TIẾT 1 SẢN PHẨM (SPOTLIGHT PRODUCT)
+       ======================================================== */
+    .spotlight-card {
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      border: 2px solid var(--gold-border);
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 460px 1fr;
+      margin-bottom: 30px;
+      position: relative;
+    }
+
+    /* Cột Trái: Ảnh Sản Phẩm */
+    .product-media-col {
+      background: linear-gradient(180deg, #FFFFFF 0%, #FAF5EB 100%);
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-right: 1.5px solid #F1E8DA;
+      position: relative;
+    }
+
+    .product-img-wrapper {
+      width: 100%;
+      max-width: 360px;
+      aspect-ratio: 1 / 1;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      background: #FFFFFF;
+      border: 2px solid #EFE4CF;
+      box-shadow: 0 10px 25px rgba(180, 83, 9, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .product-main-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+
+    .product-img-wrapper:hover .product-main-img {
+      transform: scale(1.04);
+    }
+
+    /* Fallback Hoàng Kim Monogram */
+    .hk-monogram-large {
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 50% 40%, #FFFBEB 0%, #FEF3C7 50%, #FDE68A 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .hk-monogram-crown {
+      font-size: 64px;
+      filter: drop-shadow(0 4px 10px rgba(217, 119, 6, 0.35));
+      animation: gentleFloat 3s ease-in-out infinite alternate;
+    }
+
+    .hk-monogram-text {
+      font-family: 'Cinzel', serif;
+      font-size: 42px;
+      font-weight: 900;
+      letter-spacing: 5px;
+      color: #92400E;
+      text-shadow: 0 2px 4px rgba(255, 255, 255, 0.8), 0 1px 2px rgba(146, 64, 14, 0.2);
+    }
+
+    .hk-monogram-sub {
+      font-size: 13px;
+      font-weight: 700;
+      color: #B45309;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    @keyframes gentleFloat {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(-8px); }
+    }
+
+    /* Mã Vạch Trực Quan Dưới Ảnh */
+    .barcode-display-box {
+      margin-top: 20px;
+      width: 100%;
+      max-width: 360px;
+      background: #FFFFFF;
+      border: 1.5px dashed #CBD5E1;
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      text-align: center;
+    }
+
+    .barcode-svg-wrap {
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 6px;
+    }
+
+    .barcode-code-text {
+      font-family: 'Cinzel', monospace;
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 2.5px;
+      color: var(--text-main);
+    }
+
+    /* Cột Phải: Thông Tin Chi Tiết */
+    .product-details-col {
+      padding: 34px 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .gold-badge-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .badge-gold-type {
+      background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+      color: #FFFFFF;
+      font-size: 13.5px;
+      font-weight: 800;
+      padding: 5px 14px;
+      border-radius: 999px;
+      letter-spacing: 0.5px;
+      box-shadow: 0 2px 8px rgba(217, 119, 6, 0.25);
+    }
+
+    .badge-purity {
+      background: #FEF3C7;
+      color: #92400E;
+      border: 1px solid #FCD34D;
+      font-size: 13px;
+      font-weight: 800;
+      padding: 5px 12px;
+      border-radius: 999px;
+    }
+
+    .badge-status {
+      margin-left: auto;
+      background: #ECFDF5;
+      color: #047857;
+      border: 1px solid #A7F3D0;
+      font-size: 12px;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #10B981;
+      display: inline-block;
+      box-shadow: 0 0 6px #10B981;
+    }
+
+    .product-title {
+      font-family: 'Cinzel', serif;
+      font-size: 27px;
+      font-weight: 800;
+      color: #1E293B;
+      line-height: 1.3;
+      margin-bottom: 18px;
+    }
+
+    /* Hộp Giá Bán Minh Bạch */
+    .price-spotlight-box {
+      background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
+      border: 2px solid #FDE68A;
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 14px rgba(217, 119, 6, 0.08);
+      position: relative;
+    }
+
+    .price-label-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .price-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: #92400E;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    .price-live-tag {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #047857;
+      background: #ECFDF5;
+      border: 1px solid #A7F3D0;
+      padding: 2px 8px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .price-value-main {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 34px;
+      font-weight: 900;
+      color: #B45309;
+      letter-spacing: -0.5px;
+      line-height: 1.2;
+    }
+
+    .price-breakdown {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px dashed rgba(180, 83, 9, 0.2);
+      font-size: 12.5px;
+      color: #78350F;
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .breakdown-item b {
+      font-weight: 800;
+      color: #92400E;
+    }
+
+    /* Bảng Thông Số Kỹ Thuật */
+    .specs-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 26px;
+    }
+
+    .spec-item {
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-radius: 10px;
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      transition: all 0.2s;
+    }
+
+    .spec-item:hover {
+      background: #FFFFFF;
+      border-color: #CBD5E1;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    }
+
+    .spec-item.full-width {
+      grid-column: 1 / -1;
+    }
+
+    .spec-label {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .spec-value {
+      font-size: 15px;
+      font-weight: 800;
+      color: #0F172A;
+    }
+
+    .spec-value.highlight-gold {
+      color: #D97706;
+    }
+
+    /* Nút Hành Động Liên Hệ & Chia Sẻ */
+    .action-buttons-group {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .btn-action {
+      flex: 1;
+      min-width: 170px;
+      padding: 13px 20px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 800;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      text-align: center;
+    }
+
+    .btn-zalo {
+      background: #0068FF;
+      color: #FFFFFF;
+      box-shadow: 0 4px 14px rgba(0, 104, 255, 0.3);
+    }
+
+    .btn-zalo:hover {
+      background: #0056D2;
+      transform: translateY(-2px);
+    }
+
+    .btn-call {
+      background: linear-gradient(135deg, #D97706 0%, #B45309 100%);
+      color: #FFFFFF;
+      box-shadow: 0 4px 14px rgba(217, 119, 6, 0.3);
+    }
+
+    .btn-call:hover {
+      background: linear-gradient(135deg, #B45309 0%, #92400E 100%);
+      transform: translateY(-2px);
+    }
+
+    .btn-share {
+      background: #F1F5F9;
+      color: #334155;
+      border: 1px solid #CBD5E1;
+      flex: 0 0 auto;
+      min-width: 50px;
+      padding: 13px 16px;
+    }
+
+    .btn-share:hover {
+      background: #E2E8F0;
+      color: #0F172A;
+    }
+
+    /* Cam Kết Chất Lượng */
+    .trust-badges {
+      border-top: 1px solid #E2E8F0;
+      padding-top: 18px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .trust-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #475569;
+    }
+
+    .trust-icon {
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    /* ========================================================
+       CHẾ ĐỘ XEM BỘ SƯU TẬP (CATALOG / GALLERY VIEW)
+       ======================================================== */
+    .catalog-section {
+      display: block;
+    }
+
+    .catalog-hero {
+      background: linear-gradient(135deg, #FFFFFF 0%, #FFFDF9 50%, #FAF3E6 100%);
+      border: 2px solid var(--gold-border);
+      border-radius: var(--radius-lg);
+      padding: 30px;
+      text-align: center;
+      margin-bottom: 26px;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .catalog-hero::before {
+      content: '👑';
+      position: absolute;
+      right: -20px;
+      bottom: -20px;
+      font-size: 140px;
+      opacity: 0.05;
+      pointer-events: none;
+    }
+
+    .catalog-hero h2 {
+      font-family: 'Cinzel', serif;
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--gold-dark);
+      letter-spacing: 1.5px;
+      margin-bottom: 6px;
+    }
+
+    .catalog-hero p {
+      font-size: 14.5px;
+      color: var(--text-muted);
+      max-width: 600px;
+      margin: 0 auto 20px;
+    }
+
+    /* Thanh Tìm Kiếm Thông Minh */
+    .search-filter-card {
+      background: #FFFFFF;
+      border-radius: var(--radius-md);
+      border: 1px solid #E2E8F0;
+      padding: 18px 22px;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 24px;
+    }
+
+    .search-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .search-input-wrap {
+      flex: 1;
+      position: relative;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 16px;
+      color: #94A3B8;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 12px 16px 12px 42px;
+      border: 1.5px solid #CBD5E1;
+      border-radius: 10px;
+      font-size: 14.5px;
+      font-family: inherit;
+      color: var(--text-main);
+      background: #F8FAFC;
+      transition: all 0.2s;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--gold-primary);
+      background: #FFFFFF;
+      box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.15);
+    }
+
+    /* Filter Chips */
+    .filters-scroll {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+      scrollbar-width: thin;
+    }
+
+    .filter-chip {
+      padding: 7px 16px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      border: 1.5px solid #E2E8F0;
+      background: #FFFFFF;
+      color: #475569;
+      transition: all 0.15s;
+    }
+
+    .filter-chip:hover {
+      border-color: var(--gold-light);
+      background: #FFFBEB;
+      color: var(--gold-dark);
+    }
+
+    .filter-chip.active {
+      background: linear-gradient(135deg, #D97706 0%, #B45309 100%);
+      border-color: #B45309;
+      color: #FFFFFF;
+      box-shadow: 0 2px 8px rgba(217, 119, 6, 0.25);
+    }
+
+    /* Lưới Sản Phẩm Cao Cấp */
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .catalog-item-card {
+      background: #FFFFFF;
+      border-radius: var(--radius-md);
+      border: 1.5px solid #EAE1CF;
+      overflow: hidden;
+      box-shadow: 0 4px 14px rgba(180, 83, 9, 0.05);
+      transition: all 0.25s ease;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .catalog-item-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 14px 30px rgba(180, 83, 9, 0.14);
+      border-color: #FBBF24;
+    }
+
+    .catalog-thumb-box {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      background: #FAF6EF;
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .catalog-thumb-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s;
+    }
+
+    .catalog-item-card:hover .catalog-thumb-img {
+      transform: scale(1.06);
+    }
+
+    .catalog-thumb-hk {
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle, #FFFBEB 0%, #FEF3C7 60%, #FDE68A 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .catalog-thumb-hk .hk-crown { font-size: 36px; }
+    .catalog-thumb-hk .hk-text { font-family: 'Cinzel', serif; font-size: 22px; font-weight: 900; color: #92400E; letter-spacing: 2px; }
+
+    .catalog-tag-gold {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(15, 23, 42, 0.85);
+      color: #FDE68A;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 6px;
+      backdrop-filter: blur(4px);
+    }
+
+    .catalog-card-body {
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      justify-content: space-between;
+    }
+
+    .catalog-item-code {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+
+    .catalog-item-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: #1E293B;
+      line-height: 1.35;
+      margin-bottom: 8px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      min-height: 40px;
+    }
+
+    .catalog-item-meta {
+      font-size: 12.5px;
+      color: #64748B;
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px dashed #E2E8F0;
+    }
+
+    .catalog-item-price {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 18px;
+      font-weight: 900;
+      color: #B45309;
+    }
+
+    .catalog-btn-view {
+      margin-top: 10px;
+      padding: 7px 12px;
+      border-radius: 8px;
+      background: #FEF3C7;
+      color: #92400E;
+      font-size: 12.5px;
+      font-weight: 800;
+      text-align: center;
+      transition: all 0.15s;
+    }
+
+    .catalog-item-card:hover .catalog-btn-view {
+      background: #D97706;
+      color: #FFFFFF;
+    }
+
+    /* Footer */
+    .showcase-footer {
+      background: #FFFFFF;
+      border-top: 2px solid var(--gold-border);
+      padding: 30px 20px;
+      margin-top: 40px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 13.5px;
+    }
+
+    .footer-brand-title {
+      font-family: 'Cinzel', serif;
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--gold-dark);
+      margin-bottom: 4px;
+    }
+
+    .footer-address {
+      margin-top: 8px;
+      font-size: 13px;
+      color: #475569;
+    }
+
+    /* Floating Contact Buttons trên Mobile */
+    .floating-contact-bar {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      z-index: 999;
+    }
+
+    .float-btn {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #FFFFFF;
+      font-size: 24px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .float-btn-zalo { background: #0068FF; }
+    .float-btn-call { background: #059669; }
+
+    .float-btn:hover {
+      transform: scale(1.1);
+    }
+
+    /* Toast Thông Báo Sao Chép */
+    .toast-msg {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #0F172A;
+      color: #FFFFFF;
+      padding: 12px 24px;
+      border-radius: 999px;
+      font-size: 13.5px;
+      font-weight: 700;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+      z-index: 1000;
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toast-msg.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* Loading Spinner */
+    .loading-box {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--gold-dark);
+    }
+
+    .spinner {
+      width: 44px;
+      height: 44px;
+      border: 4px solid #FDE68A;
+      border-top-color: #D97706;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .spotlight-card {
+        grid-template-columns: 1fr;
+      }
+      .product-media-col {
+        border-right: none;
+        border-bottom: 1.5px solid #F1E8DA;
+        padding: 24px;
+      }
+      .product-details-col {
+        padding: 24px;
+      }
+      .product-title {
+        font-size: 22px;
+      }
+      .price-value-main {
+        font-size: 28px;
+      }
+      .specs-grid {
+        grid-template-columns: 1fr;
+      }
+      .trust-badges {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .header-container {
+        padding: 10px 14px;
+      }
+      .brand-info h1 {
+        font-size: 16px;
+      }
+      .brand-crown {
+        width: 38px;
+        height: 38px;
+        font-size: 20px;
+      }
+      .btn-nav-price span {
+        display: none;
+      }
+      .main-wrapper {
+        padding: 14px;
+      }
+      .products-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+      .catalog-card-body {
+        padding: 10px 12px;
+      }
+      .catalog-item-title {
+        font-size: 13.5px;
+        min-height: 36px;
+      }
+      .catalog-item-price {
+        font-size: 15px;
+      }
+      .catalog-btn-view {
+        font-size: 11.5px;
+        padding: 6px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header Thanh Lịch -->
+  <header class="showcase-header">
+    <div class="header-container">
+      <a href="san-pham.html" class="header-brand" title="Về trang chủ bộ sưu tập">
+        <div class="brand-crown">👑</div>
+        <div class="brand-info">
+          <h1 id="shopName">TIỆM VÀNG HOÀNG KIM</h1>
+          <p id="shopSlogan">Uy Tín Trọn Niềm Tin - Vàng Chuẩn Tuổi</p>
+        </div>
+      </a>
+      <div class="header-actions">
+        <a href="bang-gia-vang.html" class="btn-nav btn-nav-price" title="Xem bảng giá vàng trực tiếp">
+          <span>📊</span> Bảng Giá Vàng
+        </a>
+        <a href="tel:0988888888" id="headerCallBtn" class="btn-nav btn-nav-hotline" title="Gọi hotline tiệm">
+          <span>📞</span> <span id="shopPhoneHeader">0988.888.888</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Wrapper -->
+  <main class="main-wrapper">
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb-nav" id="breadcrumbNav">
+      <a href="san-pham.html">👑 Bộ Sưu Tập</a>
+      <span class="breadcrumb-sep">/</span>
+      <span id="breadcrumbCurrent">Tất Cả Sản Phẩm</span>
+    </nav>
+
+    <!-- Loading State -->
+    <div id="loadingState" class="loading-box">
+      <div class="spinner"></div>
+      <p style="font-weight: 700;">Đang tải thông tin sản phẩm từ hệ thống...</p>
+    </div>
+
+    <!-- 1. VÙNG HIỂN THỊ CHI TIẾT 1 SẢN PHẨM (SPOTLIGHT) -->
+    <section id="spotlightSection" style="display: none;">
+      <div class="spotlight-card">
+        <!-- Cột Ảnh & Barcode -->
+        <div class="product-media-col">
+          <div class="product-img-wrapper" id="spotlightImgWrapper">
+            <!-- Sẽ render img hoặc monogram HK -->
+          </div>
+          <div class="barcode-display-box">
+            <div class="barcode-svg-wrap" id="spotlightBarcodeSvg">
+              <!-- SVG Barcode 128 -->
+            </div>
+            <div class="barcode-code-text" id="spotlightBarcodeText">I6600001</div>
+          </div>
+        </div>
+
+        <!-- Cột Thông Tin & Thông Số Kiểm Định -->
+        <div class="product-details-col">
+          <div>
+            <div class="gold-badge-row">
+              <span class="badge-gold-type" id="spotlightGoldType">Vàng 24k</span>
+              <span class="badge-purity" id="spotlightPurity">Tuổi vàng: 99.99%</span>
+              <span class="badge-status">
+                <span class="status-dot"></span> <span id="spotlightStatus">Sẵn sàng giao dịch</span>
+              </span>
+            </div>
+
+            <h2 class="product-title" id="spotlightTitle">Tên Sản Phẩm</h2>
+
+            <!-- Bảng Giá Bán Minh Bạch -->
+            <div class="price-spotlight-box">
+              <div class="price-label-row">
+                <span class="price-label">Giá Bán Niêm Yết</span>
+                <span class="price-live-tag">⚡ Cập nhật theo giá vàng hôm nay</span>
+              </div>
+              <div class="price-value-main" id="spotlightPrice">0 đ</div>
+              <div class="price-breakdown" id="spotlightPriceBreakdown">
+                <!-- Chi tiết tiền vàng + tiền công -->
+              </div>
+            </div>
+
+            <!-- Thông Số Kỹ Thuật Kiểm Định -->
+            <div class="specs-grid">
+              <div class="spec-item">
+                <span class="spec-label">⚖️ Trọng Lượng Tổng (TLT)</span>
+                <span class="spec-value" id="specTLT">0.000 chỉ</span>
+              </div>
+              <div class="spec-item">
+                <span class="spec-label">🪙 Trọng Lượng Vàng Thực (TLV)</span>
+                <span class="spec-value highlight-gold" id="specTLV">0.000 chỉ</span>
+              </div>
+              <div class="spec-item">
+                <span class="spec-label">💎 Trọng Lượng Hột / Đá (TLH)</span>
+                <span class="spec-value" id="specTLH">0.000 chỉ</span>
+              </div>
+              <div class="spec-item">
+                <span class="spec-label">🔨 Tiền Công Chế Tác</span>
+                <span class="spec-value" id="specCong">0 đ</span>
+              </div>
+              <div class="spec-item" id="specNiRow">
+                <span class="spec-label">📏 Ni Tay / Kích Cỡ</span>
+                <span class="spec-value" id="specNi">Tiêu chuẩn</span>
+              </div>
+              <div class="spec-item">
+                <span class="spec-label">🏢 Nhà Sản Xuất / Cung Cấp</span>
+                <span class="spec-value" id="specNCC">CTTNHH VB&TS HOÀNG KIM</span>
+              </div>
+              <div class="spec-item full-width">
+                <span class="spec-label">📜 Tiêu Chuẩn Cơ Sở (TCCS) & Xuất Xứ</span>
+                <span class="spec-value" id="specTCCS">tccs 01:2025/ HK • Nơi sản xuất: Việt Nam</span>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <!-- Nhóm Nút Hành Động -->
+            <div class="action-buttons-group">
+              <a href="#" id="spotlightZaloBtn" target="_blank" class="btn-action btn-zalo">
+                <span>💬</span> Nhắn Zalo Tư Vấn Mua
+              </a>
+              <a href="tel:0988888888" id="spotlightCallBtn" class="btn-action btn-call">
+                <span>📞</span> Gọi Mua Ngay
+              </a>
+              <button onclick="copyProductLink()" class="btn-action btn-share" title="Sao chép liên kết sản phẩm">
+                <span>📋 Chia sẻ</span>
+              </button>
+            </div>
+
+            <!-- Cam Kết Chất Lượng -->
+            <div class="trust-badges">
+              <div class="trust-item">
+                <span class="trust-icon">🛡️</span>
+                <span>Chuẩn tuổi vàng 100% kiểm định</span>
+              </div>
+              <div class="trust-item">
+                <span class="trust-icon">🔄</span>
+                <span>Thu đổi trọn đời theo quy chế</span>
+              </div>
+              <div class="trust-item">
+                <span class="trust-icon">✨</span>
+                <span>Làm mới, đánh bóng trọn đời</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Nút xem bộ sưu tập -->
+      <div style="text-align: center; margin-bottom: 40px;">
+        <button onclick="showCatalogView()" class="filter-chip active" style="padding: 10px 24px; font-size: 14.5px;">
+          ✨ Xem Thêm Các Mẫu Trang Sức Khác Tại Tiệm ➔
+        </button>
+      </div>
+    </section>
+
+    <!-- 2. VÙNG HIỂN THỊ DANH MỤC SẢN PHẨM (CATALOG / GALLERY) -->
+    <section id="catalogSection" style="display: none;">
+      <!-- Hero Banner -->
+      <div class="catalog-hero">
+        <h2>Bộ Sưu Tập Trang Sức Hoàng Gia</h2>
+        <p>Khám phá các tuyệt tác trang sức vàng 24K, 18K, vàng Ý 10K và bạc cao cấp được chế tác tinh xảo tại Tiệm Vàng Hoàng Kim.</p>
+        <div style="display: inline-flex; gap: 8px; font-size: 13px; font-weight: 700; color: #92400E; background: #FEF3C7; padding: 6px 14px; border-radius: 999px;">
+          <span>📍</span> <span id="heroStoreAddress">123 Đường Kim Hoàn, Quận 1, TP. Hồ Chí Minh</span>
+        </div>
+      </div>
+
+      <!-- Thẻ Tìm Kiếm & Bộ Lọc -->
+      <div class="search-filter-card">
+        <div class="search-row">
+          <div class="search-input-wrap">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="catalogSearchInput" class="search-input" placeholder="Tìm theo tên trang sức hoặc mã sản phẩm (VD: Nhẫn, Dây chuyền, I660...)" />
+          </div>
+        </div>
+        <div class="filters-scroll" id="goldFiltersContainer">
+          <button class="filter-chip active" onclick="filterCatalogByGold('ALL', this)">Tất Cả</button>
+          <button class="filter-chip" onclick="filterCatalogByGold('24K', this)">Vàng 24K</button>
+          <button class="filter-chip" onclick="filterCatalogByGold('23K', this)">Vàng 23K</button>
+          <button class="filter-chip" onclick="filterCatalogByGold('18K', this)">Vàng 18K</button>
+          <button class="filter-chip" onclick="filterCatalogByGold('10K', this)">Vàng Ý 10K</button>
+          <button class="filter-chip" onclick="filterCatalogByGold('Bạc', this)">Trang Sức Bạc</button>
+        </div>
+      </div>
+
+      <!-- Thống kê & Số lượng tìm thấy -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; font-size: 13.5px; color: var(--text-muted); font-weight: 600;">
+        <span>Hiển thị <b id="catalogResultCount" style="color: var(--gold-dark);">0</b> sản phẩm</span>
+        <span id="catalogBranchNotice"></span>
+      </div>
+
+      <!-- Lưới Danh Sách Sản Phẩm -->
+      <div class="products-grid" id="catalogGrid">
+        <!-- Render bằng Javascript -->
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="showcase-footer">
+    <div class="footer-brand-title" id="footerShopName">TIỆM VÀNG HOÀNG KIM</div>
+    <p id="footerShopSlogan">Uy Tín Trọn Niềm Tin - Vàng Chuẩn Tuổi</p>
+    <div class="footer-address" id="footerShopAddress">📍 123 Đường Kim Hoàn, Quận 1, TP. Hồ Chí Minh | 📞 Hotline: 0988.888.888</div>
+    <p style="margin-top: 14px; font-size: 12px; color: #94A3B8;">© 2026 Bản quyền thuộc về Tiệm Vàng Hoàng Kim. Tất cả các quyền được bảo lưu.</p>
+  </footer>
+
+  <!-- Nút Liên Hệ Nổi (Floating Contact) -->
+  <div class="floating-contact-bar">
+    <a href="#" id="floatingZaloBtn" target="_blank" class="float-btn float-btn-zalo" title="Chat Zalo ngay">💬</a>
+    <a href="tel:0988888888" id="floatingCallBtn" class="float-btn float-btn-call" title="Gọi Hotline">📞</a>
+  </div>
+
+  <!-- Toast Copy -->
+  <div class="toast-msg" id="toastMsg">
+    <span>✅</span> <span id="toastText">Đã sao chép liên kết sản phẩm!</span>
+  </div>
+
+  <!-- Thư viện Dữ Liệu Gốc & Đồng Bộ -->
+  <script src="js/defaultData.js?v=37"></script>
+  <script src="js/googleSheetService.js?v=37"></script>
+
+  <script>
+    // State Quản Lý
+    let products = [];
+    let goldPrices = [];
+    let storeConfig = {};
+    let activeGoldFilter = 'ALL';
+    let currentSpotlightProduct = null;
+
+    const STORAGE_KEY_PRODUCTS = 'pmqlv_products';
+    const STORAGE_KEY_PRICES = 'pmqlv_gold_prices';
+    const STORAGE_KEY_CONFIG = 'pmqlv_store_config';
+
+    // 1. Khởi tạo
+    async function init() {
+      loadInitialData();
+
+      // Cập nhật giao diện cửa hàng
+      applyStoreConfig();
+
+      // Kiểm tra tham số URL: ?ma=... hoặc ?id=...
+      const urlParams = new URLSearchParams(window.location.search);
+      const targetCode = urlParams.get('ma') || urlParams.get('id') || urlParams.get('code');
+
+      if (targetCode) {
+        showProductByCode(targetCode);
+      } else {
+        showCatalogView();
+      }
+
+      // Thử đồng bộ dữ liệu mới nhất từ Google Sheet trong nền
+      fetchLatestFromCloud();
+
+      // Lắng nghe tìm kiếm
+      const searchInput = document.getElementById('catalogSearchInput');
+      if (searchInput) {
+        searchInput.addEventListener('input', () => {
+          renderCatalogGrid();
+        });
+      }
+
+      // Ẩn loading
+      document.getElementById('loadingState').style.display = 'none';
+    }
+
+    // 2. Nạp dữ liệu cục bộ
+    function loadInitialData() {
+      // Cấu hình cửa hàng
+      const savedConfig = localStorage.getItem(STORAGE_KEY_CONFIG);
+      storeConfig = savedConfig ? JSON.parse(savedConfig) : (window.DEFAULT_STORE_CONFIG || {});
+
+      // Bảng giá vàng
+      const savedPrices = localStorage.getItem(STORAGE_KEY_PRICES);
+      if (savedPrices) {
+        try { goldPrices = JSON.parse(savedPrices); } catch (e) { goldPrices = []; }
+      }
+      if (!goldPrices || goldPrices.length === 0) {
+        goldPrices = window.DEFAULT_GOLD_PRICES || [];
+      }
+
+      // Danh sách sản phẩm
+      const savedProducts = localStorage.getItem(STORAGE_KEY_PRODUCTS);
+      if (savedProducts) {
+        try { products = JSON.parse(savedProducts); } catch (e) { products = []; }
+      }
+      if (!products || products.length === 0) {
+        products = window.DEFAULT_PRODUCTS || [];
+      }
+    }
+
+    // 3. Đồng bộ dữ liệu mới nhất từ Google Sheet (khi khách truy cập từ điện thoại)
+    async function fetchLatestFromCloud() {
+      if (!window.GoogleSheetService || !GoogleSheetService.isConfigured()) return;
+      try {
+        const cloudData = await GoogleSheetService.fetchAllData();
+        if (cloudData) {
+          let updated = false;
+          if (cloudData.products && cloudData.products.length > 0) {
+            products = cloudData.products;
+            localStorage.setItem(STORAGE_KEY_PRODUCTS, JSON.stringify(products));
+            updated = true;
+          }
+          if (cloudData.goldPrices && cloudData.goldPrices.length > 0) {
+            goldPrices = cloudData.goldPrices;
+            localStorage.setItem(STORAGE_KEY_PRICES, JSON.stringify(goldPrices));
+            updated = true;
+          }
+          if (cloudData.storeConfig) {
+            storeConfig = cloudData.storeConfig;
+            localStorage.setItem(STORAGE_KEY_CONFIG, JSON.stringify(storeConfig));
+            applyStoreConfig();
+          }
+
+          if (updated) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetCode = urlParams.get('ma') || urlParams.get('id') || urlParams.get('code');
+            if (targetCode && currentSpotlightProduct) {
+              showProductByCode(targetCode);
+            } else if (document.getElementById('catalogSection').style.display !== 'none') {
+              renderCatalogGrid();
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Lỗi đồng bộ đám mây:', err);
+      }
+    }
+
+    // 4. Áp dụng thông tin Tiệm Vàng
+    function applyStoreConfig() {
+      const name = storeConfig.storeName || 'TIỆM VÀNG HOÀNG KIM';
+      const slogan = storeConfig.slogan || 'Uy Tín Trọn Niềm Tin - Vàng Chuẩn Tuổi';
+      const phone = storeConfig.phone || '0988.888.888';
+      const cleanPhone = phone.replace(/\D/g, '');
+      const address = storeConfig.address || '123 Đường Kim Hoàn, Quận 1, TP. Hồ Chí Minh';
+
+      // Header
+      document.getElementById('shopName').textContent = name;
+      document.getElementById('shopSlogan').textContent = slogan;
+      document.getElementById('shopPhoneHeader').textContent = phone;
+      document.getElementById('headerCallBtn').href = `tel:${cleanPhone}`;
+
+      // Footer
+      document.getElementById('footerShopName').textContent = name;
+      document.getElementById('footerShopSlogan').textContent = slogan;
+      document.getElementById('footerShopAddress').textContent = `📍 ${address} | 📞 Hotline: ${phone}`;
+      document.getElementById('heroStoreAddress').textContent = address;
+
+      // Floating buttons
+      const zaloUrl = `https://zalo.me/${cleanPhone}`;
+      document.getElementById('floatingZaloBtn').href = zaloUrl;
+      document.getElementById('floatingCallBtn').href = `tel:${cleanPhone}`;
+    }
+
+    // 5. Tính giá sản phẩm theo chuẩn ngành vàng
+    function calculateProductPrice(product) {
+      const multiplier = storeConfig.currencyUnitMultiplier || 1000;
+
+      // Giá bán theo món niêm yết
+      if (product.giaBanMon && Number(product.giaBanMon) > 0) {
+        return {
+          total: Number(product.giaBanMon) * multiplier,
+          laborCost: 0,
+          goldPriceUnit: 0,
+          goldPricePart: Number(product.giaBanMon) * multiplier,
+          isFixedPrice: true
+        };
+      }
+
+      // Tính theo TL Vàng * Giá Vàng + Tiền Công
+      const tlVang = Number(product.tlVang) || 0;
+      const congBanVnd = (Number(product.congBan) || 0) * multiplier;
+
+      // Tìm giá vàng
+      let rateObj = goldPrices.find(g => g.loaiVang && g.loaiVang.trim().toLowerCase() === (product.loaiVang || '').trim().toLowerCase());
+      if (!rateObj) {
+        rateObj = goldPrices.find(g => (product.loaiVang || '').includes(g.loaiVang) || (g.loaiVang && g.loaiVang.includes(product.loaiVang || '')));
+      }
+
+      const donGiaVangVnd = rateObj ? (Number(rateObj.giaBan) * multiplier) : (7850 * multiplier);
+      const tienVangVnd = Math.round(tlVang * donGiaVangVnd);
+      const total = tienVangVnd + congBanVnd;
+
+      return {
+        total: total,
+        laborCost: congBanVnd,
+        goldPriceUnit: donGiaVangVnd,
+        goldPricePart: tienVangVnd,
+        isFixedPrice: false
+      };
+    }
+
+    // Xác định hàm lượng vàng chuẩn
+    function getPurityText(loaiVang = '') {
+      const n = loaiVang.toLowerCase();
+      if (n.includes('24') || n.includes('9999')) return 'Chuẩn tuổi 99.99%';
+      if (n.includes('23')) return 'Chuẩn tuổi 95.8%';
+      if (n.includes('18')) return 'Chuẩn tuổi 75.0%';
+      if (n.includes('14')) return 'Chuẩn tuổi 58.5%';
+      if (n.includes('10')) return 'Chuẩn tuổi 41.6%';
+      if (n.includes('bạc')) return 'Chuẩn tuổi 92.5%';
+      return 'Chuẩn định lượng';
+    }
+
+    // 6. Hiển thị chi tiết 1 sản phẩm (Spotlight)
+    function showProductByCode(code) {
+      if (!code) return;
+      const clean = String(code).trim().toLowerCase();
+      const product = products.find(p => (p.maHang && p.maHang.trim().toLowerCase() === clean) || (p.id && String(p.id) === clean));
+
+      if (!product) {
+        alert(`Không tìm thấy sản phẩm có mã "${code}"! Hệ thống sẽ chuyển đến danh mục sản phẩm.`);
+        showCatalogView();
+        return;
+      }
+
+      currentSpotlightProduct = product;
+
+      // Ẩn Catalog, hiện Spotlight
+      document.getElementById('catalogSection').style.display = 'none';
+      document.getElementById('spotlightSection').style.display = 'block';
+
+      // Cập nhật Breadcrumb
+      document.getElementById('breadcrumbCurrent').textContent = `${product.loaiVang || 'Trang Sức'} > ${product.tenHang || product.maHang}`;
+
+      // 1. Ảnh sản phẩm hoặc Logo Monogram HK
+      const imgWrap = document.getElementById('spotlightImgWrapper');
+      if (product.anhSanPham && product.anhSanPham.trim()) {
+        imgWrap.innerHTML = `
+          <img src="${product.anhSanPham.trim()}" alt="${product.tenHang || ''}" class="product-main-img" onerror="renderSpotlightFallbackMonogram()" />
+        `;
+      } else {
+        renderSpotlightFallbackMonogram();
+      }
+
+      // 2. Barcode
+      document.getElementById('spotlightBarcodeText').textContent = product.maHang || '---';
+      document.getElementById('spotlightBarcodeSvg').innerHTML = generateCode128Svg(product.maHang || '000000', 36);
+
+      // 3. Thông tin cơ bản
+      document.getElementById('spotlightGoldType').textContent = product.loaiVang || 'Vàng Trang Sức';
+      document.getElementById('spotlightPurity').textContent = getPurityText(product.loaiVang);
+      document.getElementById('spotlightTitle').textContent = product.tenHang || `Sản Phẩm ${product.maHang}`;
+      document.getElementById('spotlightStatus').textContent = product.trangThai || 'Sẵn sàng giao dịch';
+
+      // 4. Giá bán
+      const priceCalc = calculateProductPrice(product);
+      document.getElementById('spotlightPrice').textContent = priceCalc.total.toLocaleString('vi-VN') + ' đ';
+
+      const breakdownEl = document.getElementById('spotlightPriceBreakdown');
+      if (priceCalc.isFixedPrice) {
+        breakdownEl.innerHTML = `<span class="breakdown-item">Sản phẩm tính theo giá bán trọn món niêm yết</span>`;
+      } else {
+        breakdownEl.innerHTML = `
+          <span class="breakdown-item">Giá vàng hôm nay: <b>${(priceCalc.goldPriceUnit / 1000).toLocaleString('vi-VN')}k / chỉ</b></span>
+          <span class="breakdown-item">Tiền vàng: <b>${priceCalc.goldPricePart.toLocaleString('vi-VN')} đ</b></span>
+          <span class="breakdown-item">Tiền công chế tác: <b>${priceCalc.laborCost ? priceCalc.laborCost.toLocaleString('vi-VN') + ' đ' : '0 đ'}</b></span>
+        `;
+      }
+
+      // 5. Thông số kỹ thuật
+      const tlt = Number(product.tlTong) || 0;
+      const tlv = Number(product.tlVang) || 0;
+      const tlh = Number(product.tlHot) || 0;
+      const cong = (Number(product.congBan) || 0) * (storeConfig.currencyUnitMultiplier || 1000);
+
+      document.getElementById('specTLT').textContent = `${tlt.toFixed(3)} chỉ (${(tlt * 3.75).toFixed(2)}g)`;
+      document.getElementById('specTLV').textContent = `${tlv.toFixed(3)} chỉ (${(tlv * 3.75).toFixed(2)}g)`;
+      document.getElementById('specTLH').textContent = tlh > 0 ? `${tlh.toFixed(3)} chỉ` : 'Không có hột';
+      document.getElementById('specCong').textContent = cong > 0 ? `${cong.toLocaleString('vi-VN')} đ` : 'Miễn phí công';
+
+      const niEl = document.getElementById('specNiRow');
+      if (product.ni && Number(product.ni) > 0) {
+        niEl.style.display = 'flex';
+        document.getElementById('specNi').textContent = `Ni số ${product.ni}`;
+      } else {
+        niEl.style.display = 'none';
+      }
+
+      // Nhà sản xuất / Cung cấp & TCCS
+      const nccName = (product.ncc === 'HK' || (product.ncc && product.ncc.toUpperCase().includes('HOÀNG KIM')))
+        ? 'CTTNHH VB&TS HOÀNG KIM'
+        : (product.ncc || 'CTTNHH VB&TS HOÀNG KIM');
+      document.getElementById('specNCC').textContent = nccName;
+
+      const tccsText = product.tccs || 'tccs 01:2025/ HK';
+      const xuatXuText = product.xuatXu || 'Việt Nam';
+      document.getElementById('specTCCS').textContent = `${tccsText} • Nơi sản xuất: ${xuatXuText}`;
+
+      // Nút liên hệ
+      const phone = storeConfig.phone || '0988.888.888';
+      const cleanPhone = phone.replace(/\D/g, '');
+      const zaloMsg = encodeURIComponent(`Chào Tiệm Vàng Hoàng Kim, tôi muốn được tư vấn chi tiết về sản phẩm: "${product.tenHang || ''}" (Mã hàng: ${product.maHang})`);
+      document.getElementById('spotlightZaloBtn').href = `https://zalo.me/${cleanPhone}?text=${zaloMsg}`;
+      document.getElementById('spotlightCallBtn').href = `tel:${cleanPhone}`;
+
+      // Cuộn lên đầu trang nhẹ nhàng
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      // Đổi title trang
+      document.title = `${product.tenHang || product.maHang} - Tiệm Vàng Hoàng Kim`;
+    }
+
+    function renderSpotlightFallbackMonogram() {
+      const imgWrap = document.getElementById('spotlightImgWrapper');
+      imgWrap.innerHTML = `
+        <div class="hk-monogram-large">
+          <div class="hk-monogram-crown">👑</div>
+          <div class="hk-monogram-text">HK</div>
+          <div class="hk-monogram-sub">Hoàng Kim Jewelry</div>
+        </div>
+      `;
+    }
+
+    // 7. Hiển thị chế độ Danh Mục (Catalog)
+    function showCatalogView() {
+      currentSpotlightProduct = null;
+      document.getElementById('spotlightSection').style.display = 'none';
+      document.getElementById('catalogSection').style.display = 'block';
+      document.getElementById('breadcrumbCurrent').textContent = 'Tất Cả Sản Phẩm';
+
+      // Xóa query param trên thanh địa chỉ mà không reload trang
+      const newUrl = window.location.pathname;
+      window.history.pushState({}, '', newUrl);
+
+      renderCatalogGrid();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      document.title = 'Bộ Sưu Tập Trang Sức - Tiệm Vàng Hoàng Kim';
+    }
+
+    // 8. Lọc và render Danh Sách Sản Phẩm
+    function filterCatalogByGold(type, btn) {
+      activeGoldFilter = type;
+      document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      renderCatalogGrid();
+    }
+
+    function renderCatalogGrid() {
+      const grid = document.getElementById('catalogGrid');
+      const keyword = (document.getElementById('catalogSearchInput')?.value || '').trim().toLowerCase();
+      const countEl = document.getElementById('catalogResultCount');
+
+      // Lọc sản phẩm
+      const filtered = products.filter(p => {
+        // Chỉ hiện còn tồn nếu có trường trangThai
+        if (p.trangThai && p.trangThai !== 'Còn tồn') return false;
+
+        // Lọc loại vàng
+        if (activeGoldFilter !== 'ALL') {
+          const lv = (p.loaiVang || '').toLowerCase();
+          if (activeGoldFilter === '24K' && !(lv.includes('24') || lv.includes('9999'))) return false;
+          if (activeGoldFilter === '23K' && !lv.includes('23')) return false;
+          if (activeGoldFilter === '18K' && !lv.includes('18')) return false;
+          if (activeGoldFilter === '10K' && !lv.includes('10')) return false;
+          if (activeGoldFilter === 'Bạc' && !lv.includes('bạc')) return false;
+        }
+
+        // Lọc từ khóa
+        if (keyword) {
+          const ma = (p.maHang || '').toLowerCase();
+          const ten = (p.tenHang || '').toLowerCase();
+          const loai = (p.loaiVang || '').toLowerCase();
+          return ma.includes(keyword) || ten.includes(keyword) || loai.includes(keyword);
+        }
+
+        return true;
+      });
+
+      countEl.textContent = filtered.length.toLocaleString('vi-VN');
+
+      // Hiển thị tối đa 60 sản phẩm đầu để cuộn mượt mà
+      const displayItems = filtered.slice(0, 60);
+
+      if (displayItems.length === 0) {
+        grid.innerHTML = `
+          <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: #94A3B8;">
+            <div style="font-size: 48px; margin-bottom: 12px;">🔍</div>
+            <h3 style="font-size: 18px; color: #475569; margin-bottom: 6px;">Không tìm thấy mẫu trang sức phù hợp</h3>
+            <p style="font-size: 14px;">Quý khách vui lòng thử tìm bằng từ khóa khác hoặc bấm "Tất Cả" để xem toàn bộ mẫu.</p>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = displayItems.map(p => {
+        const priceCalc = calculateProductPrice(p);
+        const formattedPrice = priceCalc.total.toLocaleString('vi-VN') + ' đ';
+
+        const thumbHtml = (p.anhSanPham && p.anhSanPham.trim())
+          ? `<img src="${p.anhSanPham.trim()}" alt="${p.tenHang || ''}" class="catalog-thumb-img" onerror="this.parentElement.innerHTML='<div class=\\\'catalog-thumb-hk\\\'><span class=\\\'hk-crown\\\'>👑</span><span class=\\\'hk-text\\\'>HK</span></div>'" />`
+          : `<div class="catalog-thumb-hk"><span class="hk-crown">👑</span><span class="hk-text">HK</span></div>`;
+
+        return `
+          <div class="catalog-item-card" onclick="openProductSpotlight('${p.maHang}')">
+            <div class="catalog-thumb-box">
+              <span class="catalog-tag-gold">${p.loaiVang || 'Vàng'}</span>
+              ${thumbHtml}
+            </div>
+            <div class="catalog-card-body">
+              <div>
+                <div class="catalog-item-code">Mã: ${p.maHang}</div>
+                <h3 class="catalog-item-title" title="${p.tenHang || ''}">${p.tenHang || 'Trang sức cao cấp'}</h3>
+                <div class="catalog-item-meta">
+                  <span>TLV: <b>${Number(p.tlVang || 0).toFixed(3)}c</b></span>
+                  <span>Công: <b>${priceCalc.laborCost ? (priceCalc.laborCost / 1000).toLocaleString('vi-VN') + 'k' : '0đ'}</b></span>
+                </div>
+              </div>
+              <div>
+                <div class="catalog-item-price">${formattedPrice}</div>
+                <div class="catalog-btn-view">👁️ Xem Thông Số & Kiểm Định ➔</div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function openProductSpotlight(maHang) {
+      const newUrl = `${window.location.pathname}?ma=${encodeURIComponent(maHang)}`;
+      window.history.pushState({ ma: maHang }, '', newUrl);
+      showProductByCode(maHang);
+    }
+
+    // 9. Lắng nghe nút quay lại của trình duyệt (Popstate)
+    window.addEventListener('popstate', (e) => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const code = urlParams.get('ma') || urlParams.get('id') || urlParams.get('code');
+      if (code) {
+        showProductByCode(code);
+      } else {
+        showCatalogView();
+      }
+    });
+
+    // 10. Sao chép liên kết sản phẩm
+    function copyProductLink() {
+      const url = window.location.href;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(() => {
+          showToast('Đã sao chép liên kết sản phẩm vào bộ nhớ tạm!');
+        }).catch(() => fallbackCopy(url));
+      } else {
+        fallbackCopy(url);
+      }
+    }
+
+    function fallbackCopy(text) {
+      const tempInput = document.createElement('input');
+      tempInput.value = text;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      document.execCommand('copy');
+      document.body.removeChild(tempInput);
+      showToast('Đã sao chép liên kết sản phẩm!');
+    }
+
+    function showToast(text) {
+      const toast = document.getElementById('toastMsg');
+      const textEl = document.getElementById('toastText');
+      if (!toast || !textEl) return;
+      textEl.textContent = text;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+
+    // 11. Bộ tạo mã vạch Code 128 SVG chuẩn xác, siêu nhẹ, không cần thư viện ngoài
+    const CODE_128_PATTERNS = [
+      "212222","222122","222221","121223","121322","131222","122213","122312","132212","221213",
+      "221312","231212","112232","122132","122231","113222","123122","123221","223211","221132",
+      "221231","213212","223112","312131","311222","321122","321221","312212","322112","322211",
+      "212123","212321","232121","111323","131123","131321","112313","132113","132311","211313",
+      "231113","231311","112133","112331","132131","113123","113321","133121","313121","211331",
+      "231131","213113","213311","213131","311123","311321","331121","312113","312311","332111",
+      "314111","221411","431111","111224","111422","121124","121421","141122","141221","112214",
+      "112412","122114","122411","142112","142211","241211","221114","413111","241112","134111",
+      "111242","121142","121241","114212","124112","124211","411212","421112","421211","212141",
+      "214121","412121","111143","111341","131141","114113","114311","411113","411311","113141",
+      "114131","311141","411131","211412","211214","211232","2331112"
+    ];
+
+    function generateCode128Svg(text, height = 30) {
+      if (!text) return '';
+      text = String(text).trim();
+
+      let checksum = 104;
+      const codes = [104];
+
+      for (let i = 0; i < text.length; i++) {
+        const val = text.charCodeAt(i) - 32;
+        codes.push(val);
+        checksum += val * (i + 1);
+      }
+
+      codes.push(checksum % 103);
+      codes.push(106); // Stop
+
+      let binary = "";
+      for (const code of codes) {
+        const pattern = CODE_128_PATTERNS[code];
+        if (pattern) {
+          for (let j = 0; j < pattern.length; j++) {
+            const width = parseInt(pattern[j]);
+            binary += (j % 2 === 0 ? "1" : "0").repeat(width);
+          }
+        }
+      }
+
+      const quietZone = 10;
+      let rects = '';
+      let x = quietZone;
+      const barWidth = 1.0;
+      for (let i = 0; i < binary.length; i++) {
+        if (binary[i] === '1') {
+          rects += `<rect x="${(x * barWidth).toFixed(1)}" y="0" width="${barWidth.toFixed(1)}" height="${height}" fill="#0F172A" />`;
+        }
+        x++;
+      }
+
+      const totalWidth = ((binary.length + quietZone * 2) * barWidth).toFixed(1);
+      return `
+        <svg viewBox="0 0 ${totalWidth} ${height}" preserveAspectRatio="none" style="width:100%; height:${height}px; max-width:280px; display:block; margin:0 auto;">
+          <rect width="${totalWidth}" height="${height}" fill="#ffffff" />
+          ${rects}
+        </svg>
+      `;
+    }
+
+    // Khởi chạy khi tài liệu sẵn sàng
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
