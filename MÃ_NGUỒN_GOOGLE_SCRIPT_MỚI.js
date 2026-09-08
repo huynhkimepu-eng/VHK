@@ -25,9 +25,19 @@
  * "Xem lại quyền" -> Chọn tài khoản -> "Nâng cao" (Advanced) -> "Đi tới... (không an toàn)" -> "Cho phép" (Allow).
  */
 function authorizePermissions() {
-  DriveApp.getRootFolder();
+  // Kích hoạt toàn bộ quyền Tạo thư mục và Lưu file trên Google Drive (https://www.googleapis.com/auth/drive)
+  let folder;
+  const folders = DriveApp.getFoldersByName('PMQLV_Media');
+  if (folders.hasNext()) {
+    folder = folders.next();
+  } else {
+    folder = DriveApp.createFolder('PMQLV_Media');
+  }
+  const testFile = folder.createFile('test_auth.txt', 'OK');
+  testFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  testFile.setTrashed(true);
   SpreadsheetApp.getActiveSpreadsheet();
-  Logger.log("✅ ĐÃ CẤP QUYỀN GOOGLE DRIVE VÀ GOOGLE SHEET THÀNH CÔNG!");
+  Logger.log("✅ ĐÃ CẤP TOÀN BỘ QUYỀN GOOGLE DRIVE VÀ GOOGLE SHEET THÀNH CÔNG!");
 }
 
 const SHEET_NAMES = {
