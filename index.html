@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>PMQLV - Phần Mềm Quản Lý & Bán Hàng Vàng Bạc Đá Quý</title>
-  <link rel="stylesheet" href="css/style.css?v=55">
+  <link rel="stylesheet" href="css/style.css?v=56">
   <!-- HTML5 QR Code & Barcode Scanner for Camera -->
     <script>
     window.onerror = function(msg, src, line, col, err) {
@@ -1125,7 +1125,7 @@
           <!-- Nhà cung cấp (Tùy chọn in đuôi tem) -->
           <div style="margin-bottom: 10px; background: #F0FDF4; padding: 8px 10px; border-radius: var(--radius-sm); border: 1px dashed #86EFAC;">
             <label style="font-size: 12px; font-weight: bold; color: #166534; display: block; margin-bottom: 4px;">
-              🏢 Nhà Cung Cấp (In Đuôi Tem)
+              🏢 Nhà Cung Cấp <span class="hide-on-mobile">(In Đuôi Tem)</span>
             </label>
             <select id="modalNhaCungCap" class="form-select" style="font-size: 12px; font-weight: 600;" onchange="app.onModalNhaCungCapChange()">
               <option value="">(Không có - Mặc định)</option>
@@ -1158,7 +1158,7 @@
               <input type="number" id="modalCongBan" class="form-control" placeholder="VD: 550 (= 550.000đ)">
             </div>
             <div>
-              <label style="font-size: 12px; font-weight: bold;">Giá Bán Món (Nếu bán món)</label>
+              <label style="font-size: 12px; font-weight: bold;">Giá Bán Món <span class="hide-on-mobile">(Nếu bán món)</span></label>
               <input type="number" id="modalGiaBanMon" class="form-control" placeholder="VD: 350 (= 350.000đ)">
             </div>
           </div>
@@ -1493,6 +1493,6 @@
   <script src="js/googleSheetService.js?v=51"></script>
   <script src="js/cloudinaryService.js?v=51"></script>
   <script src="js/barcodeLabel.js?v=51"></script>
-  <script src="js/app.js?v=55"></script>
+  <script src="js/app.js?v=56"></script>
 </body>
 </html>
