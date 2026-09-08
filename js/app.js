@@ -1751,12 +1751,41 @@ class GoldApp {
       return true;
     });
 
-    // Nhóm sản phẩm theo loại vàng
+    // 4. Danh sách các loại vàng chuẩn để gom nhóm nhất quán với bộ lọc
+    const definedTypes = [];
+    (this.goldPrices || []).forEach(gp => {
+      const name = (gp.loaiVang || '').trim();
+      if (name && !definedTypes.includes(name)) definedTypes.push(name);
+    });
+    const selEl = document.getElementById('invGoldTypeFilter');
+    if (selEl) {
+      Array.from(selEl.options).forEach(opt => {
+        const val = (opt.value || '').trim();
+        if (val && val !== 'ALL' && !definedTypes.includes(val)) definedTypes.push(val);
+      });
+    }
+
+    const getCanonicalGoldType = (rawType) => {
+      if (!rawType || !String(rawType).trim()) return 'Khác';
+      const cleanRaw = String(rawType).trim();
+
+      // Khớp chính xác (không phân biệt hoa thường)
+      const exact = definedTypes.find(dt => dt.toLowerCase() === cleanRaw.toLowerCase());
+      if (exact) return exact;
+
+      // Khớp thông minh theo isMatchingGoldType
+      const smart = definedTypes.find(dt => this.isMatchingGoldType(cleanRaw, dt));
+      if (smart) return smart;
+
+      return cleanRaw;
+    };
+
+    // Nhóm sản phẩm theo loại vàng chuẩn hóa
     const goldGroupMap = new Map();
     let grandTotalWeight = 0;
 
     scopeProducts.forEach(p => {
-      const typeName = (p.loaiVang || 'Khác').trim();
+      const typeName = getCanonicalGoldType(p.loaiVang);
       const w = parseWeight(p.tlVang);
       grandTotalWeight += w;
 
@@ -1785,15 +1814,18 @@ class GoldApp {
 
     gridEl.innerHTML = groups.map(g => {
       const isCardActive = (currentGoldTypeFilter !== 'ALL' && (currentGoldTypeFilter === g.name || this.isMatchingGoldType(g.name, currentGoldTypeFilter)));
+      // Nếu thẻ đang được kích hoạt lọc danh sách bên dưới -> đồng bộ 100% số lượng và trọng lượng với bảng phân trang
+      const displayCount = isCardActive ? this.filteredProducts.length : g.count;
+      const displayWeight = isCardActive ? totalFilteredWeight : g.weight;
       const escapedName = g.name.replace(/'/g, "\\'");
       return `
         <div class="inv-gold-stat-card ${isCardActive ? 'active' : ''}" onclick="app.quickFilterByGoldType('${escapedName}')" title="Bấm để lọc nhanh sản phẩm ${g.name}">
           <div class="card-gold-name">
             <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 90px;">${g.name}</span>
-            <span class="card-gold-count">${g.count} SP</span>
+            <span class="card-gold-count">${displayCount} SP</span>
           </div>
           <div class="card-gold-weight">
-            <span class="card-gold-weight-val">${g.weight.toFixed(3)}</span>
+            <span class="card-gold-weight-val">${displayWeight.toFixed(3)}</span>
             <span style="font-size: 11px; color: #78350F; font-weight: 600;">chỉ</span>
           </div>
         </div>
