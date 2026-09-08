@@ -50,9 +50,10 @@ const BarcodeLabel = {
       }
     }
 
-    // Convert binary string to SVG rects
+    // Thêm khoảng trắng an toàn (Quiet Zone) 10 vạch ở 2 bên theo chuẩn Barcode Code 128 quốc tế
+    const quietZone = 10;
     let rects = '';
-    let x = 0;
+    let x = quietZone;
     const barWidth = 1.0;
     for (let i = 0; i < binary.length; i++) {
       if (binary[i] === '1') {
@@ -61,9 +62,10 @@ const BarcodeLabel = {
       x++;
     }
 
-    const totalWidth = (binary.length * barWidth).toFixed(1);
+    const totalWidth = ((binary.length + quietZone * 2) * barWidth).toFixed(1);
     return `
-      <svg class="barcode-svg" viewBox="0 0 ${totalWidth} ${height}" preserveAspectRatio="none" style="width:100%; height:100%; max-height:${height}px; display:block;">
+      <svg class="barcode-svg" viewBox="0 0 ${totalWidth} ${height}" preserveAspectRatio="none" style="width:100%; height:100%; max-height:${height}px; display:block; background:#fff;">
+        <rect width="${totalWidth}" height="${height}" fill="#fff" />
         ${rects}
       </svg>
     `;

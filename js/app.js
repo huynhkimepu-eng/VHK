@@ -2170,8 +2170,31 @@ class GoldApp {
       return;
     }
 
-    this.html5QrCode = new Html5Qrcode('scanner-reader');
-    const config = { fps: 10, qrbox: { width: 280, height: 160 } };
+    const formatsToSupport = [
+      Html5QrcodeSupportedFormats.CODE_128,
+      Html5QrcodeSupportedFormats.CODE_39,
+      Html5QrcodeSupportedFormats.EAN_13,
+      Html5QrcodeSupportedFormats.UPC_A,
+      Html5QrcodeSupportedFormats.QR_CODE
+    ];
+
+    this.html5QrCode = new Html5Qrcode('scanner-reader', {
+      formatsToSupport: formatsToSupport,
+      verbose: false
+    });
+
+    const config = {
+      fps: 20,
+      qrbox: (viewfinderWidth, viewfinderHeight) => {
+        const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+        return {
+          width: Math.floor(viewfinderWidth * 0.85),
+          height: Math.floor(Math.min(viewfinderHeight * 0.45, 180))
+        };
+      },
+      aspectRatio: 1.0,
+      disableFlip: false
+    };
 
     this.html5QrCode.start(
       { facingMode: 'environment' },
@@ -2197,7 +2220,8 @@ class GoldApp {
   }
 
   onBarcodeScanned(barcode) {
-    barcode = barcode.trim();
+    if (!barcode) return;
+    barcode = String(barcode).trim().replace(/^\*+|\*+$/g, '');
     console.log('Quét được mã vạch:', barcode);
 
     // Phát âm thanh bip nhỏ nếu có thể
@@ -2207,7 +2231,8 @@ class GoldApp {
       this.addToCart(barcode);
       this.closeCameraScanner();
     } else {
-      document.getElementById('invSearchInput').value = barcode;
+      const invInput = document.getElementById('invSearchInput');
+      if (invInput) invInput.value = barcode;
       this.filterInventory();
       this.closeCameraScanner();
     }

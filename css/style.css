@@ -858,13 +858,20 @@ body {
 }
 
 /* CAMERA SCANNER */
-#scanner-container {
+#scanner-container, #scanner-reader {
   width: 100%;
   max-width: 400px;
   margin: 0 auto;
   border-radius: var(--radius-md);
   overflow: hidden;
   background: #000;
+  min-height: 250px;
+}
+#scanner-reader video {
+  width: 100% !important;
+  height: auto !important;
+  object-fit: cover !important;
+  border-radius: var(--radius-md);
 }
 
 /* ================= MOBILE BOTTOM NAVIGATION ================= */
