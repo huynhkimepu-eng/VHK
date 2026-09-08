@@ -197,10 +197,10 @@ const BarcodeLabel = {
     // Ni
     const niHtml = (showNi && product.ni && Number(product.ni) > 0) ? `<span>Ni: ${product.ni}</span>` : '';
 
-    // Cánh 1: Tên tiệm, Barcode, Mã hàng + Ni
+    // Cánh 1: Tên sản phẩm (thay cho tên cửa hàng HOÀNG KIM theo yêu cầu), Barcode, Mã hàng + Ni
     const wing1Html = `
       <div class="tag-wing tag-wing-1" style="width: ${layout.wing1Width}mm; font-size: ${fontSize}pt;">
-        ${showStore ? `<div class="tag-store-name" style="font-size: ${(fontSize * 0.9).toFixed(1)}pt;">${storeName}</div>` : ''}
+        <div class="tag-product-title tag-store-name" style="font-size: ${(fontSize * 0.95).toFixed(1)}pt; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.1;">${product.tenHang || 'Trang sức'}</div>
         ${showBarcode ? `<div class="tag-barcode-box" style="height: ${barcodeHeight}px; flex: 1; min-height: 8px;">${barcodeSvg}</div>` : ''}
         ${showBarcodeText ? `
           <div class="tag-barcode-text" style="font-size: ${(fontSize * 0.85).toFixed(1)}pt;">
@@ -211,41 +211,49 @@ const BarcodeLabel = {
       </div>
     `;
 
-    // Cánh 2: Tên sản phẩm, Loại vàng, Trọng lượng (TLT, TLH, TLV), Tiền công
-    let weightRow1 = [];
-    if (showWeight && showTLT) weightRow1.push(`<span><b>TLT:</b>${this.formatWeight(product.tlTong)}</span>`);
-    if (showWeight && showTLH) weightRow1.push(`<span><b>TLH:</b>${this.formatWeight(product.tlHot)}</span>`);
-
-    let weightRow2 = [];
-    if (showWeight && showTLV) weightRow2.push(`<span><b>TLV:</b>${this.formatWeight(product.tlVang)}</span>`);
-    if (giaHienThi) weightRow2.push(giaHienThi);
-
-    const wing2Html = `
-      <div class="tag-wing tag-wing-2" style="width: ${layout.wing2Width}mm; font-size: ${fontSize}pt;">
-        ${showProductName ? `<div class="tag-product-title" style="font-size: ${(fontSize * 0.95).toFixed(1)}pt;">${product.tenHang || 'Trang sức'}</div>` : ''}
-        ${showGoldType ? `<div class="tag-gold-type" style="font-size: ${(fontSize * 0.85).toFixed(1)}pt;"><b>${product.loaiVang || ''}</b> ${product.quayNho ? `(${product.quayNho})` : ''}</div>` : ''}
-        ${weightRow1.length > 0 ? `<div class="tag-weight-row" style="font-size: ${(fontSize * 0.82).toFixed(1)}pt;">${weightRow1.join('')}</div>` : ''}
-        ${weightRow2.length > 0 ? `<div class="tag-weight-row" style="font-size: ${(fontSize * 0.82).toFixed(1)}pt;">${weightRow2.join('')}</div>` : ''}
-      </div>
-    `;
-
     // Xử lý Nhà cung cấp (NCC) / Tiêu chuẩn cơ sở (TCCS) / Sản xuất
     const showMfg = config.showManufacturer !== false;
     const nhaCC = (product.nhaCungCap || '').trim();
     const hasMfg = Boolean(nhaCC);
 
-    let mfgTailHtml = '';
+    let wing2Html = '';
+
     if (showMfg && hasMfg) {
+      // Khi có nhà cung cấp: Thay thế tên sản phẩm, loại vàng, TLT, TLV, TLH, công bằng thông tin nhà CC + Loại vàng (bỏ tên quầy) + TLV
       const isHK = nhaCC.toUpperCase() === 'HK' || nhaCC.toUpperCase().includes('HOÀNG KIM') || nhaCC.toUpperCase().includes('HOANG KIM');
       const sxText = 'SX: Việt Nam';
       const nccText = isHK ? 'NCC: CTTNHH VB&TS HOÀNG KIM' : `NCC: ${nhaCC}`;
       const tccsText = isHK ? 'TCCS: 01:2025/HK' : '';
+      const loaiVangText = product.loaiVang || '';
+      const tlvText = showTLV ? `TLV:${this.formatWeight(product.tlVang)}` : '';
 
-      mfgTailHtml = `
-        <div class="tag-mfg-info" style="font-size: ${(fontSize * 0.72).toFixed(1)}pt; font-family: 'Arial Narrow', Arial, sans-serif; letter-spacing: -0.15px;">
+      wing2Html = `
+        <div class="tag-wing tag-wing-2 tag-wing-mfg" style="width: ${layout.wing2Width}mm; font-size: ${(fontSize * 0.72).toFixed(1)}pt; font-family: 'Arial Narrow', Arial, sans-serif; letter-spacing: -0.15px; justify-content: space-evenly; line-height: 1.15;">
           <div class="mfg-line"><b>${sxText}</b></div>
-          <div class="mfg-line"><b>${nccText}</b></div>
+          <div class="mfg-line" style="letter-spacing: -0.25px; font-size: ${(fontSize * 0.65).toFixed(1)}pt;"><b>${nccText}</b></div>
           ${tccsText ? `<div class="mfg-line"><b>${tccsText}</b></div>` : ''}
+          <div class="tag-weight-row" style="font-size: ${(fontSize * 0.78).toFixed(1)}pt; justify-content: space-between; width: 100%;">
+            <b>${loaiVangText}</b>
+            ${tlvText ? `<span><b>${tlvText}</b></span>` : ''}
+          </div>
+        </div>
+      `;
+    } else {
+      // Cánh 2 khi KHÔNG có nhà cung cấp: Giữ nguyên Loại vàng, TLT, TLH, TLV, Tiền công
+      let weightRow1 = [];
+      if (showWeight && showTLT) weightRow1.push(`<span><b>TLT:</b>${this.formatWeight(product.tlTong)}</span>`);
+      if (showWeight && showTLH) weightRow1.push(`<span><b>TLH:</b>${this.formatWeight(product.tlHot)}</span>`);
+
+      let weightRow2 = [];
+      if (showWeight && showTLV) weightRow2.push(`<span><b>TLV:</b>${this.formatWeight(product.tlVang)}</span>`);
+      if (giaHienThi) weightRow2.push(giaHienThi);
+
+      wing2Html = `
+        <div class="tag-wing tag-wing-2" style="width: ${layout.wing2Width}mm; font-size: ${fontSize}pt;">
+          ${showProductName ? `<div class="tag-product-title" style="font-size: ${(fontSize * 0.95).toFixed(1)}pt;">${product.tenHang || 'Trang sức'}</div>` : ''}
+          ${showGoldType ? `<div class="tag-gold-type" style="font-size: ${(fontSize * 0.85).toFixed(1)}pt;"><b>${product.loaiVang || ''}</b> ${product.quayNho ? `(${product.quayNho})` : ''}</div>` : ''}
+          ${weightRow1.length > 0 ? `<div class="tag-weight-row" style="font-size: ${(fontSize * 0.82).toFixed(1)}pt;">${weightRow1.join('')}</div>` : ''}
+          ${weightRow2.length > 0 ? `<div class="tag-weight-row" style="font-size: ${(fontSize * 0.82).toFixed(1)}pt;">${weightRow2.join('')}</div>` : ''}
         </div>
       `;
     }
@@ -253,7 +261,7 @@ const BarcodeLabel = {
     // Phần đuôi tem (Tail)
     const tailHtml = `
       <div class="tag-tail" style="width: ${layout.tailWidth}mm;">
-        ${mfgTailHtml ? mfgTailHtml : '<div class="tail-line"></div>'}
+        <div class="tail-line"></div>
       </div>
     `;
 
@@ -471,10 +479,15 @@ const BarcodeLabel = {
             letter-spacing: -0.15px;
           }
 
+          .tag-wing-mfg {
+            justify-content: space-evenly !important;
+          }
+
           .mfg-line {
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            line-height: 1.1;
           }
 
           .tail-line {

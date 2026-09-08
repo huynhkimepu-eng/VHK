@@ -746,10 +746,15 @@ body {
   letter-spacing: -0.15px;
 }
 
-.tag-mfg-info .mfg-line {
+.tag-wing-mfg {
+  justify-content: space-evenly !important;
+}
+
+.mfg-line {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.1;
 }
 
 .tail-line {
