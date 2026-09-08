@@ -1473,4 +1473,62 @@ body {
   .modal-footer {
     padding: 10px 14px !important;
   }
+
+  /* 8. Tối ưu Quản lý kho trên Mobile theo yêu cầu */
+  .hide-on-mobile {
+    display: none !important;
+  }
+
+  .inv-filter-search {
+    grid-column: 1 / -1 !important;
+  }
+
+  .inventory-toolbar-actions {
+    display: flex !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .inventory-toolbar-actions .btn-add-prod-main {
+    flex: 1 1 auto !important;
+    padding: 8px 14px !important;
+    font-size: 13.5px !important;
+    font-weight: 700 !important;
+  }
+
+  /* Mã hàng trên điện thoại: kiểu nút chạm nổi bật */
+  .product-code-link {
+    color: #1D4ED8 !important;
+    background: #EFF6FF !important;
+    border: 1px solid #BFDBFE !important;
+    padding: 2px 6px !important;
+    border-radius: 5px !important;
+    display: inline-block !important;
+    cursor: pointer !important;
+    text-decoration: none !important;
+    font-size: 12.5px !important;
+  }
+  .product-code-link:active {
+    background: #DBEAFE !important;
+    transform: scale(0.96);
+  }
+
+  .product-action-sheet {
+    width: 92% !important;
+    max-width: 360px !important;
+    border-radius: 16px !important;
+    animation: popUpMobile 0.2s ease-out;
+  }
+  @keyframes popUpMobile {
+    from { transform: scale(0.92); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
 }
+
+/* Kiểu mặc định trên máy tính: mã hàng hiển thị bình thường */
+.product-code-link {
+  color: inherit;
+  cursor: default;
+  text-decoration: none;
+}
+

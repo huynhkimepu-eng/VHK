@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>PMQLV - Phần Mềm Quản Lý & Bán Hàng Vàng Bạc Đá Quý</title>
-  <link rel="stylesheet" href="css/style.css?v=53">
+  <link rel="stylesheet" href="css/style.css?v=54">
   <!-- HTML5 QR Code & Barcode Scanner for Camera -->
     <script>
     window.onerror = function(msg, src, line, col, err) {
@@ -185,27 +185,27 @@
           </div>
 
           <!-- Action Buttons -->
-          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-            <button class="btn btn-primary btn-sm admin-only" onclick="app.openAddProductModal()">
+          <div class="inventory-toolbar-actions" style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button class="btn btn-primary btn-sm admin-only btn-add-prod-main" onclick="app.openAddProductModal()">
               + Thêm Sản Phẩm Mới
             </button>
-            <button class="btn btn-sm admin-only" onclick="document.getElementById('importExcelInput').click()" style="background: #EEF2FF; color: #4338CA; border: 1px solid #C7D2FE; font-weight: 600;" title="Nhập danh sách sản phẩm nhanh từ file Excel">
+            <button class="btn btn-sm admin-only hide-on-mobile" onclick="document.getElementById('importExcelInput').click()" style="background: #EEF2FF; color: #4338CA; border: 1px solid #C7D2FE; font-weight: 600;" title="Nhập danh sách sản phẩm nhanh từ file Excel">
               📥 Nhập từ Excel
             </button>
             <input type="file" id="importExcelInput" accept=".xlsx, .xls, .csv" style="display: none;" onchange="app.handleImportExcel(event)">
-            <button id="btnToggleRecentFilter" class="btn btn-sm" onclick="app.toggleRecentFilter()" style="background: #FEF3C7; color: #92400E; border: 1px solid #F59E0B; font-weight: 700;" title="Bật/tắt chỉ xem các mặt hàng vừa thêm mới hoặc sửa để in tem">
+            <button id="btnToggleRecentFilter" class="btn btn-sm hide-on-mobile" onclick="app.toggleRecentFilter()" style="background: #FEF3C7; color: #92400E; border: 1px solid #F59E0B; font-weight: 700;" title="Bật/tắt chỉ xem các mặt hàng vừa thêm mới hoặc sửa để in tem">
               ✨ Vừa Thêm/Sửa (<span id="recentCountBadge">0</span>)
             </button>
-            <button class="btn btn-dark btn-sm" onclick="app.printSelectedTags()">
+            <button class="btn btn-dark btn-sm hide-on-mobile" onclick="app.printSelectedTags()">
               🏷️ In Tem Đã Chọn (<span id="selectedTagsCount">0</span>)
             </button>
             <button class="btn btn-warning btn-sm admin-only" onclick="app.transferSelectedProducts()" title="Chuyển các món đã chọn sang Chi nhánh khác" style="font-weight: 600;">
               🔄 Chuyển Kho
             </button>
-            <button class="btn btn-secondary btn-sm" onclick="app.exportToExcel()">
+            <button class="btn btn-secondary btn-sm hide-on-mobile" onclick="app.exportToExcel()">
               📤 Xuất Excel
             </button>
-            <button class="btn btn-success btn-sm admin-only" onclick="app.syncAllProductsToGoogleSheet()">
+            <button class="btn btn-success btn-sm admin-only hide-on-mobile" onclick="app.syncAllProductsToGoogleSheet()">
               ☁️ Đồng Bộ Lên Google Sheet
             </button>
           </div>
@@ -214,11 +214,11 @@
         <div class="card-body">
           <!-- Filters -->
           <div class="inventory-filters">
-            <div>
+            <div class="inv-filter-search">
               <label style="font-size: 11px; font-weight: 700; color: #64748B;">TÌM KIẾM MÃ/TÊN</label>
               <input type="text" id="invSearchInput" class="form-control" placeholder="Mã vạch, tên món..." onkeyup="app.filterInventory()">
             </div>
-            <div>
+            <div class="hide-on-mobile">
               <label style="font-size: 11px; font-weight: 700; color: #64748B;">QUẦY HÀNG</label>
               <select id="invCounterFilter" class="form-select" onchange="app.filterInventory()">
                 <option value="ALL">Tất cả quầy</option>
@@ -1270,6 +1270,61 @@
     </div>
   </div>
 
+  <!-- ================= MODAL 5: MENU THAO TÁC SẢN PHẨM TRÊN ĐIỆN THOẠI ================= -->
+  <div class="modal-overlay" id="productActionModal" onclick="if(event.target===this) app.closeProductActionModal()">
+    <div class="modal-content product-action-sheet" style="max-width: 360px; padding: 0; border-radius: 16px; overflow: hidden; background: #FFF; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+      <!-- Header với thông tin sản phẩm vắn tắt -->
+      <div style="background: linear-gradient(135deg, #1E3A8A, #2563EB); color: #FFF; padding: 14px 16px; position: relative;">
+        <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.85;">Thao tác sản phẩm</div>
+        <div style="font-size: 18px; font-weight: 800; margin-top: 2px;" id="actionModalMaHang">I9450260</div>
+        <div style="font-size: 13.5px; font-weight: 600; opacity: 0.95; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px;" id="actionModalTenHang">Tên món hàng</div>
+        <div style="font-size: 11.5px; opacity: 0.85; margin-top: 1px;" id="actionModalSubInfo">Vàng 24K</div>
+        <button type="button" onclick="app.closeProductActionModal()" style="position: absolute; top: 12px; right: 12px; background: rgba(255,255,255,0.2); border: none; color: #FFF; width: 28px; height: 28px; border-radius: 50%; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center;">✕</button>
+      </div>
+
+      <!-- Danh sách các nút thao tác lớn, dễ chạm ngón tay -->
+      <div style="padding: 14px; display: flex; flex-direction: column; gap: 8px;">
+        <!-- Copy Link cho khách -->
+        <button type="button" class="btn" onclick="app.actionCopyCustomerLink()" style="background: #F0FDF4; color: #166534; border: 1.5px solid #86EFAC; font-weight: 700; padding: 11px 14px; font-size: 13.5px; display: flex; align-items: center; gap: 10px; border-radius: 10px; text-align: left; justify-content: flex-start;">
+          <span style="font-size: 18px;">🔗</span>
+          <div>
+            <div>Copy Link Cho Khách Xem</div>
+            <div style="font-size: 11px; font-weight: normal; color: #15803D;">Dán gửi Zalo/Facebook xem ảnh & video</div>
+          </div>
+        </button>
+
+        <!-- Sửa Sản Phẩm -->
+        <button type="button" class="btn" onclick="app.actionEditProduct()" style="background: #EFF6FF; color: #1E40AF; border: 1.5px solid #93C5FD; font-weight: 700; padding: 11px 14px; font-size: 13.5px; display: flex; align-items: center; gap: 10px; border-radius: 10px; text-align: left; justify-content: flex-start;">
+          <span style="font-size: 18px;">✏️</span>
+          <div>
+            <div>Sửa Sản Phẩm</div>
+            <div style="font-size: 11px; font-weight: normal; color: #1D4ED8;">Chỉnh sửa tên, trọng lượng, giá, ảnh</div>
+          </div>
+        </button>
+
+        <!-- Xóa Sản Phẩm -->
+        <button type="button" class="btn" onclick="app.actionDeleteProduct()" style="background: #FEF2F2; color: #991B1B; border: 1.5px solid #FECACA; font-weight: 700; padding: 11px 14px; font-size: 13.5px; display: flex; align-items: center; gap: 10px; border-radius: 10px; text-align: left; justify-content: flex-start;">
+          <span style="font-size: 18px;">🗑️</span>
+          <div>
+            <div>Xóa Sản Phẩm</div>
+            <div style="font-size: 11px; font-weight: normal; color: #B91C1C;">Xóa món này khỏi kho hàng</div>
+          </div>
+        </button>
+
+        <!-- Xem trang khách trực tiếp -->
+        <button type="button" class="btn" onclick="app.actionViewShowcase()" style="background: #F8FAFC; color: #475569; border: 1px solid #CBD5E1; font-weight: 600; padding: 10px 14px; font-size: 13px; display: flex; align-items: center; gap: 10px; border-radius: 10px; text-align: left; justify-content: flex-start;">
+          <span style="font-size: 16px;">👁️</span>
+          <span>Xem Trang Khách Trực Tiếp</span>
+        </button>
+
+        <!-- Đóng -->
+        <button type="button" class="btn btn-secondary" onclick="app.closeProductActionModal()" style="margin-top: 4px; padding: 9px; border-radius: 8px; font-weight: 600; font-size: 13px;">
+          Đóng
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- ================= PRINTABLE INVOICE (ẨN, CHỈ HIỆN KHI IN) ================= -->
   <div id="printable-invoice">
     <div class="invoice-header">
@@ -1333,6 +1388,6 @@
   <script src="js/googleSheetService.js?v=51"></script>
   <script src="js/cloudinaryService.js?v=51"></script>
   <script src="js/barcodeLabel.js?v=51"></script>
-  <script src="js/app.js?v=53"></script>
+  <script src="js/app.js?v=54"></script>
 </body>
 </html>

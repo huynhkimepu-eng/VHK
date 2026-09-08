@@ -1275,7 +1275,7 @@ class GoldApp {
                    </div>`;
             })()}
           </td>
-          <td><b>${p.maHang}</b>${recentBadge}</td>
+          <td><span class="product-code-link" onclick="app.showProductMobileActions('${p.maHang}')" title="Thao tác: Sửa, Xóa, Copy Link"><b>${p.maHang}</b></span>${recentBadge}</td>
           <td>
             <div style="font-weight: 600;">${p.tenHang || '--'}</div>
             ${p.nhaCungCap ? `<span style="font-size: 10px; background: #DCFCE7; color: #166534; padding: 1px 6px; border-radius: 4px; font-weight: 700; display: inline-block; margin-top: 2px;" title="Nhà cung cấp">🏢 ${p.nhaCungCap}</span>` : ''}
@@ -2724,6 +2724,95 @@ class GoldApp {
     }
     const cleanMa = String(maHang).trim();
     window.open(`san-pham.html?ma=${encodeURIComponent(cleanMa)}`, '_blank');
+  }
+
+  // Menu thao tác sản phẩm trên điện thoại (Sửa, Xóa, Copy Link)
+  showProductMobileActions(maHang) {
+    if (window.innerWidth > 768) return; // Trên máy tính không mở popup này, giữ nguyên giao diện chuẩn
+    if (!maHang) return;
+    const p = this.products.find(prod => prod.maHang === maHang);
+    if (!p) return;
+
+    this.selectedActionProduct = p;
+
+    const elMa = document.getElementById('actionModalMaHang');
+    const elTen = document.getElementById('actionModalTenHang');
+    const elSub = document.getElementById('actionModalSubInfo');
+    if (elMa) elMa.textContent = p.maHang;
+    if (elTen) elTen.textContent = p.tenHang || 'Sản phẩm';
+    if (elSub) {
+      const weightStr = (typeof BarcodeLabel !== 'undefined') ? BarcodeLabel.formatWeight(p.tlVang) : `${p.tlVang || 0} chỉ`;
+      elSub.textContent = `${p.loaiVang || ''} • TL Vàng: ${weightStr} • ${p.chiNhanh || 'Kho'}`;
+    }
+
+    const modal = document.getElementById('productActionModal');
+    if (modal) modal.classList.add('active');
+  }
+
+  closeProductActionModal() {
+    const modal = document.getElementById('productActionModal');
+    if (modal) modal.classList.remove('active');
+    this.selectedActionProduct = null;
+  }
+
+  actionEditProduct() {
+    const p = this.selectedActionProduct;
+    this.closeProductActionModal();
+    if (p && p.maHang) {
+      this.openEditProductModal(p.maHang);
+    }
+  }
+
+  actionDeleteProduct() {
+    const p = this.selectedActionProduct;
+    this.closeProductActionModal();
+    if (p && p.maHang) {
+      this.deleteProduct(p.maHang);
+    }
+  }
+
+  actionCopyCustomerLink() {
+    const p = this.selectedActionProduct;
+    if (!p || !p.maHang) return;
+
+    const base = window.location.origin + window.location.pathname.replace(/[^/]*$/, '');
+    const showcaseUrl = `${base}san-pham.html?ma=${encodeURIComponent(p.maHang)}`;
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(showcaseUrl).then(() => {
+        this.showToast(`✅ Đã copy link ${p.maHang}! Dán gửi Zalo/Facebook cho khách xem.`, 'success');
+      }).catch(() => {
+        this.fallbackCopyText(showcaseUrl, p.maHang);
+      });
+    } else {
+      this.fallbackCopyText(showcaseUrl, p.maHang);
+    }
+    this.closeProductActionModal();
+  }
+
+  fallbackCopyText(text, maHang) {
+    const inp = document.createElement('textarea');
+    inp.value = text;
+    inp.style.position = 'fixed';
+    inp.style.opacity = '0';
+    document.body.appendChild(inp);
+    inp.focus();
+    inp.select();
+    try {
+      document.execCommand('copy');
+      this.showToast(`✅ Đã copy link ${maHang}!`, 'success');
+    } catch (e) {
+      prompt('Hãy copy đường link giới thiệu sản phẩm bên dưới:', text);
+    }
+    document.body.removeChild(inp);
+  }
+
+  actionViewShowcase() {
+    const p = this.selectedActionProduct;
+    this.closeProductActionModal();
+    if (p && p.maHang) {
+      this.previewProductShowcase(p.maHang);
+    }
   }
 
   openAddProductModal() {
