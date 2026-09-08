@@ -1979,12 +1979,20 @@ class GoldApp {
     // Reset Album ảnh & Video
     this.currentProductImages = [];
     this.currentProductVideo = '';
+    this.currentLocalVideoFile = null;
+    this.currentLocalVideoUrl = null;
     const addUrlInput = document.getElementById('modalAddImageUrlInput');
     if (addUrlInput) addUrlInput.value = '';
     const videoInput = document.getElementById('modalVideoSanPham');
     if (videoInput) videoInput.value = '';
     const videoBox = document.getElementById('modalVideoPreviewBox');
     if (videoBox) { videoBox.style.display = 'none'; videoBox.innerHTML = ''; }
+    const progressBox = document.getElementById('modalVideoProgressBox');
+    if (progressBox) progressBox.style.display = 'none';
+    const statusBadge = document.getElementById('modalVideoStatusBadge');
+    if (statusBadge) statusBadge.innerText = 'Chưa có video';
+    const btnClearVideo = document.getElementById('modalBtnClearVideo');
+    if (btnClearVideo) btnClearVideo.style.display = 'none';
     this.renderModalMediaPreview();
 
     if (document.getElementById('modalChiNhanh')) {
@@ -2060,17 +2068,29 @@ class GoldApp {
     // Nạp Album ảnh & Video của sản phẩm
     this.currentProductImages = this.parseProductImages(p.anhSanPham);
     this.currentProductVideo = p.videoSanPham || '';
+    this.currentLocalVideoFile = null;
+    this.currentLocalVideoUrl = null;
     const addUrlInput = document.getElementById('modalAddImageUrlInput');
     if (addUrlInput) addUrlInput.value = '';
     const videoInput = document.getElementById('modalVideoSanPham');
     if (videoInput) videoInput.value = this.currentProductVideo;
     const videoBox = document.getElementById('modalVideoPreviewBox');
     if (videoBox) { videoBox.style.display = 'none'; videoBox.innerHTML = ''; }
-    this.renderModalMediaPreview();
+    const progressBox = document.getElementById('modalVideoProgressBox');
+    if (progressBox) progressBox.style.display = 'none';
+    const statusBadge = document.getElementById('modalVideoStatusBadge');
+    const btnClearVideo = document.getElementById('modalBtnClearVideo');
+
     if (this.currentProductVideo) {
+      if (statusBadge) statusBadge.innerHTML = '<span style="color: #059669; font-weight: bold;">✅ Đã có video</span>';
+      if (btnClearVideo) btnClearVideo.style.display = 'inline-block';
       this.testModalVideoPreview();
+    } else {
+      if (statusBadge) statusBadge.innerText = 'Chưa có video';
+      if (btnClearVideo) btnClearVideo.style.display = 'none';
     }
 
+    this.renderModalMediaPreview();
     document.getElementById('productModal').classList.add('active');
   }
 
@@ -2301,8 +2321,8 @@ class GoldApp {
       };
     }
 
-    // 3. Direct video file (.mp4, .webm, .ogg)
-    if (url.match(/\.(mp4|webm|ogg)(\?.*)?$/i)) {
+    // 3. Direct video file (.mp4, .webm, .ogg, .mov, blob, data:video)
+    if (url.startsWith('blob:') || url.startsWith('data:video') || url.match(/\.(mp4|webm|ogg|mov)(\?.*)?$/i)) {
       return {
         type: 'direct',
         embedUrl: url
@@ -2337,13 +2357,161 @@ class GoldApp {
     box.style.display = 'block';
     if (embedInfo.type === 'direct') {
       box.innerHTML = `
-        <video src="${embedInfo.embedUrl}" controls style="width:100%; max-height:180px; display:block; margin:0 auto;"></video>
+        <video src="${embedInfo.embedUrl}" controls playsinline autoplay muted style="width:100%; max-height:220px; display:block; margin:0 auto; background:#000; border-radius:6px;"></video>
       `;
     } else {
       box.innerHTML = `
-        <iframe src="${embedInfo.embedUrl}" style="width:100%; height:180px; border:none; display:block;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        <iframe src="${embedInfo.embedUrl}" style="width:100%; height:220px; border:none; display:block; border-radius:6px;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
       `;
     }
+  }
+
+  async handleVideoRecordingUpload(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+
+    const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+    const progressBox = document.getElementById('modalVideoProgressBox');
+    const progressBar = document.getElementById('modalVideoProgressBar');
+    const progressText = document.getElementById('modalVideoProgressText');
+    const progressPct = document.getElementById('modalVideoProgressPercent');
+    const statusBadge = document.getElementById('modalVideoStatusBadge');
+    const btnClearVideo = document.getElementById('modalBtnClearVideo');
+    const videoInput = document.getElementById('modalVideoSanPham');
+
+    if (progressBox) progressBox.style.display = 'block';
+    if (progressBar) { progressBar.style.width = '15%'; progressBar.style.background = '#2563EB'; }
+    if (progressPct) progressPct.innerText = '15%';
+    if (progressText) progressText.innerText = `🎥 Đang nạp video quay từ điện thoại... (${sizeMB} MB)`;
+
+    // Tạo blob URL để phát ngay lập tức trên máy mà không cần chờ tải mạng
+    const localUrl = URL.createObjectURL(file);
+    this.currentLocalVideoFile = file;
+    this.currentLocalVideoUrl = localUrl;
+    this.currentProductVideo = localUrl;
+
+    if (videoInput) videoInput.value = localUrl;
+    if (btnClearVideo) btnClearVideo.style.display = 'inline-block';
+    if (statusBadge) statusBadge.innerHTML = `<span style="color: #059669; font-weight: bold;">📹 Đã nạp video (${sizeMB} MB)</span>`;
+
+    // Hiển thị ngay trên khung xem trước
+    const previewBox = document.getElementById('modalVideoPreviewBox');
+    if (previewBox) {
+      previewBox.style.display = 'block';
+      previewBox.innerHTML = `
+        <video src="${localUrl}" controls playsinline autoplay muted style="width: 100%; max-height: 220px; background: #000; border-radius: 6px;"></video>
+      `;
+    }
+
+    // Nếu có Google Sheet API, tiến hành tải lên Google Drive của tiệm
+    const hasGasApi = (typeof googleSheetService !== 'undefined' && googleSheetService.apiUrl && googleSheetService.apiUrl.trim().length > 10);
+
+    if (hasGasApi) {
+      if (file.size > 35 * 1024 * 1024) {
+        if (progressText) progressText.innerText = `⚠️ Video hơi lớn (${sizeMB} MB), đã lưu để phát trên máy này (Nên quay ngắn dưới 25MB để đồng bộ Drive).`;
+        if (progressBar) { progressBar.style.width = '100%'; progressBar.style.background = '#F59E0B'; }
+        if (progressPct) progressPct.innerText = '100%';
+        return;
+      }
+
+      if (progressText) progressText.innerText = `☁️ Đang đọc file video... (${sizeMB} MB)`;
+      if (progressBar) progressBar.style.width = '35%';
+      if (progressPct) progressPct.innerText = '35%';
+
+      const reader = new FileReader();
+      reader.onload = async (readEvt) => {
+        try {
+          if (progressText) progressText.innerText = `☁️ Đang tải video lên Google Drive của tiệm...`;
+          if (progressBar) progressBar.style.width = '65%';
+          if (progressPct) progressPct.innerText = '65%';
+
+          const base64Data = readEvt.target.result;
+          const maHang = document.getElementById('modalMaHang')?.value?.trim() || 'SP';
+
+          const resp = await fetch(googleSheetService.apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({
+              action: 'uploadVideo',
+              maHang: maHang,
+              fileName: `video_${maHang}_${Date.now()}.mp4`,
+              mimeType: file.type || 'video/mp4',
+              data: base64Data
+            })
+          });
+
+          const result = await resp.json();
+          if (result && result.success && result.url) {
+            if (progressBar) { progressBar.style.width = '100%'; progressBar.style.background = '#059669'; }
+            if (progressPct) progressPct.innerText = '100%';
+            if (progressText) progressText.innerText = `✅ Đã tải lên Google Drive của tiệm thành công!`;
+
+            if (videoInput) videoInput.value = result.url;
+            this.currentProductVideo = result.url;
+            if (statusBadge) statusBadge.innerHTML = `<span style="color: #059669; font-weight: bold;">☁️ Google Drive (${sizeMB} MB)</span>`;
+            this.showToast('✅ Đã tải video lên Google Drive của tiệm thành công!', 'success');
+
+            setTimeout(() => {
+              if (progressBox) progressBox.style.display = 'none';
+            }, 3500);
+          } else {
+            const errMsg = result?.error || result?.message || 'Không thể upload';
+            if (progressBar) { progressBar.style.width = '100%'; progressBar.style.background = '#F59E0B'; }
+            if (progressPct) progressPct.innerText = '100%';
+            if (progressText) progressText.innerText = `⚠️ Đã lưu video trên máy này (Drive: ${errMsg})`;
+          }
+        } catch (uploadErr) {
+          console.warn('Lỗi upload video lên Google Drive:', uploadErr);
+          if (progressBar) { progressBar.style.width = '100%'; progressBar.style.background = '#F59E0B'; }
+          if (progressPct) progressPct.innerText = '100%';
+          if (progressText) progressText.innerText = `⚠️ Đã lưu video trên máy này (Chưa tải lên Drive: ${uploadErr.message})`;
+        }
+      };
+      reader.readAsDataURL(file);
+    } else {
+      if (progressBar) { progressBar.style.width = '100%'; progressBar.style.background = '#059669'; }
+      if (progressPct) progressPct.innerText = '100%';
+      if (progressText) progressText.innerText = `✅ Đã nạp video từ điện thoại (Lưu trữ trên máy này)`;
+      setTimeout(() => {
+        if (progressBox) progressBox.style.display = 'none';
+      }, 3000);
+    }
+
+    e.target.value = '';
+  }
+
+  onModalVideoInputChanged() {
+    const input = document.getElementById('modalVideoSanPham');
+    const val = input ? input.value.trim() : '';
+    this.currentProductVideo = val;
+    const btnClear = document.getElementById('modalBtnClearVideo');
+    const statusBadge = document.getElementById('modalVideoStatusBadge');
+    if (btnClear) {
+      btnClear.style.display = val ? 'inline-block' : 'none';
+    }
+    if (statusBadge) {
+      statusBadge.innerHTML = val ? `<span style="color: #059669; font-weight: bold;">✅ Có video</span>` : 'Chưa có video';
+    }
+  }
+
+  clearModalVideo() {
+    const videoInput = document.getElementById('modalVideoSanPham');
+    if (videoInput) videoInput.value = '';
+    this.currentProductVideo = '';
+    this.currentLocalVideoFile = null;
+    this.currentLocalVideoUrl = null;
+
+    const box = document.getElementById('modalVideoPreviewBox');
+    if (box) { box.style.display = 'none'; box.innerHTML = ''; }
+
+    const progressBox = document.getElementById('modalVideoProgressBox');
+    if (progressBox) progressBox.style.display = 'none';
+
+    const statusBadge = document.getElementById('modalVideoStatusBadge');
+    if (statusBadge) statusBadge.innerText = 'Chưa có video';
+
+    const btnClear = document.getElementById('modalBtnClearVideo');
+    if (btnClear) btnClear.style.display = 'none';
   }
 
   async saveProductFromModal() {

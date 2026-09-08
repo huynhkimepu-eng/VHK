@@ -388,6 +388,48 @@ function doPost(e) {
       return jsonResponse({ success: true, message: 'Lưu thông tin tiệm vàng lên Google Sheet thành công!' });
     }
 
+    // 8. Tải video / hình ảnh lên Google Drive (Quay trực tiếp từ điện thoại)
+    if (action === 'uploadVideo' || action === 'uploadMedia') {
+      try {
+        const base64Data = contents.data;
+        if (!base64Data) {
+          return jsonResponse({ success: false, message: 'Dữ liệu video trống!' });
+        }
+        const maHang = contents.maHang || 'SP';
+        const fileName = contents.fileName || ('video_' + maHang + '_' + Utilities.formatDate(new Date(), 'GMT+7', 'yyyyMMdd_HHmmss') + '.mp4');
+        const mimeType = contents.mimeType || 'video/mp4';
+
+        const cleanBase64 = base64Data.indexOf('base64,') > -1 ? base64Data.split('base64,')[1] : base64Data;
+        const decoded = Utilities.base64Decode(cleanBase64);
+        const blob = Utilities.newBlob(decoded, mimeType, fileName);
+
+        let folder;
+        const folders = DriveApp.getFoldersByName('PMQLV_Media');
+        if (folders.hasNext()) {
+          folder = folders.next();
+        } else {
+          folder = DriveApp.createFolder('PMQLV_Media');
+        }
+
+        const file = folder.createFile(blob);
+        file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+        const fileId = file.getId();
+        const previewUrl = 'https://drive.google.com/file/d/' + fileId + '/preview';
+
+        return jsonResponse({
+          success: true,
+          fileId: fileId,
+          url: previewUrl,
+          message: 'Tải video lên Google Drive thành công!'
+        });
+      } catch (uploadErr) {
+        return jsonResponse({
+          success: false,
+          error: 'Lỗi tải lên Google Drive: ' + uploadErr.toString()
+        });
+      }
+    }
+
     return jsonResponse({ success: false, message: 'Hành động không hợp lệ: ' + action });
   } catch (err) {
     return jsonResponse({ success: false, error: err.toString() });

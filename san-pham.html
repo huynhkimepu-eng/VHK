@@ -1371,8 +1371,8 @@
   </div>
 
   <!-- Thư viện Dữ Liệu Gốc & Đồng Bộ -->
-  <script src="js/defaultData.js?v=38"></script>
-  <script src="js/googleSheetService.js?v=38"></script>
+  <script src="js/defaultData.js?v=39"></script>
+  <script src="js/googleSheetService.js?v=39"></script>
 
   <script>
     // State Quản Lý
@@ -1600,7 +1600,7 @@
           embedUrl: `https://drive.google.com/file/d/${driveMatch[1]}/preview`
         };
       }
-      if (url.match(/\.(mp4|webm|ogg)(\?.*)?$/i)) {
+      if (url.startsWith('blob:') || url.startsWith('data:video') || url.match(/\.(mp4|webm|ogg|mov)(\?.*)?$/i)) {
         return {
           type: 'direct',
           embedUrl: url

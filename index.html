@@ -868,17 +868,52 @@
 
             <!-- Mục Video Sản Phẩm -->
             <div style="margin-top: 12px; padding-top: 10px; border-top: 1px dashed #E2E8F0;">
-              <label style="font-size: 12px; font-weight: bold; color: #B45309; display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
-                <span>🎬</span> Video Giới Thiệu / Xoay Cận Cảnh (Tùy chọn):
-              </label>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <label style="font-size: 12px; font-weight: bold; color: #B45309; display: flex; align-items: center; gap: 6px; margin: 0;">
+                  <span>🎬</span> Video Giới Thiệu / Xoay Cận Cảnh (Tùy chọn):
+                </label>
+                <span id="modalVideoStatusBadge" style="font-size: 11px; color: #64748B; font-weight: 500;">Chưa có video</span>
+              </div>
+
+              <!-- Nút Quay Video Trực Tiếp Từ Điện Thoại & Chọn Video -->
+              <div style="display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">
+                <label class="btn btn-sm btn-warning" style="margin: 0; cursor: pointer; flex: 1; min-width: 170px; text-align: center; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 6px; background: linear-gradient(135deg, #F59E0B, #D97706); color: #FFF; border: none; box-shadow: 0 2px 4px rgba(217, 119, 6, 0.2);">
+                  📹 Quay Video Bằng Điện Thoại
+                  <input type="file" id="modalVideoCameraFile" accept="video/*" capture="environment" style="display: none;" onchange="app.handleVideoRecordingUpload(event)">
+                </label>
+                <label class="btn btn-sm btn-outline-secondary" style="margin: 0; cursor: pointer; text-align: center; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                  📁 Chọn Video Trong Máy
+                  <input type="file" id="modalVideoGalleryFile" accept="video/*" style="display: none;" onchange="app.handleVideoRecordingUpload(event)">
+                </label>
+              </div>
+
+              <!-- Thanh tiến trình xử lý / upload video -->
+              <div id="modalVideoProgressBox" style="display: none; margin-bottom: 8px; padding: 8px 12px; background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 6px; font-size: 12px; color: #1E40AF;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                  <span id="modalVideoProgressText">⏳ Đang nạp video...</span>
+                  <span id="modalVideoProgressPercent" style="font-weight: bold;">0%</span>
+                </div>
+                <div style="width: 100%; height: 6px; background: #DBEAFE; border-radius: 3px; overflow: hidden;">
+                  <div id="modalVideoProgressBar" style="width: 0%; height: 100%; background: #2563EB; transition: width 0.3s ease;"></div>
+                </div>
+              </div>
+
               <div style="display: flex; gap: 8px;">
-                <input type="url" id="modalVideoSanPham" class="form-control form-control-sm" placeholder="Dán link YouTube, Shorts, TikTok, Drive hoặc link file .mp4..." onchange="app.testModalVideoPreview()">
+                <input type="url" id="modalVideoSanPham" class="form-control form-control-sm" placeholder="Link video (tự động điền sau khi quay, hoặc dán link YouTube, Drive...)" oninput="app.onModalVideoInputChanged()">
                 <button type="button" class="btn btn-sm btn-outline-warning" onclick="app.testModalVideoPreview()" style="white-space: nowrap; font-weight: 600;" title="Xem thử khung video">
                   ▶️ Xem thử
                 </button>
+                <button type="button" id="modalBtnClearVideo" class="btn btn-sm btn-outline-danger" onclick="app.clearModalVideo()" style="white-space: nowrap; font-weight: 600; display: none;" title="Xóa video này">
+                  🗑️ Xóa
+                </button>
               </div>
+
+              <small style="display: block; color: #64748B; font-size: 11px; margin-top: 5px;">
+                💡 <em>Gợi ý: Dùng điện thoại quay ngắn 5 - 15 giây (xoay món trang sức bắt sáng) để video nhẹ, tải nhanh và sắc nét nhất.</em>
+              </small>
+
               <!-- Vùng hiển thị xem thử video -->
-              <div id="modalVideoPreviewBox" style="display: none; margin-top: 8px; border-radius: 6px; overflow: hidden; background: #000; text-align: center; max-height: 200px;"></div>
+              <div id="modalVideoPreviewBox" style="display: none; margin-top: 8px; border-radius: 6px; overflow: hidden; background: #000; text-align: center; max-height: 220px; position: relative;"></div>
             </div>
           </div>
 
@@ -1121,9 +1156,9 @@
   </div>
 
   <!-- Scripts -->
-  <script src="js/defaultData.js?v=38"></script>
-  <script src="js/googleSheetService.js?v=38"></script>
-  <script src="js/barcodeLabel.js?v=38"></script>
-  <script src="js/app.js?v=38"></script>
+  <script src="js/defaultData.js?v=39"></script>
+  <script src="js/googleSheetService.js?v=39"></script>
+  <script src="js/barcodeLabel.js?v=39"></script>
+  <script src="js/app.js?v=39"></script>
 </body>
 </html>
