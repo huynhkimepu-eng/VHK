@@ -903,7 +903,10 @@ class GoldApp {
             })()}
           </td>
           <td><b>${p.maHang}</b></td>
-          <td>${p.tenHang || '--'}</td>
+          <td>
+            <div style="font-weight: 600;">${p.tenHang || '--'}</div>
+            ${p.nhaCungCap ? `<span style="font-size: 10px; background: #DCFCE7; color: #166534; padding: 1px 6px; border-radius: 4px; font-weight: 700; display: inline-block; margin-top: 2px;" title="Nhà cung cấp">🏢 ${p.nhaCungCap}</span>` : ''}
+          </td>
           <td><span class="badge" style="background:#FEF3C7; color:#92400E;">${p.loaiVang || ''}</span></td>
           <td>${p.quayNho || '--'}</td>
           <td>${p.chiNhanh || 'Chi nhánh 1'}</td>
@@ -2140,9 +2143,7 @@ class GoldApp {
       customInp.focus();
     } else {
       customInp.style.display = 'none';
-      if (sel.value === 'HK') {
-        customInp.value = '';
-      }
+      customInp.value = '';
     }
   }
 
@@ -2584,6 +2585,19 @@ class GoldApp {
           anhSanPham = this.currentProductImages[0];
         } else {
           anhSanPham = JSON.stringify(this.currentProductImages);
+        }
+      }
+
+      // Phòng ngừa nếu còn sót ảnh base64 lớn từ cache cũ làm tràn bộ nhớ 50.000 ký tự của ô Google Sheet
+      if (typeof anhSanPham === 'string' && anhSanPham.length > 40000) {
+        console.warn('Ảnh sản phẩm vượt quá 40.000 ký tự, tự động tối ưu để không làm lỗi Google Sheet');
+        try {
+          const arr = JSON.parse(anhSanPham);
+          if (Array.isArray(arr) && arr.length > 0) {
+            anhSanPham = arr[0].substring(0, 40000);
+          }
+        } catch(e) {
+          anhSanPham = anhSanPham.substring(0, 40000);
         }
       }
       if (this.isVideoUploading) {
