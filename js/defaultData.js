@@ -31,6 +31,8 @@ window.DEFAULT_STORE_CONFIG = {
   address: "123 \u0110\u01b0\u1eddng Kim Ho\u00e0n, Qu\u1eadn 1, TP. H\u1ed3 Ch\u00ed Minh",
   phone: "0988.888.888",
   currencyUnitMultiplier: 1000,
+  cloudinaryCloudName: "mjgp9vci",
+  cloudinaryPreset: "pmqlv_upload",
   printTagConfig: {
     storeName: "HO\u00c0NG KIM",
     showLaborCost: true,

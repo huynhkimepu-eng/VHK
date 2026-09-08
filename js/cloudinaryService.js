@@ -1,4 +1,4 @@
-﻿/**
+/**
  * PMQLV - Dịch vụ tải Media (Video & Ảnh) trực tiếp lên Cloudinary (Unsigned Upload)
  * Giúp video & ảnh tải siêu tốc, xem mượt mà trên mọi thiết bị mà không phụ thuộc Google Drive.
  */
@@ -6,6 +6,8 @@
 const CloudinaryService = {
   STORAGE_CLOUD_NAME: 'pmqlv_cloudinary_cloud_name',
   STORAGE_PRESET: 'pmqlv_cloudinary_preset',
+  DEFAULT_CLOUD_NAME: 'mjgp9vci',
+  DEFAULT_UPLOAD_PRESET: 'pmqlv_upload',
 
   getCloudName() {
     const local = localStorage.getItem(this.STORAGE_CLOUD_NAME);
@@ -13,7 +15,10 @@ const CloudinaryService = {
     if (window.app && window.app.storeConfig && window.app.storeConfig.cloudinaryCloudName) {
       return String(window.app.storeConfig.cloudinaryCloudName).trim();
     }
-    return '';
+    if (window.DEFAULT_STORE_CONFIG && window.DEFAULT_STORE_CONFIG.cloudinaryCloudName) {
+      return String(window.DEFAULT_STORE_CONFIG.cloudinaryCloudName).trim();
+    }
+    return this.DEFAULT_CLOUD_NAME;
   },
 
   getUploadPreset() {
@@ -22,7 +27,10 @@ const CloudinaryService = {
     if (window.app && window.app.storeConfig && window.app.storeConfig.cloudinaryPreset) {
       return String(window.app.storeConfig.cloudinaryPreset).trim();
     }
-    return '';
+    if (window.DEFAULT_STORE_CONFIG && window.DEFAULT_STORE_CONFIG.cloudinaryPreset) {
+      return String(window.DEFAULT_STORE_CONFIG.cloudinaryPreset).trim();
+    }
+    return this.DEFAULT_UPLOAD_PRESET;
   },
 
   setConfig(cloudName, preset) {
