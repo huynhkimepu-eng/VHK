@@ -2896,6 +2896,19 @@ class GoldApp {
         this.calcModalCostPrice();
       }
     }
+
+    // Tự động gán quầy hàng phù hợp theo loại vàng đã chọn
+    const quayInp = document.getElementById('modalQuayNho');
+    if (quayInp) {
+      const lvLower = loaiVang.toLowerCase();
+      if (lvLower.includes('24k') || lvLower.includes('23k')) quayInp.value = '2VANG24K';
+      else if (lvLower.includes('18k')) quayInp.value = '2VANG18K';
+      else if (lvLower.includes('14k')) quayInp.value = '2VANG14K';
+      else if (lvLower.includes('10k')) quayInp.value = '2VANG10K';
+      else if (lvLower.includes('bạc') || lvLower.includes('bac')) quayInp.value = '2BAC';
+      else if (lvLower.includes('phong')) quayInp.value = '2PHONGTHUY';
+      else quayInp.value = '2VANG24K';
+    }
   }
 
   onModalNhaCungCapChange() {
@@ -2960,13 +2973,13 @@ class GoldApp {
 
     const count = (this.currentProductImages && Array.isArray(this.currentProductImages)) ? this.currentProductImages.length : 0;
     if (badge) {
-      badge.textContent = `${count} ảnh`;
+      badge.textContent = `${count}`;
     }
 
     if (!this.currentProductImages || this.currentProductImages.length === 0) {
       grid.innerHTML = `
-        <div id="modalImagesEmptyHint" style="font-size: 11.5px; color: #94A3B8; text-align: center; width: 100%; padding: 12px 0;">
-          Chưa có ảnh nào. Bạn hãy bấm "📷 Tải Lên Nhiều Ảnh" hoặc dán link ảnh bên dưới.
+        <div id="modalImagesEmptyHint" style="font-size: 11.5px; color: #94A3B8; text-align: center; width: 100%; padding: 8px 0;">
+          Chưa có ảnh nào.
         </div>
       `;
       return;

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>PMQLV - Phần Mềm Quản Lý & Bán Hàng Vàng Bạc Đá Quý</title>
-  <link rel="stylesheet" href="css/style.css?v=52">
+  <link rel="stylesheet" href="css/style.css?v=53">
   <!-- HTML5 QR Code & Barcode Scanner for Camera -->
     <script>
     window.onerror = function(msg, src, line, col, err) {
@@ -1025,96 +1025,82 @@
             </div>
           </div>
 
-          <!-- QUẢN LÝ MEDIA SẢN PHẨM (NHIỀU ẢNH & VIDEO) -->
-          <div style="margin-bottom: 12px; background: #F8FAFC; padding: 12px; border-radius: 8px; border: 1.5px dashed #CBD5E1;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-              <label style="font-size: 12.5px; font-weight: bold; color: #0F172A; display: flex; align-items: center; gap: 6px; margin: 0;">
-                <span>📸</span> Album Ảnh Sản Phẩm (<span id="modalImgCountBadge">0 ảnh</span>)
+          <!-- QUẢN LÝ MEDIA SẢN PHẨM (ẢNH & VIDEO) -->
+          <div style="margin-bottom: 12px; background: #F8FAFC; padding: 10px 12px; border-radius: 8px; border: 1.5px dashed #CBD5E1;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <label style="font-size: 12px; font-weight: bold; color: #0F172A; display: flex; align-items: center; gap: 5px; margin: 0;">
+                <span>📸</span> Album Ảnh (<span id="modalImgCountBadge">0</span>)
               </label>
-              <small style="color: #64748B; font-size: 11px;">Ảnh đầu tiên (⭐) sẽ là ảnh đại diện</small>
+              <small style="color: #64748B; font-size: 11px;">⭐ Ảnh 1 là đại diện</small>
             </div>
 
             <!-- Khung danh sách ảnh thu nhỏ (Gallery Grid) -->
-            <div id="modalImagesGrid" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; min-height: 64px; background: #FFFFFF; padding: 8px; border-radius: 6px; border: 1px solid #E2E8F0; align-items: center;">
-              <!-- Sẽ render các thumbnail ảnh bằng JS -->
-              <div id="modalImagesEmptyHint" style="font-size: 11.5px; color: #94A3B8; text-align: center; width: 100%; padding: 10px 0;">
-                Chưa có ảnh nào. Bạn hãy tải ảnh lên hoặc dán link ảnh bên dưới.
+            <div id="modalImagesGrid" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; min-height: 52px; background: #FFFFFF; padding: 6px 8px; border-radius: 6px; border: 1px solid #E2E8F0; align-items: center;">
+              <div id="modalImagesEmptyHint" style="font-size: 11.5px; color: #94A3B8; text-align: center; width: 100%; padding: 6px 0;">
+                Chưa có ảnh nào.
               </div>
             </div>
 
-            <!-- Điều khiển Thêm Ảnh -->
-            <div style="display: flex; flex-direction: column; gap: 8px;">
-              <div style="display: flex; gap: 8px;">
-                <input type="url" id="modalAddImageUrlInput" class="form-control form-control-sm" placeholder="Dán đường link ảnh (http://...) vào đây...">
-                <button type="button" class="btn btn-sm btn-outline-primary" onclick="app.addImageFromInputUrl()" style="white-space: nowrap; font-weight: 600;">
-                  ➕ Thêm Link
-                </button>
-              </div>
-              <div style="display: flex; gap: 8px;">
-                <label class="btn btn-sm btn-primary" style="margin: 0; cursor: pointer; flex: 1; text-align: center; font-weight: 600;">
-                  📷 Tải Lên Nhiều Ảnh (Chọn nhiều file)
-                  <input type="file" id="modalMultiImageFile" accept="image/*" multiple style="display: none;" onchange="app.handleMultipleImageUpload(event)">
-                </label>
-                <label class="btn btn-sm btn-outline-secondary" style="margin: 0; cursor: pointer; text-align: center; font-weight: 600;" title="Mở máy ảnh chụp nhanh">
-                  📸 Chụp Camera
-                  <input type="file" id="modalCameraImageFile" accept="image/*" capture="environment" style="display: none;" onchange="app.handleMultipleImageUpload(event)">
-                </label>
-              </div>
+            <!-- Nút Chọn & Chụp Ảnh -->
+            <div style="display: flex; gap: 8px;">
+              <label class="btn btn-sm btn-primary" style="margin: 0; cursor: pointer; flex: 1; text-align: center; font-weight: 700; padding: 7px 10px; font-size: 12.5px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                📁 Chọn Ảnh
+                <input type="file" id="modalMultiImageFile" accept="image/*" multiple style="display: none;" onchange="app.handleMultipleImageUpload(event)">
+              </label>
+              <label class="btn btn-sm btn-outline-secondary" style="margin: 0; cursor: pointer; flex: 1; text-align: center; font-weight: 700; padding: 7px 10px; font-size: 12.5px; display: flex; align-items: center; justify-content: center; gap: 6px;" title="Mở máy ảnh chụp nhanh">
+                📷 Chụp Ảnh
+                <input type="file" id="modalCameraImageFile" accept="image/*" capture="environment" style="display: none;" onchange="app.handleMultipleImageUpload(event)">
+              </label>
             </div>
 
             <!-- Mục Video Sản Phẩm -->
-            <div style="margin-top: 12px; padding-top: 10px; border-top: 1px dashed #E2E8F0;">
+            <div style="margin-top: 10px; padding-top: 8px; border-top: 1px dashed #E2E8F0;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                <label style="font-size: 12px; font-weight: bold; color: #B45309; display: flex; align-items: center; gap: 6px; margin: 0;">
-                  <span>🎬</span> Video Giới Thiệu / Xoay Cận Cảnh (Tùy chọn):
-                  <span id="modalCloudinaryActiveBadge" style="display: none; font-size: 10px; background: #DBEAFE; color: #1E40AF; padding: 1px 6px; border-radius: 4px; font-weight: 700;">☁️ Cloudinary Siêu Tốc</span>
+                <label style="font-size: 12px; font-weight: bold; color: #B45309; display: flex; align-items: center; gap: 5px; margin: 0;">
+                  <span>🎬</span> Video:
+                  <span id="modalCloudinaryActiveBadge" style="display: none; font-size: 9.5px; background: #DBEAFE; color: #1E40AF; padding: 1px 5px; border-radius: 4px; font-weight: 700;">☁️ Cloud</span>
                 </label>
-                <span id="modalVideoStatusBadge" style="font-size: 11px; color: #64748B; font-weight: 500;">Chưa có video</span>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <span id="modalVideoStatusBadge" style="font-size: 11px; color: #64748B; font-weight: 500;">Chưa có video</span>
+                  <button type="button" id="modalBtnClearVideo" class="btn btn-sm btn-outline-danger" onclick="app.clearModalVideo()" style="padding: 1px 6px; font-size: 10.5px; display: none; line-height: 1.2;" title="Xóa video này">
+                    🗑️ Xóa
+                  </button>
+                </div>
               </div>
 
               <!-- Nút Quay Video Trực Tiếp Từ Điện Thoại & Chọn Video -->
-              <div style="display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">
-                <label class="btn btn-sm btn-warning" style="margin: 0; cursor: pointer; flex: 1; min-width: 170px; text-align: center; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 6px; background: linear-gradient(135deg, #F59E0B, #D97706); color: #FFF; border: none; box-shadow: 0 2px 4px rgba(217, 119, 6, 0.2);">
-                  📹 Quay Video Bằng Điện Thoại
+              <div style="display: flex; gap: 8px; margin-bottom: 6px;">
+                <label class="btn btn-sm btn-warning" style="margin: 0; cursor: pointer; flex: 1; text-align: center; font-weight: bold; padding: 7px 10px; font-size: 12.5px; display: flex; align-items: center; justify-content: center; gap: 6px; background: linear-gradient(135deg, #F59E0B, #D97706); color: #FFF; border: none; box-shadow: 0 2px 4px rgba(217, 119, 6, 0.2);">
+                  📹 Quay Video
                   <input type="file" id="modalVideoCameraFile" accept="video/*" capture="environment" style="display: none;" onchange="app.handleVideoRecordingUpload(event)">
                 </label>
-                <label class="btn btn-sm btn-outline-secondary" style="margin: 0; cursor: pointer; text-align: center; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                  📁 Chọn Video Trong Máy
+                <label class="btn btn-sm btn-outline-secondary" style="margin: 0; cursor: pointer; flex: 1; text-align: center; font-weight: 700; padding: 7px 10px; font-size: 12.5px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                  📁 Chọn Video
                   <input type="file" id="modalVideoGalleryFile" accept="video/*" style="display: none;" onchange="app.handleVideoRecordingUpload(event)">
                 </label>
               </div>
 
               <!-- Thanh tiến trình xử lý / upload video -->
-              <div id="modalVideoProgressBox" style="display: none; margin-bottom: 8px; padding: 8px 12px; background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 6px; font-size: 12px; color: #1E40AF;">
+              <div id="modalVideoProgressBox" style="display: none; margin-bottom: 6px; padding: 6px 10px; background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 6px; font-size: 11.5px; color: #1E40AF;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
                   <span id="modalVideoProgressText">⏳ Đang nạp video...</span>
                   <span id="modalVideoProgressPercent" style="font-weight: bold;">0%</span>
                 </div>
-                <div style="width: 100%; height: 6px; background: #DBEAFE; border-radius: 3px; overflow: hidden;">
+                <div style="width: 100%; height: 5px; background: #DBEAFE; border-radius: 3px; overflow: hidden;">
                   <div id="modalVideoProgressBar" style="width: 0%; height: 100%; background: #2563EB; transition: width 0.3s ease;"></div>
                 </div>
               </div>
 
-              <div style="display: flex; gap: 8px;">
-                <input type="url" id="modalVideoSanPham" class="form-control form-control-sm" placeholder="Link video (tự động nạp Cloudinary sau khi quay, hoặc dán link MP4/YouTube...)" oninput="app.onModalVideoInputChanged()">
-                <button type="button" class="btn btn-sm btn-outline-warning" onclick="app.testModalVideoPreview()" style="white-space: nowrap; font-weight: 600;" title="Xem thử khung video">
-                  ▶️ Xem thử
-                </button>
-                <button type="button" id="modalBtnClearVideo" class="btn btn-sm btn-outline-danger" onclick="app.clearModalVideo()" style="white-space: nowrap; font-weight: 600; display: none;" title="Xóa video này">
-                  🗑️ Xóa
-                </button>
-              </div>
-
-              <small style="display: block; color: #64748B; font-size: 11px; margin-top: 5px;">
-                💡 <em>Gợi ý: Dùng điện thoại quay ngắn 5 - 15 giây (xoay món trang sức bắt sáng) để video nhẹ, tải nhanh và sắc nét nhất.</em>
-              </small>
+              <!-- Input video ẩn tự động nhận URL sau khi quay / chọn -->
+              <input type="hidden" id="modalVideoSanPham">
 
               <!-- Vùng hiển thị xem thử video -->
-              <div id="modalVideoPreviewBox" style="display: none; margin-top: 8px; border-radius: 6px; overflow: hidden; background: #000; text-align: center; max-height: 220px; position: relative;"></div>
+              <div id="modalVideoPreviewBox" style="display: none; margin-top: 6px; border-radius: 6px; overflow: hidden; background: #000; text-align: center; max-height: 200px; position: relative;"></div>
             </div>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+          <!-- Loại Vàng & Chi Nhánh (Bỏ Quầy Hàng, hiển thị 2 cột rộng rãi) -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
             <div>
               <label style="font-size: 12px; font-weight: bold;">Loại Vàng</label>
               <select id="modalLoaiVang" class="form-select" onchange="app.onModalLoaiVangChange()">
@@ -1129,20 +1115,10 @@
                 <option value="Bạc Phú Quý">Bạc Phú Quý</option>
                 <option value="Đá Phong Thuỷ">Đá Phong Thuỷ</option>
               </select>
+              <input type="hidden" id="modalQuayNho" value="2VANG24K">
             </div>
             <div>
-              <label style="font-size: 12px; font-weight: bold;">Quầy Hàng</label>
-              <select id="modalQuayNho" class="form-select">
-                <option value="2VANG24K">2VANG24K</option>
-                <option value="2VANG18K">2VANG18K</option>
-                <option value="2VANG14K">2VANG14K</option>
-                <option value="2VANG10K">2VANG10K</option>
-                <option value="2BAC">2BAC</option>
-                <option value="2PHONGTHUY">2PHONGTHUY</option>
-              </select>
-            </div>
-            <div>
-              <label style="font-size: 12px; font-weight: bold;">Chi Nhánh (Kho Hàng)</label>
+              <label style="font-size: 12px; font-weight: bold;">Chi Nhánh</label>
               <select id="modalChiNhanh" class="form-select" style="font-weight: 700; color: #1E3A8A; background-color: #EFF6FF; border: 1.5px solid #93C5FD; padding: 7px 10px;">
                 <option value="Chi nhánh 1">🏢 Chi nhánh 1</option>
                 <option value="Chi nhánh 2">🏢 Chi nhánh 2</option>
@@ -1208,12 +1184,12 @@
           </div>
 
           <div class="modal-footer" style="padding: 10px 0 0 0; display: flex; justify-content: space-between; align-items: center;">
-            <button type="button" class="btn btn-sm btn-outline-info" onclick="app.previewProductShowcase(document.getElementById('modalMaHang')?.value)" title="Mở trang giới thiệu sản phẩm riêng cho khách xem">
-              👁️ Xem Trang Khách
+            <button type="button" class="btn btn-sm btn-outline-info" onclick="app.previewProductShowcase(document.getElementById('modalMaHang')?.value)" title="Mở trang giới thiệu sản phẩm riêng cho khách xem" style="font-size: 12px; padding: 6px 10px;">
+              👁️ Xem Khách
             </button>
             <div style="display: flex; gap: 8px;">
-              <button type="button" class="btn btn-secondary" onclick="app.closeProductModal()">Hủy</button>
-              <button type="submit" class="btn btn-primary">Lưu Sản Phẩm</button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="app.closeProductModal()" style="padding: 6px 12px; font-size: 12px;">Hủy</button>
+              <button type="submit" class="btn btn-primary btn-sm" style="font-weight: 700; padding: 6px 14px; font-size: 12px;">💾 Lưu</button>
             </div>
           </div>
         </form>
@@ -1357,6 +1333,6 @@
   <script src="js/googleSheetService.js?v=51"></script>
   <script src="js/cloudinaryService.js?v=51"></script>
   <script src="js/barcodeLabel.js?v=51"></script>
-  <script src="js/app.js?v=51"></script>
+  <script src="js/app.js?v=53"></script>
 </body>
 </html>
