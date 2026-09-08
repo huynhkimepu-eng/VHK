@@ -35,6 +35,46 @@ const CloudinaryService = {
   },
 
   /**
+   * Chuyển chuỗi dataURI sang đối tượng Blob nhị phân chuẩn
+   */
+  dataURItoBlob(dataURI) {
+    try {
+      const parts = dataURI.split(',');
+      const byteString = atob(parts[1]);
+      const mimeString = parts[0].split(':')[1].split(';')[0];
+      const ab = new ArrayBuffer(byteString.length);
+      const ia = new Uint8Array(ab);
+      for (let i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i);
+      }
+      return new Blob([ab], { type: mimeString });
+    } catch (e) {
+      return dataURI;
+    }
+  },
+
+  /**
+   * Tạo 1 ảnh PNG test 1x1 pixel hợp lệ bằng Canvas của trình duyệt
+   */
+  createTestImageBlob() {
+    return new Promise((resolve) => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = 1;
+        canvas.height = 1;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#F59E0B';
+        ctx.fillRect(0, 0, 1, 1);
+        canvas.toBlob((blob) => {
+          resolve(blob);
+        }, 'image/png');
+      } catch (err) {
+        resolve(null);
+      }
+    });
+  },
+
+  /**
    * Tải file (File/Blob hoặc chuỗi base64 dataURI) lên Cloudinary
    * @param {File|Blob|string} fileOrData 
    * @param {'video'|'image'|'auto'} resourceType 
@@ -47,6 +87,12 @@ const CloudinaryService = {
 
     if (!cloudName || !preset) {
       throw new Error('Chưa điền Cloud Name hoặc Upload Preset trong Cài Đặt.');
+    }
+
+    // Nếu là chuỗi dataURI base64, chuyển sang Blob nhị phân để đảm bảo máy chủ không từ chối
+    let filePayload = fileOrData;
+    if (typeof fileOrData === 'string' && fileOrData.startsWith('data:')) {
+      filePayload = this.dataURItoBlob(fileOrData);
     }
 
     return new Promise((resolve, reject) => {
@@ -90,7 +136,12 @@ const CloudinaryService = {
       };
 
       const formData = new FormData();
-      formData.append('file', fileOrData);
+      if (filePayload instanceof Blob) {
+        const ext = (resourceType === 'video' ? 'mp4' : 'png');
+        formData.append('file', filePayload, `media_${Date.now()}.${ext}`);
+      } else {
+        formData.append('file', filePayload);
+      }
       formData.append('upload_preset', preset);
       formData.append('folder', 'pmqlv');
       xhr.send(formData);
@@ -98,7 +149,7 @@ const CloudinaryService = {
   },
 
   /**
-   * Kiểm tra kết nối tài khoản Cloudinary bằng cách tải thử ảnh kiểm tra 1px
+   * Kiểm tra kết nối tài khoản Cloudinary bằng cách tạo & tải ảnh 1px thực tế
    */
   async testConnection() {
     const cloudName = this.getCloudName();
@@ -107,10 +158,10 @@ const CloudinaryService = {
       return { success: false, message: 'Vui lòng nhập đầy đủ Cloud Name và Upload Preset!' };
     }
 
-    // 1px transparent GIF/PNG
-    const testPixel = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAA=';
     try {
-      const res = await this.uploadMedia(testPixel, 'image');
+      const testBlob = await this.createTestImageBlob();
+      const payload = testBlob || 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+      const res = await this.uploadMedia(payload, 'image');
       if (res && res.secure_url) {
         return {
           success: true,
