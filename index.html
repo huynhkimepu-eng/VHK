@@ -621,15 +621,16 @@
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
         
 
-        <!-- Cấu hình Tiệm Vàng -->
+        <!-- Cấu hình Tiệm Vàng & Bảng Giá TV -->
         <div class="card admin-only">
           <div class="card-header">
-            <div class="card-title">🏪 Thông Tin Tiệm Vàng & In Ấn</div>
+            <div class="card-title">🏪 Thông Tin Tiệm Vàng, Bảng Giá TV & In Ấn</div>
           </div>
           <div class="card-body">
             <div style="margin-bottom: 12px;">
               <label style="font-size: 12px; font-weight: bold;">Tên Tiệm Vàng:</label>
               <input type="text" id="cfgStoreName" class="form-control" value="TIỆM VÀNG HOÀNG KIM">
+              <small style="color: #64748B; font-size: 11px;">Hiển thị trên đầu Bảng Giá TV, Hóa đơn và Trang giới thiệu sản phẩm.</small>
             </div>
 
             <div style="margin-bottom: 12px;">
@@ -638,13 +639,19 @@
             </div>
 
             <div style="margin-bottom: 12px;">
-              <label style="font-size: 12px; font-weight: bold;">Địa chỉ tiệm:</label>
+              <label style="font-size: 12px; font-weight: bold; color: #047857;">📍 Địa chỉ tiệm vàng (Hiện trên Bảng Giá TV & Hóa đơn):</label>
               <input type="text" id="cfgStoreAddress" class="form-control" value="123 Đường Kim Hoàn, Quận 1, TP. Hồ Chí Minh">
             </div>
 
             <div style="margin-bottom: 12px;">
-              <label style="font-size: 12px; font-weight: bold;">Số điện thoại:</label>
+              <label style="font-size: 12px; font-weight: bold;">Số điện thoại / Hotline:</label>
               <input type="text" id="cfgStorePhone" class="form-control" value="0988.888.888">
+            </div>
+
+            <div style="margin-bottom: 12px;">
+              <label style="font-size: 12px; font-weight: bold; color: #B45309;">📺 Chữ Chạy Chân Trang Bảng Giá TV (Marquee):</label>
+              <textarea id="cfgStoreTicker" class="form-control" rows="2" placeholder="Nhập nội dung chữ chạy dưới chân màn hình TV..."></textarea>
+              <small style="color: #64748B; font-size: 11px;">Dòng chữ này sẽ tự động chạy liên tục ở phía dưới màn hình Bảng Giá Vàng TV.</small>
             </div>
 
             <div style="margin-bottom: 12px;">

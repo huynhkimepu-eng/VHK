@@ -259,6 +259,11 @@ class GoldApp {
     const inpPhone = document.getElementById('cfgStorePhone');
     if (inpPhone) inpPhone.value = cfg.phone || '';
 
+    const inpTicker = document.getElementById('cfgStoreTicker');
+    if (inpTicker) {
+      inpTicker.value = cfg.tickerText || '✨ Kính chúc Quý khách Vạn Sự Như Ý - Phát Tài Phát Lộc! | Giá vàng niêm yết tại thời điểm giao dịch thực tế tại quầy | Nhận thu đổi, làm mới, đánh bóng trọn đời sản phẩm.';
+    }
+
     const footerEl = document.getElementById('cfgInvoiceFooter');
     if (footerEl) {
        footerEl.value = cfg.invoiceFooter !== undefined ? cfg.invoiceFooter : 
@@ -1861,6 +1866,9 @@ class GoldApp {
     this.storeConfig.slogan = document.getElementById('cfgStoreSlogan')?.value || '';
     this.storeConfig.address = document.getElementById('cfgStoreAddress')?.value || '';
     this.storeConfig.phone = document.getElementById('cfgStorePhone')?.value || '';
+
+    const tickerEl = document.getElementById('cfgStoreTicker');
+    if (tickerEl) this.storeConfig.tickerText = tickerEl.value;
     
     // New fields
     const footerEl = document.getElementById('cfgInvoiceFooter');
