@@ -1871,7 +1871,14 @@ class GoldApp {
     alert(`Đã khôi phục thành công ${this.products.length} sản phẩm gốc từ file Excel!`);
   }
 
-  saveStoreConfig() {
+  async saveStoreConfig() {
+    const btn = document.querySelector('button[onclick="app.saveStoreConfig()"]');
+    const origText = btn ? btn.textContent : '💾 Lưu Thông Tin Tiệm & In Ấn';
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = '⏳ Đang lưu & đồng bộ Google Sheet...';
+    }
+
     this.storeConfig.storeName = document.getElementById('cfgStoreName')?.value || 'TIỆM VÀNG HOÀNG KIM';
     this.storeConfig.slogan = document.getElementById('cfgStoreSlogan')?.value || '';
     this.storeConfig.address = document.getElementById('cfgStoreAddress')?.value || '';
@@ -1896,16 +1903,32 @@ class GoldApp {
     localStorage.setItem('pmqlv_store_config', JSON.stringify(this.storeConfig));
     this.applyStoreConfig();
 
+    let cloudMsg = '';
     // Tự động lưu lên CSDL Google Sheet nếu có kết nối
     if (window.GoogleSheetService && GoogleSheetService.isConfigured()) {
-      GoogleSheetService.saveStoreConfig(this.storeConfig).then(res => {
+      try {
+        const res = await GoogleSheetService.saveStoreConfig(this.storeConfig);
         if (res && res.success) {
+          cloudMsg = '\n☁️ Google Sheet: Đã cập nhật thành công lên trang tính CauHinh!';
           console.log('☁️ Đã đồng bộ cấu hình tiệm vàng lên CSDL Google Sheet');
+        } else {
+          cloudMsg = '\n⚠️ Google Sheet: ' + (res?.message || res?.error || 'Không đồng bộ được! Kiểm tra mạng.');
+          console.warn('Lỗi đồng bộ cấu hình lên đám mây:', res);
         }
-      }).catch(err => console.warn('Lỗi đồng bộ cấu hình lên đám mây:', err));
+      } catch (err) {
+        cloudMsg = '\n⚠️ Google Sheet: Lỗi kết nối (' + err.message + ')';
+        console.error('Lỗi kết nối lưu cấu hình:', err);
+      }
+    } else {
+      cloudMsg = '\nℹ️ Google Sheet: Chưa cấu hình kết nối đám mây (đã lưu trên máy này).';
     }
 
-    alert('Đã cập nhật cấu hình tiệm vàng & Bảng giá TV thành công!');
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = origText;
+    }
+
+    alert('✅ Đã cập nhật cấu hình tiệm vàng & Bảng giá TV thành công!' + cloudMsg);
   }
 
   // ================= 7. MODALS & FORMS =================
