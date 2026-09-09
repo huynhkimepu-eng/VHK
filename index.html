@@ -1127,6 +1127,11 @@
       </div>
       <div class="modal-body">
         <form id="productForm" onsubmit="event.preventDefault(); app.saveProductFromModal();">
+          <!-- Thông báo giới hạn quyền cho tài khoản nhân viên -->
+          <div id="modalStaffNotice" style="display: none; background: #EFF6FF; border: 1.5px solid #93C5FD; color: #1E40AF; padding: 10px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; margin-bottom: 12px; line-height: 1.5;">
+            🔒 <b>Quyền Nhân Viên:</b> Bạn chỉ được phép chỉnh sửa <b>Tên sản phẩm</b>, <b>Ảnh</b> và <b>Video</b>. Các thông số vàng, trọng lượng và giá tiền do Quản trị viên (Admin) quản lý.
+          </div>
+
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
             <div>
               <label style="font-size: 12px; font-weight: bold;">Mã Hàng (Barcode) *</label>
@@ -1332,11 +1337,12 @@
         </form>
 
         <div style="margin-top: 15px; font-size: 12px; color: #475569; background: #F8FAFC; border: 1px solid #E2E8F0; padding: 12px; border-radius: 8px; line-height: 1.6;">
-          <b style="color: #1E3A5F;">Danh sách 3 tài khoản hệ thống (Mật khẩu: <code>123</code>):</b><br>
+          <b style="color: #1E3A5F;">Danh sách tài khoản hệ thống (Mật khẩu: <code>123</code>):</b><br>
           • <b>Quản lý chung:</b> <code>admin</code> / pass: <code>123</code> (Toàn quyền)<br>
           • <b>Quản lý Chi Nhánh 1:</b> <code>chinhanh1</code> / pass: <code>123</code><br>
           • <b>Quản lý Chi Nhánh 2:</b> <code>chinhanh2</code> / pass: <code>123</code><br>
-          <small style="color: #64748B;">* Tài khoản chi nhánh chỉ xem báo cáo & hủy đơn của chi nhánh mình.</small>
+          • <b>Nhân viên bán hàng:</b> <code>nhanvien</code> / pass: <code>123</code> (Chỉ sửa tên, ảnh, video; không xóa hàng)<br>
+          <small style="color: #64748B;">* Tài khoản chi nhánh & nhân viên quản lý trong phạm vi chi nhánh được phân công.</small>
         </div>
       </div>
     </div>
@@ -1415,8 +1421,8 @@
           </div>
         </button>
 
-        <!-- Xóa Sản Phẩm -->
-        <button type="button" class="btn" onclick="app.actionDeleteProduct()" style="background: #FEF2F2; color: #991B1B; border: 1.5px solid #FECACA; font-weight: 700; padding: 11px 14px; font-size: 13.5px; display: flex; align-items: center; gap: 10px; border-radius: 10px; text-align: left; justify-content: flex-start;">
+        <!-- Xóa Sản Phẩm (Chỉ Admin) -->
+        <button type="button" class="btn admin-only" onclick="app.actionDeleteProduct()" style="background: #FEF2F2; color: #991B1B; border: 1.5px solid #FECACA; font-weight: 700; padding: 11px 14px; font-size: 13.5px; display: flex; align-items: center; gap: 10px; border-radius: 10px; text-align: left; justify-content: flex-start;">
           <span style="font-size: 18px;">🗑️</span>
           <div>
             <div>Xóa Sản Phẩm</div>
@@ -1744,10 +1750,10 @@
   </div> <!-- /#appAuthenticatedArea -->
 
   <!-- Scripts -->
-  <script src="js/defaultData.js?v=51"></script>
+  <script src="js/defaultData.js?v=52"></script>
   <script src="js/googleSheetService.js?v=53"></script>
   <script src="js/cloudinaryService.js?v=51"></script>
   <script src="js/barcodeLabel.js?v=51"></script>
-  <script src="js/app.js?v=65"></script>
+  <script src="js/app.js?v=66"></script>
 </body>
 </html>

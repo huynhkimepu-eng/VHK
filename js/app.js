@@ -256,8 +256,12 @@ class GoldApp {
       loadedUsers = defaultUsers;
     } else {
       defaultUsers.forEach(def => {
-        if (!loadedUsers.some(u => String(u.username || '').toLowerCase() === def.username.toLowerCase())) {
+        const existing = loadedUsers.find(u => String(u.username || '').toLowerCase() === def.username.toLowerCase());
+        if (!existing) {
           loadedUsers.push(def);
+        } else if (def.role === 'nhanvien' && existing.role !== 'nhanvien') {
+          existing.role = 'nhanvien';
+          existing.fullName = def.fullName;
         }
       });
     }
@@ -1852,6 +1856,9 @@ class GoldApp {
     const pageItems = this.filteredProducts.slice(startIdx, endIdx);
 
     const isAdmin = this.currentUser && this.currentUser.role === 'admin';
+    const isStaff = this.currentUser && (this.currentUser.role === 'nhanvien' || this.currentUser.role === 'staff');
+    const canEdit = isAdmin || (this.currentUser && this.currentUser.role === 'chinhanh') || isStaff;
+    const canDelete = isAdmin;
     const multiplier = this.storeConfig.currencyUnitMultiplier || 1000;
     const recentMaMap = new Map((this.recentModifiedItems || []).map(i => [(typeof i === 'object' ? i.maHang : i), i]));
 
@@ -1937,10 +1944,8 @@ class GoldApp {
           <td style="text-align: center; white-space: nowrap;">
             <button class="btn btn-sm btn-outline-info" onclick="app.previewProductShowcase('${p.maHang}')" title="Xem trang giới thiệu sản phẩm riêng cho khách">👁️</button>
             <button class="btn btn-sm btn-dark" onclick="app.printSingleTag('${p.maHang}')" title="In tem đuôi chuột">🏷️ Tem</button>
-            ${isAdmin ? `
-              <button class="btn btn-sm btn-secondary" onclick="app.openEditProductModal('${p.maHang}')" title="Sửa">✏️</button>
-              <button class="btn btn-sm btn-danger" onclick="app.deleteProduct('${p.maHang}')" title="Xóa">🗑️</button>
-            ` : ''}
+            ${canEdit ? `<button class="btn btn-sm btn-secondary" onclick="app.openEditProductModal('${p.maHang}')" title="${isStaff ? 'Sửa Tên, Ảnh, Video' : 'Sửa'}">✏️</button>` : ''}
+            ${canDelete ? `<button class="btn btn-sm btn-danger" onclick="app.deleteProduct('${p.maHang}')" title="Xóa">🗑️</button>` : ''}
           </td>
         </tr>
       `;
@@ -3831,6 +3836,12 @@ class GoldApp {
   }
 
   actionDeleteProduct() {
+    const isStaff = this.currentUser && (this.currentUser.role === 'nhanvien' || this.currentUser.role === 'staff');
+    if (isStaff) {
+      alert('Tài khoản nhân viên không có quyền xóa sản phẩm trong kho!');
+      this.closeProductActionModal();
+      return;
+    }
     const p = this.selectedActionProduct;
     this.closeProductActionModal();
     if (p && p.maHang) {
@@ -3883,6 +3894,38 @@ class GoldApp {
   }
 
   openAddProductModal() {
+    const isStaff = this.currentUser && (this.currentUser.role === 'nhanvien' || this.currentUser.role === 'staff');
+    if (isStaff) {
+      alert('Tài khoản nhân viên chỉ có quyền sửa Tên, Ảnh và Video của sản phẩm đã có sẵn trong kho, không có quyền thêm mới sản phẩm!');
+      return;
+    }
+
+    // Đảm bảo ẩn thông báo nhân viên & mở khóa tất cả các trường
+    const staffNotice = document.getElementById('modalStaffNotice');
+    if (staffNotice) staffNotice.style.display = 'none';
+
+    const lockedFieldIds = [
+      'modalLoaiVang', 'modalQuayNho', 'modalChiNhanh', 'modalNhaCungCap',
+      'modalNhaCungCapCustom', 'modalNi', 'modalTlTong', 'modalTlHot',
+      'modalTlVang', 'modalCongBan', 'modalCongVon', 'modalGiaBanMon',
+      'modalGiaVon', 'modalGiaVangNhap'
+    ];
+    lockedFieldIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        if (el.tagName === 'SELECT') el.disabled = false;
+        else el.readOnly = false;
+        el.style.backgroundColor = '';
+        el.style.cursor = '';
+      }
+    });
+    const tenHangEl = document.getElementById('modalTenHang');
+    if (tenHangEl) {
+      tenHangEl.readOnly = false;
+      tenHangEl.style.backgroundColor = '';
+      tenHangEl.style.cursor = '';
+    }
+
     document.getElementById('productModalTitle').textContent = 'Thêm Sản Phẩm Mới';
     document.getElementById('productForm').reset();
     document.getElementById('modalMaHang').readOnly = false;
@@ -3932,6 +3975,37 @@ class GoldApp {
   openEditProductModal(maHang) {
     const p = this.products.find(item => item.maHang === maHang);
     if (!p) return;
+
+    const isStaff = this.currentUser && (this.currentUser.role === 'nhanvien' || this.currentUser.role === 'staff');
+    const staffNotice = document.getElementById('modalStaffNotice');
+    if (staffNotice) staffNotice.style.display = isStaff ? 'block' : 'none';
+
+    // Khóa/mở khóa các trường dữ liệu theo phân quyền nhân viên
+    const lockedFieldIds = [
+      'modalLoaiVang', 'modalQuayNho', 'modalChiNhanh', 'modalNhaCungCap',
+      'modalNhaCungCapCustom', 'modalNi', 'modalTlTong', 'modalTlHot',
+      'modalTlVang', 'modalCongBan', 'modalCongVon', 'modalGiaBanMon',
+      'modalGiaVon', 'modalGiaVangNhap'
+    ];
+    lockedFieldIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        if (el.tagName === 'SELECT') {
+          el.disabled = isStaff;
+        } else {
+          el.readOnly = isStaff;
+        }
+        el.style.backgroundColor = isStaff ? '#F1F5F9' : '';
+        el.style.cursor = isStaff ? 'not-allowed' : '';
+      }
+    });
+
+    const tenHangEl = document.getElementById('modalTenHang');
+    if (tenHangEl) {
+      tenHangEl.readOnly = false;
+      tenHangEl.style.backgroundColor = '';
+      tenHangEl.style.cursor = '';
+    }
 
     document.getElementById('productModalTitle').textContent = 'Chỉnh Sửa Sản Phẩm: ' + maHang;
     document.getElementById('modalMaHang').value = p.maHang;
@@ -4574,7 +4648,14 @@ class GoldApp {
         return;
       }
 
+      const isStaff = this.currentUser && (this.currentUser.role === 'nhanvien' || this.currentUser.role === 'staff');
       const existingIndex = this.products.findIndex(p => p.maHang === maHang);
+
+      if (isStaff && existingIndex < 0) {
+        alert('Tài khoản nhân viên chỉ có quyền sửa Tên, Ảnh và Video của sản phẩm đã có sẵn trong kho, không có quyền thêm mới sản phẩm!');
+        return;
+      }
+
       const productData = {
         maHang,
         tenHang,
@@ -4607,6 +4688,30 @@ class GoldApp {
       if (existingIndex >= 0) {
         productData.trangThai = this.products[existingIndex].trangThai || 'Còn tồn';
         productData.ngayNhap = this.products[existingIndex].ngayNhap || productData.ngayNhap;
+
+        // BẢO VỆ DỮ LIỆU: Nếu là tài khoản Nhân viên, chỉ cho phép cập nhật tên hàng, ảnh, video.
+        // Giữ nguyên 100% các thông số kỹ thuật, trọng lượng vàng, nhà cung cấp, chi nhánh và giá tiền gốc
+        if (isStaff) {
+          const orig = this.products[existingIndex];
+          productData.loaiHang = orig.loaiHang || productData.loaiHang;
+          productData.loaiVang = orig.loaiVang;
+          productData.quayNho = orig.quayNho;
+          productData.quayLon = orig.quayLon || productData.quayLon;
+          productData.nhomHang = orig.nhomHang || productData.nhomHang;
+          productData.tlTong = orig.tlTong;
+          productData.tlHot = orig.tlHot;
+          productData.tlVang = orig.tlVang;
+          productData.ni = orig.ni;
+          productData.congBan = orig.congBan;
+          productData.congVon = orig.congVon;
+          productData.giaVangNhap = orig.giaVangNhap;
+          productData.giaBanMon = orig.giaBanMon;
+          productData.giaVon = orig.giaVon;
+          productData.nhaSanXuat = orig.nhaSanXuat;
+          productData.nhaCungCap = orig.nhaCungCap;
+          productData.chiNhanh = orig.chiNhanh;
+          // Chỉ cập nhật: tenHang, anhSanPham, videoSanPham
+        }
       }
 
       if (btn) {
@@ -4667,6 +4772,12 @@ class GoldApp {
   }
 
   async deleteProduct(maHang) {
+    const isStaff = this.currentUser && (this.currentUser.role === 'nhanvien' || this.currentUser.role === 'staff');
+    if (isStaff) {
+      alert('Tài khoản nhân viên không có quyền xóa sản phẩm trong kho!');
+      return;
+    }
+
     if (!confirm(`Bạn có chắc muốn xóa sản phẩm ${maHang}?`)) return;
 
     this.showGlobalLoading('Đang xóa sản phẩm và giải phóng Cloudinary...');
@@ -4906,22 +5017,6 @@ class GoldApp {
         String(user.username || '').trim().toLowerCase() === u && 
         String(user.password || '').trim() === p
       );
-
-      // Hỗ trợ alias cũ
-      if (!found) {
-        const aliasMap = {
-          'nhanvien1': 'chinhanh1',
-          'nhanvien2': 'chinhanh2',
-          'nhanvien': 'chinhanh1'
-        };
-        const mapped = aliasMap[u];
-        if (mapped) {
-          found = this.users.find(user => 
-            String(user.username || '').trim().toLowerCase() === mapped && 
-            String(user.password || '').trim() === p
-          );
-        }
-      }
 
       // Fallback nếu có trong DEFAULT_USERS
       if (!found && window.DEFAULT_USERS) {
