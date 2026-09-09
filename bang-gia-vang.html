@@ -37,6 +37,7 @@
       display: flex;
       flex-direction: column;
       overflow-x: hidden;
+      padding-bottom: 58px;
     }
 
     /* Main Container */
@@ -342,31 +343,39 @@
       font-size: 18px;
     }
 
-    /* Bottom Ticker Marquee */
+    /* Bottom Ticker Marquee: Cố định hoàn toàn ở đáy màn hình */
     .bottom-ticker {
-      background: linear-gradient(90deg, #78350F 0%, #92400E 100%);
-      border-top: 2px solid #F59E0B;
-      padding: 12px 20px;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      width: 100%;
+      z-index: 9999;
+      background: linear-gradient(90deg, #0F172A 0%, #1E293B 50%, #0F172A 100%);
+      border-top: 2.5px solid #F59E0B;
+      padding: 10px 24px;
       display: flex;
       align-items: center;
-      gap: 15px;
-      font-size: 14.5px;
+      gap: 16px;
+      font-size: 15px;
       overflow: hidden;
-      margin-top: 18px;
-      border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(120, 53, 15, 0.2);
+      margin: 0;
+      border-radius: 0;
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
     }
 
     .ticker-badge {
-      background: #FDE68A;
-      color: #78350F;
+      background: linear-gradient(135deg, #F59E0B, #D97706);
+      color: #FFFFFF;
       font-size: 12px;
       font-weight: 900;
-      padding: 4px 10px;
-      border-radius: 4px;
+      padding: 5px 12px;
+      border-radius: 6px;
       white-space: nowrap;
       text-transform: uppercase;
       letter-spacing: 1px;
+      box-shadow: 0 2px 6px rgba(217, 119, 6, 0.35);
+      flex-shrink: 0;
     }
 
     .ticker-content {
@@ -378,9 +387,11 @@
     .ticker-text {
       display: inline-block;
       padding-left: 100%;
-      animation: tickerAnimation 30s linear infinite;
-      color: #FFFBEB;
+      animation: tickerAnimation 28s linear infinite;
+      color: #F8FAFC;
       font-weight: 600;
+      font-size: 14.5px;
+      letter-spacing: 0.5px;
     }
 
     @keyframes tickerAnimation {
@@ -401,6 +412,7 @@
     }
 
     @media (max-width: 640px) {
+      body { padding-bottom: 52px; }
       .tv-container { padding: 10px; }
       .tv-header { flex-direction: column; align-items: flex-start; gap: 10px; }
       .brand-titles h1 { font-size: 22px; }
@@ -414,6 +426,9 @@
       .rates-table td { padding: 10px 6px; }
       .gold-bullet { width: 10px; height: 10px; }
       .gold-name-box { gap: 8px; }
+      .bottom-ticker { padding: 8px 12px; gap: 10px; }
+      .ticker-badge { font-size: 11px; padding: 3px 8px; }
+      .ticker-text { font-size: 13px; }
     }
   </style>
 </head>
@@ -468,21 +483,21 @@
         ⚠️ Bảng giá vàng đang được cập nhật. Vui lòng quay lại sau!
       </div>
     </main>
+  </div> <!-- /tv-container -->
 
-    <!-- Marquee Banner chạy chữ chân trang -->
-    <footer class="bottom-ticker">
-      <div class="ticker-badge">THÔNG BÁO</div>
-      <div class="ticker-content">
-        <div class="ticker-text" id="tickerText">
-          ✨ Kính chúc Quý khách Vạn Sự Như Ý - Phát Tài Phát Lộc! | Giá vàng niêm yết tại thời điểm giao dịch thực tế tại quầy | Nhận thu đổi, làm mới, đánh bóng trọn đời sản phẩm.
-        </div>
+  <!-- Dòng chữ thông báo chạy chân trang: Cố định độc lập dưới đáy màn hình -->
+  <footer class="bottom-ticker">
+    <div class="ticker-badge">THÔNG BÁO</div>
+    <div class="ticker-content">
+      <div class="ticker-text" id="tickerText">
+        ✨ Kính chúc Quý khách Vạn Sự Như Ý - Phát Tài Phát Lộc! | Giá vàng niêm yết tại thời điểm giao dịch thực tế tại quầy | Nhận thu đổi, làm mới, đánh bóng trọn đời sản phẩm.
       </div>
-    </footer>
-  </div>
+    </div>
+  </footer>
 
   <!-- Scripts -->
-  <script src="js/defaultData.js?v=57"></script>
-  <script src="js/googleSheetService.js?v=57"></script>
+  <script src="js/defaultData.js?v=58"></script>
+  <script src="js/googleSheetService.js?v=58"></script>
   <script>
     // State
     let goldPrices = [];
