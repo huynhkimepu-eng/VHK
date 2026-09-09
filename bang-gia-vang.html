@@ -173,13 +173,6 @@
       border-radius: 50%;
       background: #10B981;
       display: inline-block;
-      animation: pulseDot 1.5s infinite;
-    }
-
-    @keyframes pulseDot {
-      0% { opacity: 0.4; transform: scale(0.9); }
-      50% { opacity: 1; transform: scale(1.2); }
-      100% { opacity: 0.4; transform: scale(0.9); }
     }
 
     /* Address Line */
@@ -706,7 +699,7 @@
         const banVndStr = (ban * multiplier).toLocaleString('vi-VN') + ' đ';
 
         return `
-          <tr class="${highlight ? 'price-updated-flash' : ''}">
+          <tr>
             <td>
               <div class="gold-name-box">
                 <span class="gold-bullet"></span>

@@ -2568,36 +2568,81 @@ class GoldApp {
 
     tbody.innerHTML = this.goldPrices.map((g, idx) => {
       const banVnd = (Number(g.giaBan) * multiplier).toLocaleString('vi-VN') + ' đ';
+      const isEven = (idx % 2 === 1);
+      const defaultBg = isEven ? '#FAF8F5' : '#FFFFFF';
 
       return `
-        <tr>
-          <td>
+        <tr style="background: ${defaultBg}; transition: background 0.15s ease;" onmouseover="this.style.background='#FEF9C3'" onmouseout="this.style.background='${defaultBg}'">
+          <!-- Cột 1: Loại Vàng / Sản Phẩm -->
+          <td style="padding: 13px 18px; vertical-align: middle;">
+            <div style="display: flex; align-items: center; gap: 9px;">
+              <span style="display: inline-block; width: 8px; height: 8px; background: linear-gradient(135deg, #D97706, #B45309); border-radius: 2px; transform: rotate(45deg); flex-shrink: 0;"></span>
+              ${isAdmin ? `
+                <a href="javascript:void(0)" onclick="app.openQuickPriceModal(${idx})" class="gold-name-btn" style="font-weight: 800; font-size: 14.5px; color: #0F172A; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;" title="Click để nhập nhanh Giá Mua / Giá Bán">
+                  <span>${g.loaiVang}</span>
+                  <span style="font-size: 12px; opacity: 0.65;">✏️</span>
+                </a>
+              ` : `
+                <span style="font-weight: 800; color: #0F172A; font-size: 14.5px;">${g.loaiVang}</span>
+              `}
+            </div>
+          </td>
+
+          <!-- Cột 2: Giá Mua Vào (Nổi bật xanh ngọc emerald) -->
+          <td style="text-align: right; padding: 10px 18px; vertical-align: middle;">
             ${isAdmin ? `
-              <a href="javascript:void(0)" onclick="app.openQuickPriceModal(${idx})" class="gold-name-btn" title="Click để nhập nhanh Giá Mua / Giá Bán">
-                <span><b>${g.loaiVang}</b></span>
-                <span style="font-size: 11px; opacity: 0.85;">✏️</span>
-              </a>
+              <div style="display: flex; justify-content: flex-end;">
+                <input type="number" class="form-control" 
+                  style="text-align: right; width: 138px; font-weight: 800; font-size: 15.5px; color: #047857; background: #ECFDF5; border: 1.5px solid #6EE7B7; border-radius: 8px; padding: 6px 10px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.03);" 
+                  value="${g.giaMua}" onchange="app.updateGoldPriceVal(${idx}, 'giaMua', this.value)">
+              </div>
             ` : `
-              <span style="font-weight: 700; color: #1E293B; font-size: 13.5px;">${g.loaiVang}</span>
+              <div style="display: flex; justify-content: flex-end;">
+                <span style="display: inline-flex; align-items: center; justify-content: flex-end; background: #ECFDF5; color: #047857; font-weight: 800; font-size: 15.5px; padding: 6px 14px; border-radius: 8px; border: 1px solid #A7F3D0; min-width: 105px; letter-spacing: 0.3px;">
+                  ${Number(g.giaMua).toLocaleString('vi-VN')}
+                </span>
+              </div>
             `}
           </td>
-          ${!isStaff ? `<td>${g.hamLuong || '--'}</td>` : ''}
-          <td style="text-align: right;">
-            <input type="number" class="form-control" style="text-align: right; width: 130px; display: inline-block; ${!isAdmin ? 'background-color: #F8FAFC; cursor: default;' : ''}" 
-              value="${g.giaMua}" ${isAdmin ? '' : 'readonly'} onchange="app.updateGoldPriceVal(${idx}, 'giaMua', this.value)">
+
+          <!-- Cột 3: Giá Bán Ra (Nổi bật vàng kim hổ phách) -->
+          <td style="text-align: right; padding: 10px 18px; vertical-align: middle;">
+            ${isAdmin ? `
+              <div style="display: flex; justify-content: flex-end;">
+                <input type="number" class="form-control" 
+                  style="text-align: right; width: 138px; font-weight: 800; font-size: 15.5px; color: #B45309; background: #FFFBEB; border: 1.5px solid #FCD34D; border-radius: 8px; padding: 6px 10px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.03);" 
+                  value="${g.giaBan}" onchange="app.updateGoldPriceVal(${idx}, 'giaBan', this.value)">
+              </div>
+            ` : `
+              <div style="display: flex; justify-content: flex-end;">
+                <span style="display: inline-flex; align-items: center; justify-content: flex-end; background: #FFFBEB; color: #B45309; font-weight: 800; font-size: 15.5px; padding: 6px 14px; border-radius: 8px; border: 1px solid #FDE68A; min-width: 105px; letter-spacing: 0.3px;">
+                  ${Number(g.giaBan).toLocaleString('vi-VN')}
+                </span>
+              </div>
+            `}
           </td>
-          <td style="text-align: right;">
-            <input type="number" class="form-control" style="text-align: right; width: 130px; display: inline-block; font-weight: bold; color: #B45309; ${!isAdmin ? 'background-color: #F8FAFC; cursor: default;' : ''}" 
-              value="${g.giaBan}" ${isAdmin ? '' : 'readonly'} onchange="app.updateGoldPriceVal(${idx}, 'giaBan', this.value)">
+
+          <!-- Cột 4: Đơn Vị (Ngay sau Giá Bán Ra) -->
+          <td style="text-align: center; padding: 10px 12px; vertical-align: middle;">
+            <span style="display: inline-block; background: #F1F5F9; color: #334155; font-size: 12.5px; font-weight: 700; padding: 4px 10px; border-radius: 6px; border: 1px solid #CBD5E1; text-transform: lowercase;">
+              ${g.donVi || 'chỉ'}
+            </span>
           </td>
-          <td>${g.donVi || 'chỉ'}</td>
-          <td style="text-align: right; font-weight: 800; color: #0284C7;">${banVnd}</td>
+
+          <!-- Cột 5: Quy Đổi VNĐ (Bán Ra) -->
+          <td style="text-align: right; padding: 10px 18px; vertical-align: middle;">
+            <span style="font-weight: 900; color: #B45309; font-size: 15.5px; letter-spacing: 0.3px;">
+              ${banVnd}
+            </span>
+          </td>
+
+          <!-- Cột 6: Thao Tác (Admin) -->
           ${isAdmin ? `
-            <td style="text-align: center; white-space: nowrap;">
-              <button type="button" class="btn btn-outline btn-xs admin-only" onclick="app.openGoldTypeModal(${idx})" title="Sửa tên loại vàng" style="padding: 4px 8px; font-size: 11.5px; margin-right: 4px; border-radius: 6px;">
+            <td style="text-align: center; white-space: nowrap; padding: 10px 14px; vertical-align: middle;">
+              <button type="button" class="btn btn-outline btn-xs admin-only" onclick="app.openGoldTypeModal(${idx})" title="Sửa tên loại vàng" style="padding: 4px 10px; font-size: 12px; margin-right: 4px; border-radius: 6px; font-weight: 600;">
                 ✏️ Sửa Tên
               </button>
-              <button type="button" class="btn btn-danger btn-xs admin-only" onclick="app.deleteGoldType(${idx})" title="Xóa loại vàng này" style="padding: 4px 8px; font-size: 11.5px; border-radius: 6px;">
+              <button type="button" class="btn btn-danger btn-xs admin-only" onclick="app.deleteGoldType(${idx})" title="Xóa loại vàng này" style="padding: 4px 10px; font-size: 12px; border-radius: 6px; font-weight: 600;">
                 🗑️ Xóa
               </button>
             </td>

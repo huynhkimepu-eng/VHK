@@ -649,14 +649,14 @@
         </div>
         <div class="card-body">
           <!-- Thanh trạng thái đồng bộ trực tiếp máy chủ (Dành cho cả nhân viên và quản lý) -->
-          <div id="goldRatesSyncBar" style="display: flex; align-items: center; justify-content: space-between; background: #F0FDF4; border: 1px solid #BBF7D0; padding: 9px 14px; border-radius: 8px; margin-bottom: 12px; font-size: 13px; flex-wrap: wrap; gap: 8px;">
+          <div id="goldRatesSyncBar" style="display: flex; align-items: center; justify-content: space-between; background: #F8FAFC; border: 1px solid #E2E8F0; padding: 10px 16px; border-radius: 10px; margin-bottom: 14px; font-size: 13px; flex-wrap: wrap; gap: 10px;">
             <div style="display: flex; align-items: center; gap: 8px;">
-              <span id="goldRatesSyncDot" style="width: 9px; height: 9px; border-radius: 50%; background: #10B981; display: inline-block; box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);"></span>
-              <span id="goldRatesSyncStatus" style="color: #15803D; font-weight: 700;">
-                Đồng bộ máy chủ: <span id="goldRatesSyncTime" style="font-weight: 800;">Đang kết nối...</span>
+              <span id="goldRatesSyncDot" style="width: 9px; height: 9px; border-radius: 50%; background: #10B981; display: inline-block;"></span>
+              <span id="goldRatesSyncStatus" style="color: #047857; font-weight: 700;">
+                Đồng bộ máy chủ Google Sheet: <span id="goldRatesSyncTime" style="font-weight: 800; color: #1E293B;">Đang kết nối...</span>
               </span>
             </div>
-            <button type="button" class="btn btn-sm btn-outline-success" onclick="app.fetchGoldPricesRealtime(true)" style="padding: 5px 12px; font-size: 12.5px; font-weight: 700; border-radius: 6px; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; background: #FFFFFF; border: 1px solid #059669; color: #059669;">
+            <button type="button" class="btn btn-sm" onclick="app.fetchGoldPricesRealtime(true)" style="padding: 5px 14px; font-size: 12.5px; font-weight: 700; border-radius: 6px; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; background: #FFFFFF; border: 1px solid #CBD5E1; color: #0F766E;">
               🔄 Cập nhật ngay
             </button>
           </div>
@@ -670,17 +670,20 @@
             Giá bán ở bảng này sẽ tự động được áp dụng tại màn hình Bán Hàng khi tính tiền theo công thức: <b>Thành tiền = (TL Vàng * Giá Bán) + Tiền Công</b>. Bấm vào <b>Tên loại vàng</b> để nhập nhanh Giá Mua / Giá Bán.
           </p>
 
-          <div class="table-responsive">
-            <table class="table-custom">
+          <div class="table-responsive" style="border-radius: 10px; border: 1px solid #E2E8F0; box-shadow: 0 4px 16px rgba(0,0,0,0.03); overflow: hidden;">
+            <table class="table-custom" style="margin-bottom: 0;">
               <thead>
-                <tr>
-                  <th>Loại Vàng / Sản Phẩm</th>
-                  <th class="not-for-staff">Hàm Lượng</th>
-                  <th style="width: 170px; text-align: right;">Giá Mua Vào (x1.000đ)</th>
-                  <th style="width: 170px; text-align: right;">Giá Bán Ra (x1.000đ)</th>
-                  <th>Đơn Vị</th>
-                  <th style="text-align: right;">Quy Đổi VNĐ (Bán Ra)</th>
-                  <th class="admin-only" style="text-align: center; width: 140px;">Thao Tác</th>
+                <tr style="background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%); color: #F8FAFC;">
+                  <th style="padding: 13px 18px; font-size: 13.5px; font-weight: 700; letter-spacing: 0.3px;">Loại Vàng / Sản Phẩm</th>
+                  <th style="width: 175px; text-align: right; padding: 13px 18px; font-size: 13.5px; font-weight: 700; color: #6EE7B7;">
+                    💰 Giá Mua Vào (x1.000đ)
+                  </th>
+                  <th style="width: 175px; text-align: right; padding: 13px 18px; font-size: 13.5px; font-weight: 700; color: #FCD34D;">
+                    🏷️ Giá Bán Ra (x1.000đ)
+                  </th>
+                  <th style="width: 100px; text-align: center; padding: 13px 12px; font-size: 13.5px; font-weight: 700;">Đơn Vị</th>
+                  <th style="text-align: right; padding: 13px 18px; font-size: 13.5px; font-weight: 700; color: #FDE68A;">Quy Đổi VNĐ (Bán Ra)</th>
+                  <th class="admin-only" style="text-align: center; width: 140px; padding: 13px 14px; font-size: 13.5px; font-weight: 700;">Thao Tác</th>
                 </tr>
               </thead>
               <tbody id="goldRatesTableBody">
@@ -1773,9 +1776,9 @@
 
   <!-- Scripts -->
   <script src="js/defaultData.js?v=53"></script>
-  <script src="js/googleSheetService.js?v=55"></script>
+  <script src="js/googleSheetService.js?v=56"></script>
   <script src="js/cloudinaryService.js?v=51"></script>
   <script src="js/barcodeLabel.js?v=51"></script>
-  <script src="js/app.js?v=72"></script>
+  <script src="js/app.js?v=73"></script>
 </body>
 </html>
