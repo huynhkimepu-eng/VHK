@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>PMQLV - Phần Mềm Quản Lý & Bán Hàng Vàng Bạc Đá Quý</title>
-  <link rel="stylesheet" href="css/style.css?v=67">
+  <link rel="stylesheet" href="css/style.css?v=68">
   <!-- HTML5 QR Code & Barcode Scanner for Camera -->
     <script>
     window.onerror = function(msg, src, line, col, err) {
@@ -1116,6 +1116,15 @@
         <span class="icon">📊</span>
         <span>Báo cáo</span>
       </button>
+      <!-- Branch Selector (nhanvien2 & admin) -->
+      <div class="mobile-nav-branch">
+        <label>KHO:</label>
+        <select id="mobileBranchSelector" onchange="app.changeBranchMobile(this.value)">
+          <option value="Chi nhánh 1">CN1</option>
+          <option value="Chi nhánh 2">CN2</option>
+          <option value="ALL">Tất cả</option>
+        </select>
+      </div>
       <button type="button" class="mobile-nav-btn mobile-nav-btn-logout" onclick="app.logout()" title="Đăng xuất khỏi hệ thống">
         <span class="icon" style="color: #EF4444;">🚪</span>
         <span style="color: #DC2626; font-weight: 700;">Đăng xuất</span>
@@ -1446,8 +1455,8 @@
           </div>
         </button>
 
-        <!-- Xóa Sản Phẩm (Chỉ Admin) -->
-        <button type="button" class="btn admin-only" onclick="app.actionDeleteProduct()" style="background: #FEF2F2; color: #991B1B; border: 1.5px solid #FECACA; font-weight: 700; padding: 11px 14px; font-size: 13.5px; display: flex; align-items: center; gap: 10px; border-radius: 10px; text-align: left; justify-content: flex-start;">
+        <!-- Xóa Sản Phẩm (Admin + nhanvien2) -->
+        <button type="button" id="btnDeleteProduct" class="btn" onclick="app.actionDeleteProduct()" style="background: #FEF2F2; color: #991B1B; border: 1.5px solid #FECACA; font-weight: 700; padding: 11px 14px; font-size: 13.5px; display: flex; align-items: center; gap: 10px; border-radius: 10px; text-align: left; justify-content: flex-start;">
           <span style="font-size: 18px;">🗑️</span>
           <div>
             <div>Xóa Sản Phẩm</div>
@@ -1779,6 +1788,6 @@
   <script src="js/googleSheetService.js?v=62"></script>
   <script src="js/cloudinaryService.js?v=51"></script>
   <script src="js/barcodeLabel.js?v=51"></script>
-  <script src="js/app.js?v=80"></script>
+  <script src="js/app.js?v=81"></script>
 </body>
 </html>

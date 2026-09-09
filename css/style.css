@@ -1309,10 +1309,12 @@ body {
   }
 
   /* Ẩn hoàn toàn phần đầu trang trên điện thoại cho tài khoản nhân viên hạn chế */
-  body.role-restricted-staff .app-header {
+  body.role-restricted-staff .app-header,
+  body.role-power-staff .app-header {
     display: none !important;
   }
-  body.role-restricted-staff .main-wrapper {
+  body.role-restricted-staff .main-wrapper,
+  body.role-power-staff .main-wrapper {
     padding-top: max(8px, env(safe-area-inset-top, 8px)) !important;
   }
 
@@ -2050,7 +2052,43 @@ body.role-restricted-staff:not(.allow-desktop-tag) .not-for-staff {
   body.role-restricted-staff #btnToggleRecentFilter {
     display: none !important;
   }
+
+  /* Branch selector trong mobile bottom nav — chỉ hiện cho nhanvien2 & admin */
+  .mobile-nav-branch {
+    display: none;
+  }
+  body.role-power-staff .mobile-nav-branch,
+  body.role-admin .mobile-nav-branch {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 6px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.3);
+  }
+  .mobile-nav-branch label {
+    font-size: 9px;
+    font-weight: 700;
+    color: inherit;
+    white-space: nowrap;
+  }
+  .mobile-nav-branch select {
+    font-size: 10px;
+    background: transparent;
+    border: none;
+    color: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    max-width: 90px;
+    padding: 2px 2px;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .mobile-nav-branch select option {
+    color: #1E293B;
+    background: #fff;
+  }
 }
-
-
 

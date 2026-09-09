@@ -798,7 +798,7 @@ class GoldApp {
       if (banner) banner.style.display = 'none';
     }
 
-    // Cập nhật Branch Selector
+    // Cập nhật Branch Selector (desktop)
     const sel = document.getElementById('globalBranchSelector');
     const optAll = document.getElementById('optAllBranches');
     if (sel) {
@@ -814,6 +814,22 @@ class GoldApp {
         this.currentBranch = branchName;
       }
     }
+
+    // Đồng bộ Mobile Branch Selector
+    const mobSel = document.getElementById('mobileBranchSelector');
+    if (mobSel) {
+      if (isAllBranches) {
+        mobSel.value = this.currentBranch || 'ALL';
+      } else {
+        const branchName = u.chiNhanh || 'Chi nhánh 1';
+        mobSel.value = branchName;
+      }
+    }
+
+    // Phân quyền nút Xóa Sản Phẩm (Admin + nhanvien2)
+    const canDeleteProduct = isAdmin || isPowerStaff;
+    const btnDelProd = document.getElementById('btnDeleteProduct');
+    if (btnDelProd) btnDelProd.style.display = canDeleteProduct ? '' : 'none';
   }
 
   // Chuyển đổi qua lại giữa các Tab
@@ -821,8 +837,21 @@ class GoldApp {
     const sel = document.getElementById('globalBranchSelector');
     if (!sel) return;
     this.currentBranch = sel.value;
-    
+    // Đồng bộ mobile selector
+    const mobSel = document.getElementById('mobileBranchSelector');
+    if (mobSel) mobSel.value = this.currentBranch;
     // Refresh UI based on branch
+    this.filterPosProducts();
+    this.filterInventory();
+    this.updateReportStats();
+  }
+
+  changeBranchMobile(value) {
+    this.currentBranch = value;
+    // Đồng bộ desktop selector
+    const sel = document.getElementById('globalBranchSelector');
+    if (sel) sel.value = value;
+    // Refresh UI
     this.filterPosProducts();
     this.filterInventory();
     this.updateReportStats();
@@ -4135,7 +4164,8 @@ class GoldApp {
 
   actionDeleteProduct() {
     const isStaff = this.currentUser && (this.currentUser.role === 'nhanvien' || this.currentUser.role === 'staff');
-    if (isStaff) {
+    const isPowerStaff = this.currentUser && this.currentUser.username === 'nhanvien2';
+    if (isStaff && !isPowerStaff) {
       alert('Tài khoản nhân viên không có quyền xóa sản phẩm trong kho!');
       this.closeProductActionModal();
       return;
