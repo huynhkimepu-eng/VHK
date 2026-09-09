@@ -1208,11 +1208,11 @@ body {
   background: none;
   border: none;
   color: #64748B;
-  font-size: 10.5px;
+  font-size: 10px;
   font-weight: 600;
   cursor: pointer;
   flex: 1;
-  padding: 4px 2px;
+  padding: 4px 1px;
   white-space: nowrap;
 }
 
@@ -1221,7 +1221,12 @@ body {
 }
 
 .mobile-nav-btn .icon {
-  font-size: 18px;
+  font-size: 17px;
+}
+
+.mobile-nav-btn-logout:active {
+  background: #FEE2E2 !important;
+  border-radius: 6px;
 }
 
 /* ================= INVOICE PRINT TEMPLATE ================= */
@@ -1301,6 +1306,14 @@ body {
     padding: 8px !important;
     padding-bottom: 80px !important; /* Khoảng trống cho thanh menu đáy */
     overflow-x: hidden !important;
+  }
+
+  /* Ẩn hoàn toàn phần đầu trang trên điện thoại cho tài khoản nhân viên */
+  body.role-staff .app-header {
+    display: none !important;
+  }
+  body.role-staff .main-wrapper {
+    padding-top: max(8px, env(safe-area-inset-top, 8px)) !important;
   }
 
   /* 1. Header trên điện thoại: Tinh gọn 2 tầng rõ ràng */
