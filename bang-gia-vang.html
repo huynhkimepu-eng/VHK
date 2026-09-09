@@ -211,19 +211,25 @@
     }
 
     .rates-table thead th {
-      background: linear-gradient(135deg, #92400E 0%, #B45309 45%, #78350F 100%);
-      color: #FFFFFF;
-      font-family: 'Cinzel', serif;
-      font-size: 17.5px;
+      background: linear-gradient(135deg, #0F172A 0%, #1E293B 50%, #0F172A 100%);
+      color: #F8FAFC;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 16.5px;
       font-weight: 800;
-      letter-spacing: 1.5px;
+      letter-spacing: 1px;
       padding: 18px 24px;
-      border-bottom: 3px solid #D97706;
+      border-bottom: 3px solid #F59E0B;
       text-transform: uppercase;
-      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
     }
 
-    .rates-table thead th.th-right {
+    .rates-table thead th.th-buy {
+      color: #6EE7B7;
+      text-align: right;
+    }
+
+    .rates-table thead th.th-sell {
+      color: #FCD34D;
       text-align: right;
     }
 
@@ -232,23 +238,23 @@
     }
 
     .rates-table tbody tr {
-      border-bottom: 1px solid #EFE4CF;
+      border-bottom: 1px solid #F1F5F9;
       background: #FFFFFF;
-      transition: background 0.2s ease;
+      transition: background 0.15s ease;
     }
 
     .rates-table tbody tr:nth-child(even) {
-      background: #FCF9F2;
+      background: #FAF8F5;
     }
 
     .rates-table tbody tr:hover {
-      background: #FEF3C7;
+      background: #FEF9C3;
     }
 
     .rates-table td {
       padding: 18px 24px;
       vertical-align: middle;
-      font-size: 19px;
+      font-size: 18px;
     }
 
     .gold-name-box {
@@ -262,15 +268,15 @@
       height: 14px;
       border-radius: 50%;
       background: linear-gradient(135deg, #F59E0B, #B45309);
-      box-shadow: 0 0 10px rgba(217, 119, 6, 0.4);
+      box-shadow: 0 0 8px rgba(217, 119, 6, 0.35);
       flex-shrink: 0;
     }
 
     .gold-title {
-      font-size: 23px;
-      font-weight: 900;
+      font-size: 24px;
+      font-weight: 800;
       color: #0F172A;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.3px;
     }
 
     .gold-sub {
@@ -280,46 +286,52 @@
       margin-top: 2px;
     }
 
-    .purity-badge {
-      display: inline-block;
-      padding: 6px 14px;
-      border-radius: 10px;
-      background: #FEF3C7;
-      border: 1.5px solid #FCD34D;
-      color: #92400E;
-      font-size: 18px;
-      font-weight: 800;
-      letter-spacing: 0.5px;
-      box-shadow: 0 1px 3px rgba(180, 83, 9, 0.1);
-    }
-
     .unit-tag {
-      font-size: 17px;
+      display: inline-block;
+      padding: 6px 16px;
+      border-radius: 20px;
+      background: #F1F5F9;
+      border: 1.5px solid #CBD5E1;
       color: #334155;
+      font-size: 16px;
       font-weight: 700;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     }
 
     .price-cell {
       text-align: right;
       font-family: 'Montserrat', sans-serif;
-      font-size: 28px;
+    }
+
+    .price-val {
+      font-size: 32px;
       font-weight: 900;
       letter-spacing: 0.5px;
+      line-height: 1.15;
     }
 
-    .price-buy {
+    .price-buy-val {
       color: #047857;
+      text-shadow: 0 1px 1px rgba(4, 120, 87, 0.1);
     }
 
-    .price-sell {
-      color: #DC2626;
+    .price-sell-val {
+      color: #B45309;
+      text-shadow: 0 1px 1px rgba(180, 83, 9, 0.1);
     }
 
     .price-vnd-sub {
       font-size: 13.5px;
-      color: #64748B;
-      font-weight: 600;
-      margin-top: 2px;
+      font-weight: 700;
+      margin-top: 3px;
+    }
+
+    .price-buy-sub {
+      color: #059669;
+    }
+
+    .price-sell-sub {
+      color: #D97706;
     }
 
     /* Empty state */
@@ -376,36 +388,32 @@
       100% { transform: translateX(-100%); }
     }
 
-    /* Flash highlight when prices change */
-    @keyframes flashUpdatedRow {
-      0% { background-color: #FEF08A; }
-      50% { background-color: #FDE047; }
-      100% { background-color: transparent; }
-    }
-    .price-updated-flash {
-      animation: flashUpdatedRow 2s ease-out;
-    }
-
     /* Responsive for TV / Tablet / Mobile */
     @media (max-width: 1024px) {
       .brand-titles h1 { font-size: 28px; }
       .header-clock-pill .clock-time-inline { font-size: 17px; }
       .gold-title { font-size: 20px; }
-      .price-cell { font-size: 24px; }
-      .purity-badge { font-size: 15px; }
-      .rates-table thead th { font-size: 15px; padding: 14px 16px; }
-      .rates-table td { padding: 14px 16px; font-size: 17px; }
+      .price-val { font-size: 24px; }
+      .price-vnd-sub { font-size: 12px; }
+      .unit-tag { font-size: 14px; padding: 5px 12px; }
+      .rates-table thead th { font-size: 14px; padding: 14px 16px; }
+      .rates-table td { padding: 14px 16px; font-size: 16px; }
     }
 
     @media (max-width: 640px) {
-      .tv-container { padding: 12px; }
-      .tv-header { flex-direction: column; align-items: flex-start; gap: 12px; }
-      .brand-titles h1 { font-size: 24px; }
-      .header-clock-pill .clock-time-inline { font-size: 16px; }
-      .price-cell { font-size: 18px; }
-      .gold-title { font-size: 16px; }
-      .rates-table thead th { font-size: 12px; padding: 10px; }
-      .rates-table td { padding: 10px; font-size: 14px; }
+      .tv-container { padding: 10px; }
+      .tv-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+      .brand-titles h1 { font-size: 22px; }
+      .header-clock-pill .clock-time-inline { font-size: 15px; }
+      .price-val { font-size: 18px; }
+      .price-vnd-sub { font-size: 11px; }
+      .gold-title { font-size: 15px; }
+      .gold-sub { font-size: 11px; }
+      .unit-tag { font-size: 12px; padding: 4px 8px; }
+      .rates-table thead th { font-size: 11.5px; padding: 10px 6px; letter-spacing: 0.5px; }
+      .rates-table td { padding: 10px 6px; }
+      .gold-bullet { width: 10px; height: 10px; }
+      .gold-name-box { gap: 8px; }
     }
   </style>
 </head>
@@ -445,11 +453,10 @@
       <table class="rates-table">
         <thead>
           <tr>
-            <th style="width: 32%;">Loại Vàng / Sản Phẩm</th>
-            <th class="th-center" style="width: 18%;">Hàm Lượng</th>
+            <th style="width: 38%;">Loại Vàng / Sản Phẩm</th>
+            <th class="th-buy" style="width: 25%;">💰 Giá Mua Vào</th>
+            <th class="th-sell" style="width: 25%;">🏷️ Giá Bán Ra</th>
             <th class="th-center" style="width: 12%;">Đơn Vị</th>
-            <th class="th-right" style="width: 19%;">Giá Mua Vào</th>
-            <th class="th-right" style="width: 19%;">Giá Bán Ra</th>
           </tr>
         </thead>
         <tbody id="ratesTableBody">
@@ -474,8 +481,8 @@
   </div>
 
   <!-- Scripts -->
-  <script src="js/defaultData.js?v=53"></script>
-  <script src="js/googleSheetService.js?v=55"></script>
+  <script src="js/defaultData.js?v=56"></script>
+  <script src="js/googleSheetService.js?v=56"></script>
   <script>
     // State
     let goldPrices = [];
@@ -709,19 +716,16 @@
                 </div>
               </div>
             </td>
-            <td style="text-align: center;">
-              <span class="purity-badge">${hamLuong}</span>
+            <td class="price-cell">
+              <div class="price-val price-buy-val">${muaVndStr}</div>
+              <div class="price-vnd-sub price-buy-sub">Mua vào: ${mua.toLocaleString('vi-VN')}k</div>
+            </td>
+            <td class="price-cell">
+              <div class="price-val price-sell-val">${banVndStr}</div>
+              <div class="price-vnd-sub price-sell-sub">Bán ra: ${ban.toLocaleString('vi-VN')}k</div>
             </td>
             <td style="text-align: center;">
               <span class="unit-tag">${donVi}</span>
-            </td>
-            <td class="price-cell price-buy">
-              ${muaVndStr}
-              <div class="price-vnd-sub">Mua vào: ${mua.toLocaleString('vi-VN')}k</div>
-            </td>
-            <td class="price-cell price-sell">
-              ${banVndStr}
-              <div class="price-vnd-sub">Bán ra: ${ban.toLocaleString('vi-VN')}k</div>
             </td>
           </tr>
         `;
