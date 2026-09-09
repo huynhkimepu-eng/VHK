@@ -241,6 +241,19 @@ class GoldApp {
 
     if (typeof GoogleSheetService === 'undefined' || !GoogleSheetService.isConfigured()) return;
 
+    // Không tự động ghi đè dữ liệu nếu đang có thay đổi chưa lưu hoặc người dùng đang nhập liệu
+    if (this._hasUnsavedGoldPrices && !forceRender) {
+      return;
+    }
+    const activeEl = document.activeElement;
+    if (activeEl && activeEl.closest && activeEl.closest('#goldRatesTableBody') && !forceRender) {
+      return;
+    }
+    const quickModal = document.getElementById('goldQuickPriceModal');
+    if (quickModal && quickModal.classList.contains('active') && !forceRender) {
+      return;
+    }
+
     this._isFetchingGoldPrices = true;
     this._lastGoldFetchStart = now;
     try {
@@ -2725,7 +2738,9 @@ class GoldApp {
               <div style="display: flex; justify-content: flex-end;">
                 <input type="number" class="form-control" 
                   style="text-align: right; width: 138px; font-weight: 800; font-size: 15.5px; color: #047857; background: #ECFDF5; border: 1.5px solid #6EE7B7; border-radius: 8px; padding: 6px 10px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.03);" 
-                  value="${g.giaMua}" onchange="app.updateGoldPriceVal(${idx}, 'giaMua', this.value)">
+                  value="${g.giaMua}" 
+                  oninput="app.updateGoldPriceVal(${idx}, 'giaMua', this.value)" 
+                  onchange="app.updateGoldPriceVal(${idx}, 'giaMua', this.value)">
               </div>
             ` : `
               <div style="display: flex; justify-content: flex-end;">
@@ -2742,7 +2757,9 @@ class GoldApp {
               <div style="display: flex; justify-content: flex-end;">
                 <input type="number" class="form-control" 
                   style="text-align: right; width: 138px; font-weight: 800; font-size: 15.5px; color: #B45309; background: #FFFBEB; border: 1.5px solid #FCD34D; border-radius: 8px; padding: 6px 10px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.03);" 
-                  value="${g.giaBan}" onchange="app.updateGoldPriceVal(${idx}, 'giaBan', this.value)">
+                  value="${g.giaBan}" 
+                  oninput="app.updateGoldPriceVal(${idx}, 'giaBan', this.value)" 
+                  onchange="app.updateGoldPriceVal(${idx}, 'giaBan', this.value)">
               </div>
             ` : `
               <div style="display: flex; justify-content: flex-end;">
@@ -2830,6 +2847,10 @@ class GoldApp {
     if (isNaN(idx) || !this.goldPrices[idx]) return;
     const giaMua = Number(document.getElementById('goldQuickGiaMua').value) || 0;
     const giaBan = Number(document.getElementById('goldQuickGiaBan').value) || 0;
+
+    // Cập nhật giá mới vào dữ liệu
+    this.goldPrices[idx].giaMua = giaMua;
+    this.goldPrices[idx].giaBan = giaBan;
 
     const changedItem = this.goldPrices[idx];
     const changedGoldType = changedItem ? changedItem.loaiVang : null;
@@ -2982,7 +3003,22 @@ class GoldApp {
   updateGoldPriceVal(index, field, value) {
     if (this.goldPrices[index]) {
       this.goldPrices[index][field] = Number(value) || 0;
+      this._hasUnsavedGoldPrices = true;
       this.highlightUnsavedGoldPrices(true);
+
+      // Cập nhật ngay cột Quy Đổi VNĐ (Bán Ra) nếu đang sửa Giá Bán
+      if (field === 'giaBan') {
+        const multiplier = this.storeConfig?.currencyUnitMultiplier || 1000;
+        const banVnd = ((Number(value) || 0) * multiplier).toLocaleString('vi-VN') + ' đ';
+        const tbody = document.getElementById('goldRatesTableBody');
+        if (tbody && tbody.rows && tbody.rows[index]) {
+          const row = tbody.rows[index];
+          if (row.cells && row.cells[4]) {
+            const span = row.cells[4].querySelector('span');
+            if (span) span.textContent = banVnd;
+          }
+        }
+      }
     }
   }
 
@@ -3026,6 +3062,7 @@ class GoldApp {
     }
 
     localStorage.setItem('pmqlv_gold_prices', JSON.stringify(this.goldPrices));
+    this._hasUnsavedGoldPrices = false;
     this.highlightUnsavedGoldPrices(false);
     this.renderGoldRatesTable();
     this.filterPosProducts();
