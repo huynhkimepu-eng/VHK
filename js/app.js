@@ -841,6 +841,16 @@ class GoldApp {
     const canDeleteProduct = isAdmin || isPowerStaff;
     const btnDelProd = document.getElementById('btnDeleteProduct');
     if (btnDelProd) btnDelProd.style.display = canDeleteProduct ? '' : 'none';
+
+    // Phân quyền xem & sửa Giá Vốn / Công Vốn (Admin + nhanvien2)
+    const canViewCost = isAdmin || isPowerStaff;
+    document.querySelectorAll('.cost-price-col').forEach(el => {
+      el.style.display = canViewCost ? '' : 'none';
+    });
+    const modalCostRow = document.getElementById('modalCostPriceRow');
+    if (modalCostRow) {
+      modalCostRow.style.display = canViewCost ? 'grid' : 'none';
+    }
   }
 
   // Chuyển đổi qua lại giữa các Tab
@@ -2072,9 +2082,11 @@ class GoldApp {
     const pageItems = this.filteredProducts.slice(startIdx, endIdx);
 
     const isAdmin = this.currentUser && this.currentUser.role === 'admin';
+    const isPowerStaff = this.currentUser && this.currentUser.username === 'nhanvien2';
     const isStaff = this.currentUser && (this.currentUser.role === 'nhanvien' || this.currentUser.role === 'staff');
     const canEdit = isAdmin || (this.currentUser && this.currentUser.role === 'chinhanh') || isStaff;
-    const canDelete = isAdmin;
+    const canDelete = isAdmin || isPowerStaff;
+    const canViewCost = isAdmin || isPowerStaff;
     const multiplier = this.storeConfig.currencyUnitMultiplier || 1000;
     const recentMaMap = new Map((this.recentModifiedItems || []).map(i => [(typeof i === 'object' ? i.maHang : i), i]));
 
@@ -2151,9 +2163,9 @@ class GoldApp {
           <td style="text-align: right; font-weight: bold; color: #B45309;">${BarcodeLabel.formatWeight(p.tlVang)}</td>
           <td style="text-align: center;">${p.ni ? p.ni : '-'}</td>
           <td style="text-align: right;">${p.congBan ? (Number(p.congBan) * multiplier).toLocaleString('vi-VN') + 'đ' : '-'}</td>
-          <td style="text-align: right;" class="admin-only">${isAdmin && p.congVon ? (Number(p.congVon) * multiplier).toLocaleString('vi-VN') + 'đ' : '-'}</td>
+          <td style="text-align: right;" class="cost-price-col">${canViewCost && p.congVon ? (Number(p.congVon) * multiplier).toLocaleString('vi-VN') + 'đ' : '-'}</td>
           <td style="text-align: right;">${p.giaBanMon ? (Number(p.giaBanMon) * multiplier).toLocaleString('vi-VN') + 'đ' : '-'}</td>
-          <td style="text-align: right;" class="admin-only">${isAdmin && p.giaVon ? (Number(p.giaVon) * multiplier).toLocaleString('vi-VN') + 'đ' : '-'}</td>
+          <td style="text-align: right;" class="cost-price-col">${canViewCost && p.giaVon ? (Number(p.giaVon) * multiplier).toLocaleString('vi-VN') + 'đ' : '-'}</td>
           <td style="text-align: center;">
             <span class="badge-status ${statusClass}">${p.trangThai || 'Còn tồn'}</span>
           </td>
@@ -4308,6 +4320,11 @@ class GoldApp {
     if (document.getElementById('modalGiaVangNhap')) {
       document.getElementById('modalGiaVangNhap').value = '';
     }
+    const costPriceRow = document.getElementById('modalCostPriceRow');
+    if (costPriceRow) {
+      const canViewCost = this.currentUser && (this.currentUser.role === 'admin' || this.currentUser.username === 'nhanvien2');
+      costPriceRow.style.display = canViewCost ? 'grid' : 'none';
+    }
     this.onModalLoaiVangChange();
     document.getElementById('productModal').classList.add('active');
   }
@@ -4437,6 +4454,12 @@ class GoldApp {
     if (cloudBadge) {
       const isCloud = (typeof CloudinaryService !== 'undefined' && CloudinaryService.isConfigured());
       cloudBadge.style.display = isCloud ? 'inline-block' : 'none';
+    }
+
+    const costPriceRow = document.getElementById('modalCostPriceRow');
+    if (costPriceRow) {
+      const canViewCost = this.currentUser && (this.currentUser.role === 'admin' || this.currentUser.username === 'nhanvien2');
+      costPriceRow.style.display = canViewCost ? 'grid' : 'none';
     }
 
     this.renderModalMediaPreview();
@@ -5117,7 +5140,8 @@ class GoldApp {
 
   async deleteProduct(maHang) {
     const isStaff = this.currentUser && (this.currentUser.role === 'nhanvien' || this.currentUser.role === 'staff');
-    if (isStaff) {
+    const isPowerStaff = this.currentUser && this.currentUser.username === 'nhanvien2';
+    if (isStaff && !isPowerStaff) {
       alert('Tài khoản nhân viên không có quyền xóa sản phẩm trong kho!');
       return;
     }

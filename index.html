@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>PMQLV - Phần Mềm Quản Lý & Bán Hàng Vàng Bạc Đá Quý</title>
-  <link rel="stylesheet" href="css/style.css?v=69">
+  <link rel="stylesheet" href="css/style.css?v=70">
   <!-- HTML5 QR Code & Barcode Scanner for Camera -->
     <script>
     window.onerror = function(msg, src, line, col, err) {
@@ -428,9 +428,9 @@
                   <th style="text-align: right;">TL Vàng</th>
                   <th style="text-align: center;">Ni</th>
                   <th style="text-align: right;">Công Bán</th>
-                  <th style="text-align: right;" class="admin-only">Công Vốn</th>
+                  <th style="text-align: right;" class="cost-price-col">Công Vốn</th>
                   <th style="text-align: right;">Giá Món</th>
-                  <th style="text-align: right;" class="admin-only">Giá Vốn</th>
+                  <th style="text-align: right;" class="cost-price-col">Giá Vốn</th>
                   <th style="text-align: center;">Trạng Thái</th>
                   <th style="text-align: center;">Thao Tác</th>
                 </tr>
@@ -1320,7 +1320,7 @@
             </div>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px;" class="admin-only">
+          <div id="modalCostPriceRow" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px;">
             <div>
               <label style="font-size: 12px; font-weight: bold;">Giá Vàng Nhập (x1.000đ/chỉ)</label>
               <input type="number" step="any" id="modalGiaVangNhap" class="form-control" placeholder="VD: 7500 hoặc 280" oninput="app.calcModalCostPrice()">
@@ -1788,6 +1788,6 @@
   <script src="js/googleSheetService.js?v=62"></script>
   <script src="js/cloudinaryService.js?v=51"></script>
   <script src="js/barcodeLabel.js?v=51"></script>
-  <script src="js/app.js?v=82"></script>
+  <script src="js/app.js?v=83"></script>
 </body>
 </html>
