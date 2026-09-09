@@ -68,6 +68,14 @@ class GoldApp {
       } catch (e) {
         console.warn('Lỗi tải cloud:', e);
       }
+
+      // Tự động kiểm tra và cập nhật giá vàng thời gian thực mỗi 4 giây (siêu nhanh, nhẹ, không lag)
+      if (this.goldSyncInterval) clearInterval(this.goldSyncInterval);
+      this.goldSyncInterval = setInterval(() => {
+        if (this.currentUser) {
+          this.fetchGoldPricesRealtime();
+        }
+      }, 4000);
     } catch(e) {
       console.error('INIT FAILED:', e);
       this.hideGlobalLoading();
@@ -206,6 +214,37 @@ class GoldApp {
       }
     } catch (err) {
       console.warn('Lỗi tải dữ liệu real-time:', err);
+    }
+  }
+
+  // Đồng bộ giá vàng thời gian thực siêu tốc từ Google Sheet (đặc biệt cho điện thoại / đa thiết bị)
+  async fetchGoldPricesRealtime(forceRender = false) {
+    if (this._isFetchingGoldPrices) return;
+    if (typeof GoogleSheetService === 'undefined' || !GoogleSheetService.isConfigured()) return;
+
+    this._isFetchingGoldPrices = true;
+    try {
+      const prices = await GoogleSheetService.fetchGoldPrices();
+      if (prices && Array.isArray(prices) && prices.length > 0) {
+        const currentStr = JSON.stringify(this.goldPrices || []);
+        const newStr = JSON.stringify(prices);
+        if (currentStr !== newStr) {
+          console.log('⚡ Đồng bộ giá vàng mới từ Google Sheet thành công!');
+          this.goldPrices = prices;
+          localStorage.setItem('pmqlv_gold_prices', newStr);
+          this.renderGoldRatesTable();
+          this.filterPosProducts();
+          if (typeof this.updateCartUI === 'function') {
+            this.updateCartUI();
+          }
+        } else if (forceRender) {
+          this.renderGoldRatesTable();
+        }
+      }
+    } catch (err) {
+      console.warn('Lỗi fetchGoldPricesRealtime:', err);
+    } finally {
+      this._isFetchingGoldPrices = false;
     }
   }
 
@@ -716,6 +755,10 @@ class GoldApp {
     }
     if (tabId === 'tab-gold-rates') {
       this.renderGoldRatesTable();
+      this.fetchGoldPricesRealtime(true);
+    }
+    if (tabId === 'tab-pos') {
+      this.fetchGoldPricesRealtime();
     }
   }
 
@@ -2744,6 +2787,15 @@ class GoldApp {
     localStorage.setItem('pmqlv_gold_prices', JSON.stringify(this.goldPrices));
     this.renderGoldRatesTable();
     this.filterPosProducts();
+    if (typeof this.updateCartUI === 'function') this.updateCartUI();
+
+    // Phát tín hiệu BroadcastChannel tức thì cho mọi tab & màn hình TV cùng máy
+    try {
+      if (typeof BroadcastChannel !== 'undefined') {
+        const bc = new BroadcastChannel('pmqlv_channel');
+        bc.postMessage({ type: 'GOLD_PRICES_UPDATED', goldPrices: this.goldPrices, timestamp: Date.now() });
+      }
+    } catch(e) {}
     
     this.hideGlobalLoading();
     alert('Đã cập nhật bảng giá vàng thành công!');
@@ -5533,6 +5585,52 @@ class GoldApp {
         }
       } else if (e.key.length === 1) {
         barcodeBuffer += e.key;
+      }
+    });
+
+    // 2. Đồng bộ giá vàng thời gian thực khi mở khóa điện thoại, quay lại ứng dụng, chuyển tab
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && this.currentUser) {
+        this.fetchGoldPricesRealtime(true);
+      }
+    });
+    window.addEventListener('focus', () => {
+      if (this.currentUser) {
+        this.fetchGoldPricesRealtime(true);
+      }
+    });
+    window.addEventListener('pageshow', () => {
+      if (this.currentUser) {
+        this.fetchGoldPricesRealtime(true);
+      }
+    });
+
+    // 3. Lắng nghe BroadcastChannel để đồng bộ tức thì 0.01 giây giữa các tab/cửa sổ trên cùng thiết bị
+    if (typeof BroadcastChannel !== 'undefined') {
+      try {
+        const bc = new BroadcastChannel('pmqlv_channel');
+        bc.onmessage = (ev) => {
+          if (ev.data && ev.data.type === 'GOLD_PRICES_UPDATED' && Array.isArray(ev.data.goldPrices)) {
+            console.log('⚡ Nhận tín hiệu giá vàng mới qua BroadcastChannel!');
+            this.goldPrices = ev.data.goldPrices;
+            localStorage.setItem('pmqlv_gold_prices', JSON.stringify(this.goldPrices));
+            this.renderGoldRatesTable();
+            this.filterPosProducts();
+            if (typeof this.updateCartUI === 'function') this.updateCartUI();
+          }
+        };
+      } catch(e) {}
+    }
+
+    // 4. Lắng nghe sự kiện storage cho các tab cùng trình duyệt
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'pmqlv_gold_prices' && e.newValue) {
+        try {
+          this.goldPrices = JSON.parse(e.newValue);
+          this.renderGoldRatesTable();
+          this.filterPosProducts();
+          if (typeof this.updateCartUI === 'function') this.updateCartUI();
+        } catch(err) {}
       }
     });
   }

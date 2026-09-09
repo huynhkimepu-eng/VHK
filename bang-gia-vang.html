@@ -481,8 +481,8 @@
   </div>
 
   <!-- Scripts -->
-  <script src="js/defaultData.js?v=41"></script>
-  <script src="js/googleSheetService.js?v=41"></script>
+  <script src="js/defaultData.js?v=52"></script>
+  <script src="js/googleSheetService.js?v=54"></script>
   <script>
     // State
     let goldPrices = [];
@@ -500,9 +500,41 @@
       // Render giao diện bảng giá
       renderTVDisplay();
 
-      // Đồng bộ từ Google Sheet: 5 giây kiểm tra 1 lần để cập nhật siêu tốc
+      // Đồng bộ từ Google Sheet: 3.5 giây kiểm tra 1 lần để cập nhật siêu tốc
       fetchLatestFromCloud();
-      setInterval(fetchLatestFromCloud, 5000);
+      setInterval(fetchLatestFromCloud, 3500);
+
+      // Tự động kiểm tra ngay khi mở khóa điện thoại hoặc quay lại tab trình duyệt
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          loadData();
+          renderTVDisplay();
+          fetchLatestFromCloud();
+        }
+      });
+      window.addEventListener('focus', () => {
+        loadData();
+        renderTVDisplay();
+        fetchLatestFromCloud();
+      });
+      window.addEventListener('pageshow', () => {
+        loadData();
+        renderTVDisplay();
+        fetchLatestFromCloud();
+      });
+
+      // Lắng nghe BroadcastChannel để đồng bộ tức thì 0.01 giây giữa các tab cùng thiết bị
+      if (typeof BroadcastChannel !== 'undefined') {
+        try {
+          const bc = new BroadcastChannel('pmqlv_channel');
+          bc.onmessage = (ev) => {
+            if (ev.data && (ev.data.type === 'GOLD_PRICES_UPDATED' || ev.data.type === 'STORE_CONFIG_UPDATED')) {
+              loadData();
+              renderTVDisplay(true);
+            }
+          };
+        } catch(e) {}
+      }
 
       // Lắng nghe thay đổi dữ liệu từ các tab/cửa sổ khác (cùng máy)
       window.addEventListener('storage', (e) => {

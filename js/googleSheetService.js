@@ -160,11 +160,13 @@ const GoogleSheetService = {
 
     try {
       const url = this.getUrl();
+      const sep = url.includes('?') ? '&' : '?';
       // Gọi getGoldPrices (chỉ tải riêng giá vàng, phản hồi siêu nhanh 0.1s)
-      const response = await fetch(`${url}?action=getGoldPrices&t=${Date.now()}`, {
+      const response = await fetch(`${url}${sep}action=getGoldPrices&_t=${Date.now()}`, {
         method: 'GET',
         mode: 'cors',
-        redirect: 'follow'
+        redirect: 'follow',
+        cache: 'no-store'
       });
       const text = await response.text();
       let res;
