@@ -633,7 +633,7 @@
     <!-- ================= TAB 4: BẢNG GIÁ VÀNG ================= -->
     <section id="tab-gold-rates" class="tab-content-panel">
       <div class="card">
-        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <div id="goldRatesCardHeader" class="card-header not-for-staff" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
           <div class="card-title">📈 Bảng Giá Vàng Hôm Nay (Đơn vị: 1.000 VNĐ / Chỉ)</div>
           <div style="display: flex; gap: 8px; flex-wrap: wrap;">
             <button type="button" class="btn btn-warning btn-sm admin-only" onclick="app.openGoldTypeModal()" style="font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
@@ -648,7 +648,7 @@
           </div>
         </div>
         <div class="card-body">
-          <p style="font-size: 13px; color: #64748B; margin-bottom: 14px;">
+          <p id="goldRatesIntroText" class="not-for-staff" style="font-size: 13px; color: #64748B; margin-bottom: 14px;">
             Giá bán ở bảng này sẽ tự động được áp dụng tại màn hình Bán Hàng khi tính tiền theo công thức: <b>Thành tiền = (TL Vàng * Giá Bán) + Tiền Công</b>. Bấm vào <b>Tên loại vàng</b> để nhập nhanh Giá Mua / Giá Bán.
           </p>
 
@@ -657,12 +657,12 @@
               <thead>
                 <tr>
                   <th>Loại Vàng / Sản Phẩm</th>
-                  <th>Hàm Lượng</th>
+                  <th class="not-for-staff">Hàm Lượng</th>
                   <th style="width: 170px; text-align: right;">Giá Mua Vào (x1.000đ)</th>
                   <th style="width: 170px; text-align: right;">Giá Bán Ra (x1.000đ)</th>
                   <th>Đơn Vị</th>
                   <th style="text-align: right;">Quy Đổi VNĐ (Bán Ra)</th>
-                  <th style="text-align: center; width: 140px;">Thao Tác</th>
+                  <th class="admin-only" style="text-align: center; width: 140px;">Thao Tác</th>
                 </tr>
               </thead>
               <tbody id="goldRatesTableBody">
@@ -1754,6 +1754,6 @@
   <script src="js/googleSheetService.js?v=53"></script>
   <script src="js/cloudinaryService.js?v=51"></script>
   <script src="js/barcodeLabel.js?v=51"></script>
-  <script src="js/app.js?v=66"></script>
+  <script src="js/app.js?v=67"></script>
 </body>
 </html>

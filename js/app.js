@@ -635,10 +635,24 @@ class GoldApp {
     const nameText = document.getElementById('userFullName');
     if (nameText) nameText.textContent = u.fullName || u.username;
 
+    const isStaff = (u.role === 'nhanvien' || u.role === 'staff');
+    document.body.classList.toggle('role-staff', isStaff);
+    document.body.classList.toggle('role-admin', isAdmin);
+
     // Ẩn/Hiện các thành phần chỉ dành riêng cho Admin
     const adminElements = document.querySelectorAll('.admin-only');
     adminElements.forEach(el => {
       el.style.display = isAdmin ? '' : 'none';
+    });
+
+    // Ẩn các thành phần không dành cho tài khoản Nhân viên
+    const notForStaffElements = document.querySelectorAll('.not-for-staff');
+    notForStaffElements.forEach(el => {
+      if (isStaff) {
+        el.style.display = 'none';
+      } else if (!el.classList.contains('admin-only') || isAdmin) {
+        el.style.display = '';
+      }
     });
 
     // Cập nhật Branch Selector
@@ -689,6 +703,9 @@ class GoldApp {
 
     if (tabId === 'tab-reports') {
       this.updateReportStats();
+    }
+    if (tabId === 'tab-gold-rates') {
+      this.renderGoldRatesTable();
     }
   }
 
@@ -2448,7 +2465,9 @@ class GoldApp {
     if (!tbody) return;
 
     const multiplier = this.storeConfig.currencyUnitMultiplier || 1000;
-    const isAdmin = this.currentUser && this.currentUser.role === 'admin';
+    const u = this.currentUser || {};
+    const isAdmin = (u.role === 'admin');
+    const isStaff = (u.role === 'nhanvien' || u.role === 'staff');
 
     tbody.innerHTML = this.goldPrices.map((g, idx) => {
       const banVnd = (Number(g.giaBan) * multiplier).toLocaleString('vi-VN') + ' đ';
@@ -2456,35 +2475,42 @@ class GoldApp {
       return `
         <tr>
           <td>
-            <a href="javascript:void(0)" onclick="app.openQuickPriceModal(${idx})" class="gold-name-btn" title="Click để nhập nhanh Giá Mua / Giá Bán">
-              <span><b>${g.loaiVang}</b></span>
-              <span style="font-size: 11px; opacity: 0.85;">✏️</span>
-            </a>
+            ${isAdmin ? `
+              <a href="javascript:void(0)" onclick="app.openQuickPriceModal(${idx})" class="gold-name-btn" title="Click để nhập nhanh Giá Mua / Giá Bán">
+                <span><b>${g.loaiVang}</b></span>
+                <span style="font-size: 11px; opacity: 0.85;">✏️</span>
+              </a>
+            ` : `
+              <span style="font-weight: 700; color: #1E293B; font-size: 13.5px;">${g.loaiVang}</span>
+            `}
           </td>
-          <td>${g.hamLuong || '--'}</td>
+          ${!isStaff ? `<td>${g.hamLuong || '--'}</td>` : ''}
           <td style="text-align: right;">
-            <input type="number" class="form-control" style="text-align: right; width: 130px; display: inline-block;" 
+            <input type="number" class="form-control" style="text-align: right; width: 130px; display: inline-block; ${!isAdmin ? 'background-color: #F8FAFC; cursor: default;' : ''}" 
               value="${g.giaMua}" ${isAdmin ? '' : 'readonly'} onchange="app.updateGoldPriceVal(${idx}, 'giaMua', this.value)">
           </td>
           <td style="text-align: right;">
-            <input type="number" class="form-control" style="text-align: right; width: 130px; display: inline-block; font-weight: bold; color: #B45309;" 
+            <input type="number" class="form-control" style="text-align: right; width: 130px; display: inline-block; font-weight: bold; color: #B45309; ${!isAdmin ? 'background-color: #F8FAFC; cursor: default;' : ''}" 
               value="${g.giaBan}" ${isAdmin ? '' : 'readonly'} onchange="app.updateGoldPriceVal(${idx}, 'giaBan', this.value)">
           </td>
           <td>${g.donVi || 'chỉ'}</td>
           <td style="text-align: right; font-weight: 800; color: #0284C7;">${banVnd}</td>
-          <td style="text-align: center; white-space: nowrap;">
-            <button type="button" class="btn btn-outline btn-xs admin-only" onclick="app.openGoldTypeModal(${idx})" title="Sửa tên loại vàng" style="padding: 4px 8px; font-size: 11.5px; margin-right: 4px; border-radius: 6px;">
-              ✏️ Sửa Tên
-            </button>
-            <button type="button" class="btn btn-danger btn-xs admin-only" onclick="app.deleteGoldType(${idx})" title="Xóa loại vàng này" style="padding: 4px 8px; font-size: 11.5px; border-radius: 6px;">
-              🗑️ Xóa
-            </button>
-          </td>
+          ${isAdmin ? `
+            <td style="text-align: center; white-space: nowrap;">
+              <button type="button" class="btn btn-outline btn-xs admin-only" onclick="app.openGoldTypeModal(${idx})" title="Sửa tên loại vàng" style="padding: 4px 8px; font-size: 11.5px; margin-right: 4px; border-radius: 6px;">
+                ✏️ Sửa Tên
+              </button>
+              <button type="button" class="btn btn-danger btn-xs admin-only" onclick="app.deleteGoldType(${idx})" title="Xóa loại vàng này" style="padding: 4px 8px; font-size: 11.5px; border-radius: 6px;">
+                🗑️ Xóa
+              </button>
+            </td>
+          ` : ''}
         </tr>
       `;
     }).join('');
 
     this.syncGoldTypeSelects();
+    this.updateUserRoleUI();
   }
 
   openQuickPriceModal(index) {
@@ -2520,6 +2546,12 @@ class GoldApp {
   }
 
   async saveQuickPrice() {
+    const isStaff = this.currentUser && (this.currentUser.role === 'nhanvien' || this.currentUser.role === 'staff');
+    if (isStaff) {
+      alert('Tài khoản nhân viên không có quyền thay đổi giá vàng!');
+      this.closeQuickPriceModal();
+      return;
+    }
     const idx = parseInt(document.getElementById('goldQuickIndex').value, 10);
     if (isNaN(idx) || !this.goldPrices[idx]) return;
     const giaMua = Number(document.getElementById('goldQuickGiaMua').value) || 0;
@@ -2533,6 +2565,11 @@ class GoldApp {
   }
 
   openGoldTypeModal(index = -1) {
+    const isStaff = this.currentUser && (this.currentUser.role === 'nhanvien' || this.currentUser.role === 'staff');
+    if (isStaff) {
+      alert('Tài khoản nhân viên không có quyền thao tác quản lý loại vàng!');
+      return;
+    }
     const modal = document.getElementById('goldTypeModal');
     if (!modal) return;
     document.getElementById('goldTypeEditIndex').value = index;
@@ -2564,6 +2601,11 @@ class GoldApp {
   }
 
   async saveGoldType() {
+    const isStaff = this.currentUser && (this.currentUser.role === 'nhanvien' || this.currentUser.role === 'staff');
+    if (isStaff) {
+      alert('Tài khoản nhân viên không có quyền lưu loại vàng!');
+      return;
+    }
     const idx = parseInt(document.getElementById('goldTypeEditIndex').value, 10);
     const loaiVang = (document.getElementById('goldTypeNameInput').value || '').trim();
     const hamLuong = (document.getElementById('goldTypeHamLuongInput').value || '').trim();
@@ -2618,6 +2660,11 @@ class GoldApp {
   }
 
   async deleteGoldType(index) {
+    const isStaff = this.currentUser && (this.currentUser.role === 'nhanvien' || this.currentUser.role === 'staff');
+    if (isStaff) {
+      alert('Tài khoản nhân viên không có quyền xóa loại vàng!');
+      return;
+    }
     const g = this.goldPrices[index];
     if (!g) return;
 
@@ -2662,6 +2709,11 @@ class GoldApp {
   }
 
   async saveGoldPrices() {
+    const isStaff = this.currentUser && (this.currentUser.role === 'nhanvien' || this.currentUser.role === 'staff');
+    if (isStaff) {
+      alert('Tài khoản nhân viên không có quyền thay đổi bảng giá vàng!');
+      return;
+    }
     this.showGlobalLoading('Đang cập nhật giá vàng lên Google Sheet...');
     
     if (GoogleSheetService.isConfigured()) {

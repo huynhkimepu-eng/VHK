@@ -2018,5 +2018,10 @@ body.not-authenticated {
   color: #B45309;
 }
 
+/* Ẩn các thành phần không dành cho tài khoản nhân viên */
+body.role-staff .not-for-staff {
+  display: none !important;
+}
+
 
 
