@@ -221,7 +221,7 @@
       font-size: 14.5px;
       font-weight: 800;
       letter-spacing: 0.8px;
-      padding: 10px 20px;
+      padding: 8px 20px;
       border-bottom: 2.5px solid #F59E0B;
       text-transform: uppercase;
       text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
@@ -256,7 +256,7 @@
     }
 
     .rates-table td {
-      padding: 8px 20px;
+      padding: 6.5px 20px;
       vertical-align: middle;
       font-size: 16px;
     }
@@ -534,8 +534,8 @@
   </footer>
 
   <!-- Scripts -->
-  <script src="js/defaultData.js?v=62"></script>
-  <script src="js/googleSheetService.js?v=62"></script>
+  <script src="js/defaultData.js?v=64"></script>
+  <script src="js/googleSheetService.js?v=64"></script>
   <script>
     // State
     let goldPrices = [];
@@ -650,7 +650,7 @@
       }
     }
 
-    // Danh sách 5 loại cố định hiển thị trên Bảng Giá TV theo yêu cầu
+    // Danh sách 6 loại cố định hiển thị trên Bảng Giá TV theo yêu cầu
     const FIXED_TV_ITEMS = [
       {
         title: 'Vàng 24k',
@@ -701,6 +701,20 @@
         }
       },
       {
+        title: 'Vàng 10k',
+        sub: 'Chuẩn tuổi 41.6%',
+        hamLuongDefault: '41.6%',
+        donViDefault: 'chỉ',
+        defaultMua: 5400,
+        defaultBan: 6600,
+        matcher: (g) => {
+          const n = (g.loaiVang || '').trim().toLowerCase();
+          const isItalian = n.includes('ý') || /\b(ý|y)\b/.test(n);
+          const isKorea = n.includes('korea');
+          return n.includes('10') && !isItalian && !isKorea;
+        }
+      },
+      {
         title: 'Bạc',
         sub: 'Chuẩn tuổi 92.5%',
         hamLuongDefault: '92.5%',
@@ -714,7 +728,7 @@
       }
     ];
 
-    // 3. Render bảng hiển thị TV: Luôn hiển thị cố định đúng 5 loại vàng
+    // 3. Render bảng hiển thị TV: Luôn hiển thị cố định đúng 6 loại vàng
     function renderTVDisplay(highlight = false) {
       const tbody = document.getElementById('ratesTableBody');
       const emptyMsg = document.getElementById('emptyRatesMessage');
