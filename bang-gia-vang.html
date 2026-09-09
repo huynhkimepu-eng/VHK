@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>Bảng Giá Vàng Điện Tử - Tiệm Vàng Hoàng Kim</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -454,6 +457,7 @@
           <div class="live-status-pill" id="liveStatusPill" title="Tự động cập nhật giá vàng trực tiếp">
             <span class="live-dot"></span>
             <span id="liveStatusText">Trực tiếp</span>
+            <span id="lastSyncTime" style="font-size: 11px; opacity: 0.85; margin-left: 4px; font-weight: 600;"></span>
           </div>
         </div>
         <div class="address-line" id="tvStoreAddressRow">
@@ -496,8 +500,8 @@
   </footer>
 
   <!-- Scripts -->
-  <script src="js/defaultData.js?v=59"></script>
-  <script src="js/googleSheetService.js?v=59"></script>
+  <script src="js/defaultData.js?v=60"></script>
+  <script src="js/googleSheetService.js?v=60"></script>
   <script>
     // State
     let goldPrices = [];
@@ -515,17 +519,15 @@
       // Render giao diện bảng giá
       renderTVDisplay();
 
-      // Khởi động đồng bộ từ Google Sheet: chạy liên tục 3.5s/lần với Watchdog tự phá khóa
+      // Khởi động đồng bộ từ Google Sheet: chạy liên tục 4s/lần
       fetchLatestFromCloud();
       if (window._tvCloudSyncInterval) clearInterval(window._tvCloudSyncInterval);
-      window._tvCloudSyncInterval = setInterval(fetchLatestFromCloud, 3500);
+      window._tvCloudSyncInterval = setInterval(fetchLatestFromCloud, 4000);
 
       // Tự động kiểm tra ngay khi mở khóa điện thoại hoặc quay lại tab trình duyệt
       document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') {
           isFetchingCloud = false; // Phá vỡ khóa treo khi mở lại máy
-          loadData();
-          renderTVDisplay();
           fetchLatestFromCloud();
         }
       });
@@ -535,8 +537,6 @@
       });
       window.addEventListener('pageshow', () => {
         isFetchingCloud = false;
-        loadData();
-        renderTVDisplay();
         fetchLatestFromCloud();
       });
 
@@ -563,36 +563,33 @@
 
       // Lắng nghe nhấp đúp để bật/tắt toàn màn hình nếu cần
       document.addEventListener('dblclick', toggleFullScreen);
-
-      // Kiểm tra cập nhật bộ nhớ cục bộ mỗi 1 giây (cả giá vàng lẫn thông tin tiệm)
-      let lastKnownConfig = localStorage.getItem(STORAGE_KEY_CONFIG);
-      setInterval(() => {
-        const currentSaved = localStorage.getItem(STORAGE_KEY_PRICES);
-        const currentConfig = localStorage.getItem(STORAGE_KEY_CONFIG);
-        let needRefresh = false;
-
-        if (currentSaved && currentSaved !== JSON.stringify(goldPrices)) {
-          needRefresh = true;
-        }
-        if (currentConfig !== lastKnownConfig) {
-          lastKnownConfig = currentConfig;
-          needRefresh = true;
-        }
-
-        if (needRefresh) {
-          loadData();
-          renderTVDisplay(true);
-        }
-      }, 1000);
     }
 
     // 2. Tải dữ liệu từ LocalStorage
     function loadData() {
       // Cấu hình cửa hàng
       const savedConfig = localStorage.getItem(STORAGE_KEY_CONFIG);
-      storeConfig = savedConfig ? JSON.parse(savedConfig) : (window.DEFAULT_STORE_CONFIG || {});
+      try {
+        storeConfig = savedConfig ? JSON.parse(savedConfig) : (window.DEFAULT_STORE_CONFIG || {});
+      } catch (e) {
+        storeConfig = window.DEFAULT_STORE_CONFIG || {};
+      }
+      updateStoreInfoUI();
 
-      // Cập nhật thông tin tiêu đề
+      // Bảng giá vàng
+      const savedPrices = localStorage.getItem(STORAGE_KEY_PRICES);
+      let loaded = [];
+      if (savedPrices) {
+        try { loaded = JSON.parse(savedPrices); } catch (e) { loaded = []; }
+      }
+      const defaultPrices = (window.DEFAULT_GOLD_PRICES && window.DEFAULT_GOLD_PRICES.length > 0) ? window.DEFAULT_GOLD_PRICES : [];
+      if (!loaded || loaded.length === 0) {
+        loaded = defaultPrices;
+      }
+      goldPrices = loaded;
+    }
+
+    function updateStoreInfoUI() {
       const nameEl = document.getElementById('tvStoreName');
       const sloganEl = document.getElementById('tvStoreSlogan');
       const contactEl = document.getElementById('tvStoreContact');
@@ -617,24 +614,6 @@
       if (tickerEl && storeConfig.tickerText && storeConfig.tickerText.trim()) {
         tickerEl.textContent = storeConfig.tickerText.trim();
       }
-
-      // Bảng giá vàng
-      const savedPrices = localStorage.getItem(STORAGE_KEY_PRICES);
-      let loaded = [];
-      if (savedPrices) {
-        try { loaded = JSON.parse(savedPrices); } catch (e) { loaded = []; }
-      }
-      const defaultPrices = (window.DEFAULT_GOLD_PRICES && window.DEFAULT_GOLD_PRICES.length > 0) ? window.DEFAULT_GOLD_PRICES : [];
-      if (!loaded || loaded.length === 0) {
-        loaded = defaultPrices;
-      } else {
-        defaultPrices.forEach(def => {
-          if (!loaded.some(p => p.loaiVang === def.loaiVang)) {
-            loaded.push(def);
-          }
-        });
-      }
-      goldPrices = loaded;
     }
 
     // Danh sách 5 loại cố định hiển thị trên Bảng Giá TV theo yêu cầu
@@ -749,15 +728,15 @@
       }).join('');
     }
 
-    // 4. Đồng bộ dữ liệu từ Google Sheet liên tục (có Watchdog tự phá khóa chống treo)
+    // 4. Đồng bộ dữ liệu từ Google Sheet liên tục (có Watchdog kép chống treo trên Android TV)
     let isFetchingCloud = false;
     let lastCloudFetchStart = 0;
 
     async function fetchLatestFromCloud() {
       const now = Date.now();
-      // Watchdog: Nếu lần fetch trước bị kẹt quá 9s (mạng di động lag), tự động bẻ khóa
+      // Watchdog: Nếu lần fetch trước bị kẹt quá 8s (mạng lag / TV sleep), tự động bẻ khóa
       if (isFetchingCloud) {
-        if (now - lastCloudFetchStart > 9000) {
+        if (now - lastCloudFetchStart > 8000) {
           isFetchingCloud = false;
         } else {
           return;
@@ -780,12 +759,31 @@
           if (currentStr !== newStr) {
             console.log('⚡ TV: Phát hiện bảng giá vàng mới từ Google Sheet -> Cập nhật hiển thị!');
             goldPrices = prices;
-            localStorage.setItem(STORAGE_KEY_PRICES, newStr);
+            try {
+              localStorage.setItem(STORAGE_KEY_PRICES, newStr);
+            } catch (storageErr) {
+              console.warn('Lưu LocalStorage trên TV bị chặn (không ảnh hưởng hiển thị):', storageErr);
+            }
             renderTVDisplay(true);
           }
+
+          // Cập nhật thông tin tiệm nếu có thay đổi từ Cloud
+          if (GoogleSheetService.lastFetchedStoreConfig && typeof GoogleSheetService.lastFetchedStoreConfig === 'object') {
+            const newCfgStr = JSON.stringify(GoogleSheetService.lastFetchedStoreConfig);
+            if (newCfgStr !== JSON.stringify(storeConfig)) {
+              storeConfig = GoogleSheetService.lastFetchedStoreConfig;
+              try { localStorage.setItem(STORAGE_KEY_CONFIG, newCfgStr); } catch(e) {}
+              updateStoreInfoUI();
+            }
+          }
+
           updateLiveStatus(true);
         } else {
-          if (prices !== null) updateLiveStatus(true);
+          if (prices !== null) {
+            updateLiveStatus(true);
+          } else {
+            updateLiveStatus(false);
+          }
         }
       } catch (e) {
         console.warn('TV Cloud Sync warning:', e);
@@ -798,21 +796,28 @@
     function updateLiveStatus(isLive) {
       const pill = document.getElementById('liveStatusPill');
       const text = document.getElementById('liveStatusText');
+      const syncTimeEl = document.getElementById('lastSyncTime');
       if (!pill || !text) return;
+
+      const now = new Date();
+      const timeStr = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0') + ':' + String(now.getSeconds()).padStart(2, '0');
+
       if (isLive) {
         pill.style.background = '#ECFDF5';
         pill.style.borderColor = '#A7F3D0';
         pill.style.color = '#047857';
         text.textContent = 'Trực tiếp';
+        if (syncTimeEl) syncTimeEl.textContent = `· ${timeStr}`;
       } else {
         pill.style.background = '#FEF2F2';
         pill.style.borderColor = '#FECACA';
         pill.style.color = '#DC2626';
         text.textContent = 'Mất kết nối';
+        if (syncTimeEl) syncTimeEl.textContent = `· Lỗi ${timeStr}`;
       }
     }
 
-    // 5. Đồng hồ thời gian thực
+    // 5. Đồng hồ thời gian thực kiêm Watchdog kiểm tra định kỳ cho Android TV
     function updateClock() {
       const now = new Date();
       const clockEl = document.getElementById('liveClock');
@@ -832,6 +837,12 @@
         const mo = String(now.getMonth() + 1).padStart(2, '0');
         const y = now.getFullYear();
         dateEl.textContent = `${dayName}, ${d}/${mo}/${y}`;
+      }
+
+      // Watchdog chống treo/ngủ đông trên TV Bro / Android WebView:
+      // Đồng hồ chạy mỗi giây -> Nếu quá 6 giây chưa kích hoạt đồng bộ, tự động chạy ngay
+      if (Date.now() - lastCloudFetchStart > 6000) {
+        fetchLatestFromCloud();
       }
     }
 

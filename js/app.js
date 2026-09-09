@@ -241,7 +241,9 @@ class GoldApp {
         if (hasChanged) {
           console.log('⚡ Đồng bộ giá vàng mới từ Google Sheet thành công!');
           this.goldPrices = prices;
-          localStorage.setItem('pmqlv_gold_prices', newStr);
+          try {
+            localStorage.setItem('pmqlv_gold_prices', newStr);
+          } catch(e) {}
           this.renderGoldRatesTable();
           this.filterPosProducts();
           if (typeof this.updateCartUI === 'function') {

@@ -154,40 +154,83 @@ const GoogleSheetService = {
     }
   },
 
+  lastFetchedStoreConfig: null,
+
+  // Bộ gọi HTTP GET đa tầng (Fetch + XMLHttpRequest dự phòng cho Android TV Bro / WebView cũ)
+  async httpGet(url, timeoutMs = 9000, externalSignal = null) {
+    let fetchErr = null;
+    // Tầng 1: Thử Fetch API với cache: 'no-cache'
+    try {
+      let timeoutId = null;
+      const controller = (!externalSignal && typeof AbortController !== 'undefined') ? new AbortController() : null;
+      if (controller) {
+        timeoutId = setTimeout(() => {
+          try { controller.abort(); } catch(e) {}
+        }, timeoutMs);
+      }
+      const signal = externalSignal || (controller ? controller.signal : undefined);
+
+      const response = await fetch(url, {
+        method: 'GET',
+        mode: 'cors',
+        redirect: 'follow',
+        cache: 'no-cache',
+        signal: signal
+      });
+
+      if (timeoutId) clearTimeout(timeoutId);
+      const text = await response.text();
+      if (text && text.trim().length > 0) {
+        return text;
+      }
+    } catch (err) {
+      fetchErr = err;
+    }
+
+    // Tầng 2: Fallback XMLHttpRequest (tương thích 100% mọi phiên bản Android TV / TV Bro / WebView)
+    return new Promise((resolve, reject) => {
+      try {
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', url, true);
+        xhr.timeout = timeoutMs;
+        xhr.onload = function() {
+          if (xhr.responseText && xhr.responseText.trim().length > 0) {
+            resolve(xhr.responseText);
+          } else {
+            reject(fetchErr || new Error('XHR status ' + xhr.status));
+          }
+        };
+        xhr.onerror = function() {
+          reject(fetchErr || new Error('XHR network error'));
+        };
+        xhr.ontimeout = function() {
+          reject(fetchErr || new Error('XHR timeout'));
+        };
+        xhr.send();
+      } catch (err2) {
+        reject(fetchErr || err2);
+      }
+    });
+  },
+
   // Tải riêng Bảng Giá Vàng siêu tốc phục vụ hiển thị TV & POS thời gian thực
   async fetchGoldPrices(externalSignal = null) {
     if (!this.isConfigured()) return null;
 
-    let timeoutId = null;
     try {
       const url = this.getUrl();
       const sep = url.includes('?') ? '&' : '?';
-      // Gọi getGoldPrices (chỉ tải riêng giá vàng, phản hồi siêu nhanh)
-      // KHÔNG dùng cache: 'no-store' vì WebKit (iOS Safari) chặn cross-origin 302 redirect khi có no-store
-      const controller = (!externalSignal && typeof AbortController !== 'undefined') ? new AbortController() : null;
-      timeoutId = controller ? setTimeout(() => {
-        try { controller.abort(); } catch (e) {}
-      }, 10000) : null;
+      // Tham số chống cache ngẫu nhiên tuyệt đối cho TV Bro & di động
+      const antiCache = Date.now() + '_' + Math.random().toString(36).substring(2, 8);
+      const fetchUrl = `${url}${sep}action=getGoldPrices&_t=${antiCache}`;
 
-      const signal = externalSignal || (controller ? controller.signal : undefined);
-
-      const response = await fetch(`${url}${sep}action=getGoldPrices&_t=${Date.now()}`, {
-        method: 'GET',
-        mode: 'cors',
-        redirect: 'follow',
-        signal: signal
-      });
-
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-        timeoutId = null;
-      }
-
-      const text = await response.text();
+      const text = await this.httpGet(fetchUrl, 9000, externalSignal);
       let res = null;
       try { res = JSON.parse(text); } catch(e) { res = null; }
+
       if (res && res.success && res.data) {
         if (res.data.storeConfig && typeof res.data.storeConfig === 'object') {
+          this.lastFetchedStoreConfig = res.data.storeConfig;
           try {
             localStorage.setItem('pmqlv_store_config', JSON.stringify(res.data.storeConfig));
           } catch(e) {}
@@ -200,11 +243,6 @@ const GoogleSheetService = {
     } catch (err) {
       console.warn('Lỗi khi fetchGoldPrices (chu kỳ sau sẽ tự động thử lại):', (err && err.message) || err);
       return null;
-    } finally {
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-        timeoutId = null;
-      }
     }
   },
 
