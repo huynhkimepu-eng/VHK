@@ -154,24 +154,37 @@ const GoogleSheetService = {
     }
   },
 
-  // Tải riêng Bảng Giá Vàng siêu tốc phục vụ hiển thị TV thời gian thực
+  // Tải riêng Bảng Giá Vàng siêu tốc phục vụ hiển thị TV & POS thời gian thực
   async fetchGoldPrices() {
     if (!this.isConfigured()) return null;
 
+    let timeoutId = null;
     try {
       const url = this.getUrl();
       const sep = url.includes('?') ? '&' : '?';
       // Gọi getGoldPrices (chỉ tải riêng giá vàng, phản hồi siêu nhanh 0.1s - 0.5s)
       // KHÔNG dùng cache: 'no-store' vì WebKit (iOS Safari) chặn cross-origin 302 redirect khi có no-store
       const controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
-      const timeoutId = controller ? setTimeout(() => controller.abort(), 8000) : null;
+      timeoutId = controller ? setTimeout(() => {
+        try { controller.abort(); } catch (e) {}
+      }, 7000) : null;
+
       const response = await fetch(`${url}${sep}action=getGoldPrices&_t=${Date.now()}`, {
         method: 'GET',
         mode: 'cors',
         redirect: 'follow',
         signal: controller ? controller.signal : undefined
       });
-      if (timeoutId) clearTimeout(timeoutId);
+
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+      }
+
+      if (!response.ok) {
+        return null;
+      }
+
       const text = await response.text();
       let res;
       try { res = JSON.parse(text); } catch(e) { res = null; }
@@ -185,17 +198,14 @@ const GoogleSheetService = {
           return res.data.goldPrices;
         }
       }
-
-      // Fallback nếu bản Google Script trên Google Sheet chưa được update action mới
-      const all = await this.fetchAllData();
-      return (all && all.goldPrices) ? all.goldPrices : null;
+      return null;
     } catch (err) {
-      console.warn('Lỗi khi fetchGoldPrices:', err);
-      try {
-        const all = await this.fetchAllData();
-        return (all && all.goldPrices) ? all.goldPrices : null;
-      } catch (e) {
-        return null;
+      console.warn('Lỗi khi fetchGoldPrices (chu kỳ sau sẽ tự động thử lại):', (err && err.message) || err);
+      return null;
+    } finally {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
       }
     }
   },

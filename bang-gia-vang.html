@@ -481,8 +481,8 @@
   </div>
 
   <!-- Scripts -->
-  <script src="js/defaultData.js?v=56"></script>
-  <script src="js/googleSheetService.js?v=56"></script>
+  <script src="js/defaultData.js?v=57"></script>
+  <script src="js/googleSheetService.js?v=57"></script>
   <script>
     // State
     let goldPrices = [];
@@ -500,27 +500,31 @@
       // Render giao diện bảng giá
       renderTVDisplay();
 
-      // Đồng bộ từ Google Sheet: 3.5 giây kiểm tra 1 lần để cập nhật siêu tốc
+      // Khởi động đồng bộ từ Google Sheet: tuần tự an toàn, chống đơ và quá tải trên di động
       fetchLatestFromCloud();
-      setInterval(fetchLatestFromCloud, 3500);
+      startCloudLoop();
 
       // Tự động kiểm tra ngay khi mở khóa điện thoại hoặc quay lại tab trình duyệt
       document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') {
+          isFetchingCloud = false; // Phá vỡ khóa treo khi mở lại máy
           loadData();
           renderTVDisplay();
           fetchLatestFromCloud();
+          startCloudLoop();
         }
       });
       window.addEventListener('focus', () => {
-        loadData();
-        renderTVDisplay();
+        isFetchingCloud = false;
         fetchLatestFromCloud();
+        startCloudLoop();
       });
       window.addEventListener('pageshow', () => {
+        isFetchingCloud = false;
         loadData();
         renderTVDisplay();
         fetchLatestFromCloud();
+        startCloudLoop();
       });
 
       // Lắng nghe BroadcastChannel để đồng bộ tức thì 0.01 giây giữa các tab cùng thiết bị
@@ -732,20 +736,27 @@
       }).join('');
     }
 
-    // 4. Đồng bộ dữ liệu từ Google Sheet siêu tốc (mỗi 5s kiểm tra 1 lần)
+    // 4. Đồng bộ dữ liệu từ Google Sheet tuần tự an toàn (chống nghẽn socket & đơ trên điện thoại)
     let isFetchingCloud = false;
+    let lastCloudFetchStart = 0;
+    let cloudLoopTimer = null;
+
     async function fetchLatestFromCloud() {
-      if (isFetchingCloud) return;
+      const now = Date.now();
+      // Watchdog chống treo socket: Nếu lần fetch trước quá 10s chưa xong, tự phá khóa
+      if (isFetchingCloud) {
+        if (now - lastCloudFetchStart < 10000) return;
+        console.warn('⚠️ TV Cloud Sync: Phát hiện kết nối bị treo trên điện thoại -> Tự động giải phóng khóa!');
+      }
+
       if (!window.GoogleSheetService || !GoogleSheetService.isConfigured()) return;
 
       isFetchingCloud = true;
+      lastCloudFetchStart = now;
       try {
         let prices = null;
         if (typeof GoogleSheetService.fetchGoldPrices === 'function') {
           prices = await GoogleSheetService.fetchGoldPrices();
-        } else if (typeof GoogleSheetService.fetchAllData === 'function') {
-          const all = await GoogleSheetService.fetchAllData();
-          prices = all ? all.goldPrices : null;
         }
 
         if (prices && Array.isArray(prices) && prices.length > 0) {
@@ -758,6 +769,9 @@
             renderTVDisplay(true);
           }
           updateLiveStatus(true);
+        } else {
+          // Nếu không có lỗi mạng (chỉ là dữ liệu không đổi), vẫn báo trực tiếp
+          if (prices !== null) updateLiveStatus(true);
         }
       } catch (e) {
         console.warn('TV Cloud Sync warning:', e);
@@ -765,6 +779,24 @@
       } finally {
         isFetchingCloud = false;
       }
+    }
+
+    function startCloudLoop() {
+      if (cloudLoopTimer) {
+        clearTimeout(cloudLoopTimer);
+        cloudLoopTimer = null;
+      }
+
+      const loop = async () => {
+        if (!document.hidden) {
+          try {
+            await fetchLatestFromCloud();
+          } catch (e) {}
+        }
+        cloudLoopTimer = setTimeout(loop, 4500);
+      };
+
+      cloudLoopTimer = setTimeout(loop, 4500);
     }
 
     function updateLiveStatus(isLive) {
