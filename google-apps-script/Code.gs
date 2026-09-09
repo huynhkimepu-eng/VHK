@@ -45,7 +45,8 @@ const SHEET_NAMES = {
   HOA_DON: 'HoaDon',
   GIA_VANG: 'GiaVang',
   NGUOI_DUNG: 'NguoiDung',
-  CAU_HINH: 'CauHinh'
+  CAU_HINH: 'CauHinh',
+  KHACH_HANG: 'KhachHang'
 };
 
 function getStoreConfigData() {
@@ -88,6 +89,7 @@ function doGet(e) {
       const goldPrices = getSheetData(SHEET_NAMES.GIA_VANG);
       const users = getSheetData(SHEET_NAMES.NGUOI_DUNG);
       const orders = getSheetData(SHEET_NAMES.HOA_DON);
+      const customers = getSheetData(SHEET_NAMES.KHACH_HANG);
       const storeConfig = getStoreConfigData();
 
       return jsonResponse({
@@ -97,6 +99,7 @@ function doGet(e) {
           goldPrices: goldPrices,
           users: users,
           orders: orders,
+          customers: customers,
           storeConfig: storeConfig
         }
       });
@@ -343,11 +346,16 @@ function doPost(e) {
       let headers = data.length > 0 ? data[0].map(h => String(h).trim()) : [];
 
       if (headers.length === 0) {
-        headers = ['maHD', 'ngayBan', 'tenKhach', 'sdt', 'items', 'tongTien', 'tongVon', 'nhanVien', 'ghiChu', 'trangThai', 'lyDoHuy', 'maHoanHang', 'maHDGoc', 'chiNhanh', 'nguoiBan'];
+        headers = ['maHD', 'ngayBan', 'tenKhach', 'sdt', 'cccd', 'items', 'tongTien', 'tongVon', 'nhanVien', 'ghiChu', 'trangThai', 'lyDoHuy', 'maHoanHang', 'maHDGoc', 'chiNhanh', 'nguoiBan'];
         orderSheet.appendRow(headers);
         formatHeaderRow(orderSheet, headers.length);
       } else {
-        // Tự động thêm cột chiNhanh và nguoiBan nếu sheet HoaDon chưa có
+        // Tự động thêm cột cccd, chiNhanh và nguoiBan nếu sheet HoaDon chưa có
+        if (headers.indexOf('cccd') === -1) {
+          headers.push('cccd');
+          orderSheet.getRange(1, headers.length).setValue('cccd');
+          formatHeaderRow(orderSheet, headers.length);
+        }
         if (headers.indexOf('chiNhanh') === -1) {
           headers.push('chiNhanh');
           orderSheet.getRange(1, headers.length).setValue('chiNhanh');
@@ -365,6 +373,7 @@ function doPost(e) {
         ngayBan: order.ngayBan || Utilities.formatDate(new Date(), 'GMT+7', 'yyyy-MM-dd HH:mm:ss'),
         tenKhach: order.tenKhach || 'Khách lẻ',
         sdt: order.sdt || '',
+        cccd: order.cccd || '',
         items: JSON.stringify(order.items || []),
         tongTien: Number(order.tongTien) || 0,
         tongVon: Number(order.tongVon) || 0,
@@ -380,6 +389,73 @@ function doPost(e) {
 
       const orderRow = headers.map(h => fieldMap[h] !== undefined ? fieldMap[h] : '');
       orderSheet.appendRow(orderRow);
+
+      // Tự động lưu / cập nhật thông tin khách hàng vào sheet KhachHang
+      if (order.tenKhach && order.tenKhach !== 'Khách lẻ' && (order.sdt || order.cccd)) {
+        try {
+          let custSheet = ss.getSheetByName(SHEET_NAMES.KHACH_HANG);
+          if (!custSheet) {
+            custSheet = ss.insertSheet(SHEET_NAMES.KHACH_HANG);
+            custSheet.appendRow(['tenKhach', 'sdt', 'cccd', 'soLanMua', 'tongChiTieu', 'lanCuoiMua', 'ghiChu']);
+            formatHeaderRow(custSheet, 7);
+          }
+          const custData = custSheet.getDataRange().getValues();
+          const custHeaders = custData[0].map(h => String(h).trim());
+          const sdtIdx = custHeaders.indexOf('sdt');
+          const cccdIdx = custHeaders.indexOf('cccd');
+          const nameIdx = custHeaders.indexOf('tenKhach');
+          const countIdx = custHeaders.indexOf('soLanMua');
+          const totalIdx = custHeaders.indexOf('tongChiTieu');
+          const lastDateIdx = custHeaders.indexOf('lanCuoiMua');
+
+          const cleanPhone = String(order.sdt || '').trim();
+          const cleanCccd = String(order.cccd || '').trim();
+          const cleanName = String(order.tenKhach || '').trim();
+
+          let foundRow = -1;
+          for (let i = 1; i < custData.length; i++) {
+            const rowPhone = sdtIdx >= 0 ? String(custData[i][sdtIdx] || '').trim() : '';
+            const rowCccd = cccdIdx >= 0 ? String(custData[i][cccdIdx] || '').trim() : '';
+            if ((cleanPhone && rowPhone && cleanPhone === rowPhone) ||
+                (cleanCccd && rowCccd && cleanCccd === rowCccd)) {
+              foundRow = i + 1;
+              break;
+            }
+          }
+
+          const nowStr = Utilities.formatDate(new Date(), 'GMT+7', 'yyyy-MM-dd HH:mm:ss');
+          const orderTotal = Number(order.tongTien) || 0;
+
+          if (foundRow > 0) {
+            if (nameIdx >= 0 && cleanName) custSheet.getRange(foundRow, nameIdx + 1).setValue(cleanName);
+            if (cleanCccd && cccdIdx >= 0) custSheet.getRange(foundRow, cccdIdx + 1).setValue(cleanCccd);
+            if (cleanPhone && sdtIdx >= 0) custSheet.getRange(foundRow, sdtIdx + 1).setValue(cleanPhone);
+            if (countIdx >= 0) {
+              const currentCount = Number(custData[foundRow - 1][countIdx]) || 1;
+              custSheet.getRange(foundRow, countIdx + 1).setValue(currentCount + 1);
+            }
+            if (totalIdx >= 0) {
+              const currentTotal = Number(custData[foundRow - 1][totalIdx]) || 0;
+              custSheet.getRange(foundRow, totalIdx + 1).setValue(currentTotal + orderTotal);
+            }
+            if (lastDateIdx >= 0) {
+              custSheet.getRange(foundRow, lastDateIdx + 1).setValue(nowStr);
+            }
+          } else {
+            custSheet.appendRow([
+              cleanName,
+              cleanPhone,
+              cleanCccd,
+              1,
+              orderTotal,
+              nowStr,
+              order.ghiChu || ''
+            ]);
+          }
+        } catch(custErr) {
+          Logger.log('Lỗi cập nhật sheet KhachHang: ' + custErr.toString());
+        }
+      }
 
       // Cập nhật trạng thái 'Đã bán' cho các mã hàng trong sheet SanPham
       if (order.items && order.items.length) {
@@ -438,6 +514,52 @@ function doPost(e) {
         sheet.appendRow(row);
       }
       return jsonResponse({ success: true, message: 'Lưu thông tin người dùng thành công!' });
+    }
+
+    // 6.2 Quản lý khách hàng
+    if (action === 'saveCustomer') {
+      const c = contents.customer;
+      if (!c || (!c.tenKhach && !c.sdt && !c.cccd)) {
+        return jsonResponse({ success: false, message: 'Dữ liệu khách hàng trống!' });
+      }
+      const ss = SpreadsheetApp.getActiveSpreadsheet();
+      let sheet = ss.getSheetByName(SHEET_NAMES.KHACH_HANG);
+      if (!sheet) {
+        initSheetsIfNotExist();
+        sheet = ss.getSheetByName(SHEET_NAMES.KHACH_HANG);
+      }
+      const data = sheet.getDataRange().getValues();
+      let foundIndex = -1;
+      const targetPhone = String(c.sdt || '').trim();
+      const targetCccd = String(c.cccd || '').trim();
+
+      for (let i = 1; i < data.length; i++) {
+        const rowPhone = String(data[i][1] || '').trim();
+        const rowCccd = String(data[i][2] || '').trim();
+        if ((targetPhone && rowPhone && targetPhone === rowPhone) ||
+            (targetCccd && rowCccd && targetCccd === rowCccd)) {
+          foundIndex = i + 1;
+          break;
+        }
+      }
+
+      const nowStr = Utilities.formatDate(new Date(), 'GMT+7', 'yyyy-MM-dd HH:mm:ss');
+      const row = [
+        c.tenKhach || '',
+        c.sdt || '',
+        c.cccd || '',
+        Number(c.soLanMua) || 1,
+        Number(c.tongChiTieu) || 0,
+        c.lanCuoiMua || nowStr,
+        c.ghiChu || ''
+      ];
+
+      if (foundIndex > 0) {
+        sheet.getRange(foundIndex, 1, 1, row.length).setValues([row]);
+      } else {
+        sheet.appendRow(row);
+      }
+      return jsonResponse({ success: true, message: 'Lưu thông tin khách hàng thành công!' });
     }
 
     // 7. Quản lý cấu hình thông tin tiệm vàng & Bảng giá TV
@@ -588,6 +710,14 @@ function initSheetsIfNotExist() {
       phone: '0988.888.888',
       tickerText: '✨ Kính chúc Quý khách Vạn Sự Như Ý - Phát Tài Phát Lộc! | Giá vàng niêm yết tại thời điểm giao dịch thực tế tại quầy | Nhận thu đổi, làm mới, đánh bóng trọn đời sản phẩm.'
     })]);
+    formatHeaderRow(s, headers.length);
+  }
+
+  // 6. KhachHang (Lưu danh bạ khách hàng quen, số CCCD và tích lũy chi tiêu)
+  if (!ss.getSheetByName(SHEET_NAMES.KHACH_HANG)) {
+    const s = ss.insertSheet(SHEET_NAMES.KHACH_HANG);
+    const headers = ['tenKhach', 'sdt', 'cccd', 'soLanMua', 'tongChiTieu', 'lanCuoiMua', 'ghiChu'];
+    s.appendRow(headers);
     formatHeaderRow(s, headers.length);
   }
 }

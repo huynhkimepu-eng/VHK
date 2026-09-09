@@ -399,5 +399,27 @@ const GoogleSheetService = {
       console.warn('Lỗi lưu cấu hình lên Google Sheet:', err);
       return { success: false, message: err.toString() };
     }
+  },
+
+  async saveCustomer(customer) {
+    if (!this.isConfigured()) return { success: true, localOnly: true };
+
+    try {
+      const url = this.getUrl();
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        redirect: 'follow',
+        body: JSON.stringify({
+          action: 'saveCustomer',
+          customer: customer
+        })
+      });
+      const text = await response.text();
+      return JSON.parse(text);
+    } catch (err) {
+      console.warn('Lỗi lưu khách hàng lên Google Sheet:', err);
+      return { success: false, message: err.toString() };
+    }
   }
 };

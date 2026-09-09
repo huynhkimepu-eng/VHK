@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>PMQLV - Phần Mềm Quản Lý & Bán Hàng Vàng Bạc Đá Quý</title>
-  <link rel="stylesheet" href="css/style.css?v=62">
+  <link rel="stylesheet" href="css/style.css?v=63">
   <!-- HTML5 QR Code & Barcode Scanner for Camera -->
     <script>
     window.onerror = function(msg, src, line, col, err) {
@@ -185,7 +185,7 @@
               </div>
 
               <!-- Quick category / Quầy buttons -->
-              <div style="display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 8px;">
+              <div class="pos-quick-filters hide-on-mobile" style="display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 8px;">
                 <button class="btn btn-sm btn-secondary pos-filter-btn active" onclick="app.filterPosByGold('ALL', this)">Tất cả</button>
                 <button class="btn btn-sm btn-secondary pos-filter-btn" onclick="app.filterPosByGold('Vàng 24K', this)">Vàng 24K</button>
                 <button class="btn btn-sm btn-secondary pos-filter-btn" onclick="app.filterPosByGold('Vàng 18K', this)">Vàng 18K</button>
@@ -211,9 +211,29 @@
             </div>
 
             <!-- Customer inputs -->
-            <div style="padding: 10px 12px; background: #F8FAFC; border-bottom: 1px solid #E2E8F0;">
-              <input type="text" id="cartCustomerName" class="form-control" placeholder="Tên khách hàng (Tùy chọn)" style="margin-bottom: 6px; font-size: 12px; padding: 6px 10px;">
-              <input type="text" id="cartCustomerPhone" class="form-control" placeholder="Số điện thoại khách (Tùy chọn)" style="font-size: 12px; padding: 6px 10px;">
+            <div class="cart-customer-box" style="padding: 10px 12px; background: #F8FAFC; border-bottom: 1px solid #E2E8F0; position: relative;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <span style="font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">👤 Thông tin khách hàng</span>
+                <span id="custSavedBadge" style="display: none; font-size: 10px; background: #DCFCE7; color: #15803D; padding: 1px 6px; border-radius: 4px; font-weight: 700;">✨ Khách quen</span>
+              </div>
+              
+              <!-- Tên khách hàng -->
+              <div style="position: relative; margin-bottom: 6px;">
+                <input type="text" id="cartCustomerName" class="form-control" placeholder="Tên khách hàng (gõ để tìm khách cũ...)" autocomplete="off" oninput="app.onCustomerInput('name')" onfocus="app.onCustomerFocus('name')" style="font-size: 12px; padding: 6px 10px;">
+              </div>
+
+              <!-- SĐT và CCCD -->
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+                <div style="position: relative;">
+                  <input type="tel" id="cartCustomerPhone" class="form-control" placeholder="Số điện thoại..." autocomplete="off" oninput="app.onCustomerInput('phone')" onfocus="app.onCustomerFocus('phone')" onblur="app.onCustomerBlur('phone')" style="font-size: 12px; padding: 6px 8px;">
+                </div>
+                <div style="position: relative;">
+                  <input type="text" id="cartCustomerCccd" class="form-control" placeholder="Số CCCD / CMND..." autocomplete="off" oninput="app.onCustomerInput('cccd')" onfocus="app.onCustomerFocus('cccd')" onblur="app.onCustomerBlur('cccd')" style="font-size: 12px; padding: 6px 8px;">
+                </div>
+              </div>
+
+              <!-- Gợi ý khách cũ tự động -->
+              <div id="customerSuggestions" class="customer-suggestions-dropdown" style="display: none;"></div>
             </div>
 
             <!-- Cart items list -->
@@ -1676,7 +1696,7 @@
 
     <div style="margin-bottom: 8px;">
       <div>Khách hàng: <b id="invPrintCustomer">Khách lẻ</b></div>
-      <div>Điện thoại: <span id="invPrintCustPhone">--</span></div>
+      <div>Điện thoại: <span id="invPrintCustPhone">--</span> <span id="invPrintCustCccdWrap" style="display: none; margin-left: 10px;">| CCCD: <b id="invPrintCustCccd">--</b></span></div>
       <div>Nhân viên bán: <span id="invPrintStaff">Admin</span></div>
     </div>
 
@@ -1725,9 +1745,9 @@
 
   <!-- Scripts -->
   <script src="js/defaultData.js?v=51"></script>
-  <script src="js/googleSheetService.js?v=52"></script>
+  <script src="js/googleSheetService.js?v=53"></script>
   <script src="js/cloudinaryService.js?v=51"></script>
   <script src="js/barcodeLabel.js?v=51"></script>
-  <script src="js/app.js?v=64"></script>
+  <script src="js/app.js?v=65"></script>
 </body>
 </html>

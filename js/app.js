@@ -13,6 +13,8 @@ class GoldApp {
     this.storeConfig = null;
     this.cart = [];
     this.orders = [];
+    this.customers = [];
+    this.currentCustomerMatches = [];
     this.tagQueue = [];
 
     this.branches = ['Chi nhánh 1', 'Chi nhánh 2'];
@@ -164,6 +166,25 @@ class GoldApp {
             o.chiNhanh = this.normalizeOrderBranch(o);
           });
         }
+        if (data.customers && Array.isArray(data.customers)) {
+          const merged = [...(this.customers || [])];
+          data.customers.forEach(sc => {
+            const scPhone = (sc.sdt || '').trim();
+            const scCccd = (sc.cccd || '').trim();
+            const found = merged.find(c => (scPhone && c.sdt && c.sdt.trim() === scPhone) || (scCccd && c.cccd && c.cccd.trim() === scCccd));
+            if (!found) {
+              merged.push(sc);
+            } else {
+              if (sc.tenKhach && (!found.tenKhach || found.tenKhach === 'Khách lẻ')) found.tenKhach = sc.tenKhach;
+              if (sc.cccd && !found.cccd) found.cccd = sc.cccd;
+              if (sc.sdt && !found.sdt) found.sdt = sc.sdt;
+              if (sc.soLanMua) found.soLanMua = Math.max(Number(found.soLanMua) || 1, Number(sc.soLanMua));
+              if (sc.tongChiTieu) found.tongChiTieu = Math.max(Number(found.tongChiTieu) || 0, Number(sc.tongChiTieu));
+            }
+          });
+          this.customers = merged;
+          this.saveCustomersToLocal();
+        }
         if (data.storeConfig && typeof data.storeConfig === 'object') {
           this.storeConfig = Object.assign({}, this.storeConfig, data.storeConfig);
           localStorage.setItem('pmqlv_store_config', JSON.stringify(this.storeConfig));
@@ -288,6 +309,207 @@ class GoldApp {
       } else {
         this.recentModifiedItems = [];
       }
+    }
+
+    // 8. Danh sách khách hàng thân thiết & CCCD
+    this.customers = this.loadCustomersFromLocal();
+  }
+
+  loadCustomersFromLocal() {
+    let list = [];
+    const saved = localStorage.getItem('pmqlv_customers');
+    if (saved) {
+      try { list = JSON.parse(saved) || []; } catch(e) { list = []; }
+    }
+    if ((!list || list.length === 0) && this.orders && this.orders.length > 0) {
+      const map = new Map();
+      this.orders.forEach(o => {
+        const name = (o.tenKhach || '').trim();
+        const phone = (o.sdt || '').trim();
+        const cccd = (o.cccd || '').trim();
+        if (name && name !== 'Khách lẻ' && (phone || cccd)) {
+          const key = phone || cccd || name;
+          if (!map.has(key)) {
+            map.set(key, {
+              tenKhach: name,
+              sdt: phone,
+              cccd: cccd,
+              soLanMua: 1,
+              tongChiTieu: Number(o.tongTien) || 0,
+              lanCuoiMua: o.ngayBan || ''
+            });
+          } else {
+            const existing = map.get(key);
+            existing.soLanMua = (existing.soLanMua || 1) + 1;
+            existing.tongChiTieu = (existing.tongChiTieu || 0) + (Number(o.tongTien) || 0);
+            if (!existing.cccd && cccd) existing.cccd = cccd;
+            if (!existing.sdt && phone) existing.sdt = phone;
+          }
+        }
+      });
+      list = Array.from(map.values());
+      this.saveCustomersToLocal(list);
+    }
+    return list;
+  }
+
+  saveCustomersToLocal(list = null) {
+    if (list) this.customers = list;
+    try {
+      localStorage.setItem('pmqlv_customers', JSON.stringify(this.customers || []));
+    } catch(e) {}
+  }
+
+  onCustomerInput(field) {
+    const nameVal = (document.getElementById('cartCustomerName')?.value || '').trim().toLowerCase();
+    const phoneVal = (document.getElementById('cartCustomerPhone')?.value || '').trim();
+    const cccdVal = (document.getElementById('cartCustomerCccd')?.value || '').trim();
+
+    const sugBox = document.getElementById('customerSuggestions');
+    const badgeEl = document.getElementById('custSavedBadge');
+
+    const exactMatch = (this.customers || []).find(c => 
+      (phoneVal && c.sdt && c.sdt.trim() === phoneVal) ||
+      (cccdVal && c.cccd && c.cccd.trim() === cccdVal)
+    );
+    if (badgeEl) {
+      badgeEl.style.display = exactMatch ? 'inline-block' : 'none';
+    }
+
+    if (!sugBox) return;
+
+    const currentVal = (field === 'name' ? nameVal : (field === 'phone' ? phoneVal : cccdVal)).toLowerCase();
+    if (!currentVal || currentVal.length < 1) {
+      sugBox.style.display = 'none';
+      return;
+    }
+
+    const matches = (this.customers || []).filter(c => {
+      const matchName = c.tenKhach && c.tenKhach.toLowerCase().includes(currentVal);
+      const matchPhone = c.sdt && c.sdt.includes(currentVal);
+      const matchCccd = c.cccd && c.cccd.includes(currentVal);
+      return matchName || matchPhone || matchCccd;
+    }).slice(0, 5);
+
+    if (matches.length === 0) {
+      sugBox.style.display = 'none';
+      return;
+    }
+
+    sugBox.innerHTML = matches.map((c, idx) => `
+      <div class="customer-suggestion-item" onmousedown="app.selectCustomerSuggestion(${idx})">
+        <div class="cust-item-main">
+          <div class="cust-item-name">${c.tenKhach || 'Khách hàng'}</div>
+          <div class="cust-item-details">
+            ${c.sdt ? `<span>📞 ${c.sdt}</span>` : ''}
+            ${c.cccd ? `<span>🪪 CCCD: <b>${c.cccd}</b></span>` : ''}
+          </div>
+        </div>
+        <div class="cust-item-badge">
+          ${c.soLanMua ? `${c.soLanMua} lần mua` : 'Khách cũ'}
+        </div>
+      </div>
+    `).join('');
+
+    this.currentCustomerMatches = matches;
+    sugBox.style.display = 'block';
+  }
+
+  onCustomerFocus(field) {
+    this.onCustomerInput(field);
+  }
+
+  onCustomerBlur(field) {
+    setTimeout(() => {
+      const sugBox = document.getElementById('customerSuggestions');
+      if (sugBox) sugBox.style.display = 'none';
+
+      const phoneVal = (document.getElementById('cartCustomerPhone')?.value || '').trim();
+      const cccdVal = (document.getElementById('cartCustomerCccd')?.value || '').trim();
+      const nameInput = document.getElementById('cartCustomerName');
+      const phoneInput = document.getElementById('cartCustomerPhone');
+      const cccdInput = document.getElementById('cartCustomerCccd');
+      const badgeEl = document.getElementById('custSavedBadge');
+
+      if ((field === 'phone' && phoneVal) || (field === 'cccd' && cccdVal)) {
+        const found = (this.customers || []).find(c => 
+          (field === 'phone' && c.sdt && c.sdt.trim() === phoneVal) ||
+          (field === 'cccd' && c.cccd && c.cccd.trim() === cccdVal)
+        );
+        if (found) {
+          if (nameInput && (!nameInput.value.trim() || nameInput.value.trim() === 'Khách lẻ')) {
+            nameInput.value = found.tenKhach || '';
+          }
+          if (phoneInput && !phoneInput.value.trim() && found.sdt) {
+            phoneInput.value = found.sdt;
+          }
+          if (cccdInput && !cccdInput.value.trim() && found.cccd) {
+            cccdInput.value = found.cccd;
+          }
+          if (badgeEl) badgeEl.style.display = 'inline-block';
+        }
+      }
+    }, 200);
+  }
+
+  selectCustomerSuggestion(idx) {
+    if (!this.currentCustomerMatches || !this.currentCustomerMatches[idx]) return;
+    const c = this.currentCustomerMatches[idx];
+
+    const nameInput = document.getElementById('cartCustomerName');
+    const phoneInput = document.getElementById('cartCustomerPhone');
+    const cccdInput = document.getElementById('cartCustomerCccd');
+    const badgeEl = document.getElementById('custSavedBadge');
+    const sugBox = document.getElementById('customerSuggestions');
+
+    if (nameInput) nameInput.value = c.tenKhach || '';
+    if (phoneInput) phoneInput.value = c.sdt || '';
+    if (cccdInput) cccdInput.value = c.cccd || '';
+    if (badgeEl) badgeEl.style.display = 'inline-block';
+    if (sugBox) sugBox.style.display = 'none';
+
+    this.showToast(`✨ Đã điền thông tin khách: ${c.tenKhach || c.sdt}`, 'success');
+  }
+
+  saveOrUpdateCustomer(custName, custPhone, custCccd, orderTotal = 0) {
+    const cleanName = (custName || 'Khách lẻ').trim();
+    const cleanPhone = (custPhone || '').trim();
+    const cleanCccd = (custCccd || '').trim();
+
+    if (!cleanPhone && !cleanCccd && cleanName === 'Khách lẻ') return;
+
+    if (!this.customers) this.customers = [];
+
+    let found = this.customers.find(c => 
+      (cleanPhone && c.sdt && c.sdt.trim() === cleanPhone) ||
+      (cleanCccd && c.cccd && c.cccd.trim() === cleanCccd)
+    );
+
+    const nowStr = new Date().toLocaleString('vi-VN');
+
+    if (found) {
+      if (cleanName && cleanName !== 'Khách lẻ') found.tenKhach = cleanName;
+      if (cleanPhone) found.sdt = cleanPhone;
+      if (cleanCccd) found.cccd = cleanCccd;
+      found.soLanMua = (Number(found.soLanMua) || 1) + 1;
+      found.tongChiTieu = (Number(found.tongChiTieu) || 0) + Number(orderTotal);
+      found.lanCuoiMua = nowStr;
+    } else {
+      found = {
+        tenKhach: cleanName,
+        sdt: cleanPhone,
+        cccd: cleanCccd,
+        soLanMua: 1,
+        tongChiTieu: Number(orderTotal),
+        lanCuoiMua: nowStr
+      };
+      this.customers.unshift(found);
+    }
+
+    this.saveCustomersToLocal();
+
+    if (GoogleSheetService.isConfigured() && typeof GoogleSheetService.saveCustomer === 'function') {
+      GoogleSheetService.saveCustomer(found).catch(e => console.warn('Lỗi lưu khách hàng lên Sheet:', e));
     }
   }
 
@@ -562,6 +784,14 @@ class GoldApp {
     const grid = document.getElementById('posProductGrid');
     if (!grid) return;
 
+    const isMobile = (window.innerWidth <= 768);
+
+    // TRÊN MOBILE: Nếu chưa nhập tìm kiếm, không hiển thị sản phẩm để Đơn Bán Hàng nằm ngay bên dưới ô quét mã vạch
+    if (isMobile && !keyword) {
+      grid.innerHTML = '';
+      return;
+    }
+
     // Chi Nhánh hiện tại (mặc định nếu trống thì thuộc về Chi nhánh 1 để tương thích dữ liệu cũ)
     const activeBranch = this.currentBranch;
     const isAdmin = this.currentUser && this.currentUser.role === 'admin';
@@ -589,10 +819,18 @@ class GoldApp {
       return true;
     });
 
-    // Giới hạn hiển thị 80 món nhanh nhất để cuộn siêu mượt
-    const displayList = available.slice(0, 80);
+    // TRÊN MOBILE: Chỉ lấy tối đa 2 sản phẩm gần đúng nhất xếp hàng ngang. TRÊN DESKTOP: Hiển thị 80 món
+    const displayList = isMobile ? available.slice(0, 2) : available.slice(0, 80);
 
     if (displayList.length === 0) {
+      if (isMobile) {
+        grid.innerHTML = `
+          <div style="grid-column: 1/-1; text-align: center; padding: 16px 12px; color: #64748B; background: #F8FAFC; border-radius: 8px; border: 1px dashed #CBD5E1; font-size: 12px; margin-bottom: 6px;">
+            🔍 Không tìm thấy sản phẩm khớp với "<b>${keyword}</b>".
+          </div>
+        `;
+        return;
+      }
       grid.innerHTML = `
         <div style="grid-column: 1/-1; text-align: center; padding: 40px 20px; color: #94A3B8;">
           <div style="font-size: 32px; margin-bottom: 8px;">📦</div>
@@ -697,6 +935,16 @@ class GoldApp {
     });
 
     this.renderCart();
+
+    // Trên điện thoại: Xóa ô tìm kiếm để danh sách 2 món thu gọn, người dùng thấy ngay Đơn Bán Hàng bên dưới
+    if (window.innerWidth <= 768) {
+      const searchInput = document.getElementById('posSearchInput');
+      if (searchInput && searchInput.value) {
+        searchInput.value = '';
+        this.filterPosProducts();
+      }
+      this.showToast(`✅ Đã thêm ${product.tenHang || product.maHang} vào đơn hàng!`, 'success');
+    }
   }
 
   // Xóa món khỏi giỏ hàng
@@ -1102,6 +1350,7 @@ class GoldApp {
 
     const custName = (document.getElementById('cartCustomerName')?.value || '').trim() || 'Khách lẻ';
     const custPhone = (document.getElementById('cartCustomerPhone')?.value || '').trim();
+    const custCccd = (document.getElementById('cartCustomerCccd')?.value || '').trim();
 
     let grandTotal = this.cart.reduce((sum, item) => sum + item.thanhTien, 0);
     const multiplier = this.storeConfig.currencyUnitMultiplier || 1000;
@@ -1120,6 +1369,7 @@ class GoldApp {
       ngayBan: now.toLocaleString('vi-VN'),
       tenKhach: custName,
       sdt: custPhone,
+      cccd: custCccd,
       items: this.cart.map(c => ({
         maHang: c.product.maHang,
         tenHang: c.product.tenHang,
@@ -1160,9 +1410,10 @@ class GoldApp {
     });
     this.saveProductsToLocal();
 
-    // 3. Lưu lịch sử đơn hàng
+    // 3. Lưu lịch sử đơn hàng & Cập nhật khách hàng
     this.orders.unshift(orderData);
     this.saveOrdersToLocal();
+    this.saveOrUpdateCustomer(custName, custPhone, custCccd, grandTotal);
 
     // 4. Chuẩn bị mẫu in hóa đơn & Giấy đảm bảo vàng
     this.preparePrintableInvoice(orderData);
@@ -1171,6 +1422,9 @@ class GoldApp {
     this.cart = [];
     if (document.getElementById('cartCustomerName')) document.getElementById('cartCustomerName').value = '';
     if (document.getElementById('cartCustomerPhone')) document.getElementById('cartCustomerPhone').value = '';
+    if (document.getElementById('cartCustomerCccd')) document.getElementById('cartCustomerCccd').value = '';
+    if (document.getElementById('custSavedBadge')) document.getElementById('custSavedBadge').style.display = 'none';
+    if (document.getElementById('customerSuggestions')) document.getElementById('customerSuggestions').style.display = 'none';
     this.renderCart();
     this.filterPosProducts();
     this.filterInventory();
@@ -1195,6 +1449,16 @@ class GoldApp {
     document.getElementById('invPrintDate').textContent = order.ngayBan;
     document.getElementById('invPrintCustomer').textContent = order.tenKhach;
     document.getElementById('invPrintCustPhone').textContent = order.sdt || 'Không có';
+    const cccdWrap = document.getElementById('invPrintCustCccdWrap');
+    const cccdEl = document.getElementById('invPrintCustCccd');
+    if (cccdEl && cccdWrap) {
+      if (order.cccd) {
+        cccdEl.textContent = order.cccd;
+        cccdWrap.style.display = 'inline';
+      } else {
+        cccdWrap.style.display = 'none';
+      }
+    }
     document.getElementById('invPrintStaff').textContent = order.nhanVien;
     document.getElementById('invPrintTotal').textContent = order.tongTien.toLocaleString('vi-VN') + ' đ';
 
@@ -3028,6 +3292,25 @@ class GoldApp {
             o.chiNhanh = this.normalizeOrderBranch(o);
           });
           this.saveOrdersToLocal();
+        }
+        if (data.customers && Array.isArray(data.customers)) {
+          const merged = [...(this.customers || [])];
+          data.customers.forEach(sc => {
+            const scPhone = (sc.sdt || '').trim();
+            const scCccd = (sc.cccd || '').trim();
+            const found = merged.find(c => (scPhone && c.sdt && c.sdt.trim() === scPhone) || (scCccd && c.cccd && c.cccd.trim() === scCccd));
+            if (!found) {
+              merged.push(sc);
+            } else {
+              if (sc.tenKhach && (!found.tenKhach || found.tenKhach === 'Khách lẻ')) found.tenKhach = sc.tenKhach;
+              if (sc.cccd && !found.cccd) found.cccd = sc.cccd;
+              if (sc.sdt && !found.sdt) found.sdt = sc.sdt;
+              if (sc.soLanMua) found.soLanMua = Math.max(Number(found.soLanMua) || 1, Number(sc.soLanMua));
+              if (sc.tongChiTieu) found.tongChiTieu = Math.max(Number(found.tongChiTieu) || 0, Number(sc.tongChiTieu));
+            }
+          });
+          this.customers = merged;
+          this.saveCustomersToLocal();
         }
         if (data.storeConfig && typeof data.storeConfig === 'object') {
           this.storeConfig = Object.assign({}, this.storeConfig, data.storeConfig);
