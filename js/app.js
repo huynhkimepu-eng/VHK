@@ -113,21 +113,32 @@ class GoldApp {
     if (!container) {
       container = document.createElement('div');
       container.id = 'appGlobalToast';
-      container.style.cssText = 'position:fixed;bottom:28px;left:50%;transform:translateX(-50%);z-index:999999;pointer-events:none;transition:all 0.3s ease;';
+      container.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:999999;pointer-events:none;transition:all 0.3s ease;display:none;';
       document.body.appendChild(container);
     }
     const bg = type === 'success' ? '#059669' : (type === 'error' ? '#DC2626' : '#2563EB');
     container.innerHTML = `
-      <div style="background:${bg};color:#FFF;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,0.25);pointer-events:auto;display:flex;align-items:center;gap:8px;">
+      <div style="background:${bg};color:#FFF;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,0.25);display:flex;align-items:center;gap:8px;pointer-events:none;">
         <span>${message}</span>
       </div>
     `;
+    container.style.display = 'block';
+    // Trigger reflow to apply transition
+    void container.offsetWidth;
     container.style.opacity = '1';
     container.style.transform = 'translateX(-50%) translateY(0)';
-    setTimeout(() => {
+
+    if (this._toastTimer) clearTimeout(this._toastTimer);
+    this._toastTimer = setTimeout(() => {
       if (container) {
         container.style.opacity = '0';
-        container.style.transform = 'translateX(-50%) translateY(10px)';
+        container.style.transform = 'translateX(-50%) translateY(-10px)';
+        setTimeout(() => {
+          if (container) {
+            container.style.display = 'none';
+            container.innerHTML = '';
+          }
+        }, 350);
       }
     }, 3000);
   }
