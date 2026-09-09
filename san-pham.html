@@ -1446,9 +1446,10 @@
 
     // 3. Đồng bộ dữ liệu mới nhất từ Google Sheet (khi khách truy cập từ điện thoại)
     async function fetchLatestFromCloud() {
-      if (!window.GoogleSheetService || !GoogleSheetService.isConfigured()) return;
+      const gss = window.GoogleSheetService || (typeof GoogleSheetService !== 'undefined' ? GoogleSheetService : null);
+      if (!gss || typeof gss.isConfigured !== 'function' || !gss.isConfigured()) return;
       try {
-        const cloudData = await GoogleSheetService.fetchAllData();
+        const cloudData = await gss.fetchAllData();
         if (cloudData) {
           let updated = false;
           if (cloudData.products && cloudData.products.length > 0) {

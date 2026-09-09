@@ -3,7 +3,7 @@
  * Tối ưu xử lý CORS, phân tích lỗi chi tiết và kiểm tra URL chuẩn xác.
  */
 
-const GoogleSheetService = {
+var GoogleSheetService = window.GoogleSheetService = {
   // BẠN HÃY DÁN ĐƯỜNG LINK GOOGLE SCRIPT CỦA BẠN VÀO GIỮA 2 DẤU NHÁY KÉP BÊN DƯỚI:
   // Ví dụ: "https://script.google.com/macros/s/AKfycbywC60xmXT0E0acGjJL4IkeHpgx6PcCaXsDYCMCO3_TM7n_.../exec"
   HARDCODED_URL: "https://script.google.com/macros/s/AKfycbycTY6oaVZlruQoCDJdxxOO744Bzghcom4ca67xz5_jgaDl9L5ex58kfbnUIPniJR9g/exec", 
@@ -11,7 +11,10 @@ const GoogleSheetService = {
   STORAGE_KEY: 'pmqlv_google_script_url',
 
   getUrl() {
-    let customUrl = localStorage.getItem(this.STORAGE_KEY);
+    let customUrl = null;
+    try {
+      customUrl = localStorage.getItem(this.STORAGE_KEY);
+    } catch(e) {}
     if (customUrl && customUrl.trim() && this.validateUrl(customUrl).valid) {
       return customUrl.trim();
     }
@@ -180,7 +183,7 @@ const GoogleSheetService = {
 
       if (timeoutId) clearTimeout(timeoutId);
       const text = await response.text();
-      if (text && text.trim().length > 0) {
+      if (text && text.trim().startsWith('{')) {
         return text;
       }
     } catch (err) {
@@ -473,5 +476,5 @@ const GoogleSheetService = {
       console.warn('Lỗi lưu khách hàng lên Google Sheet:', err);
       return { success: false, message: err.toString() };
     }
-  }
 };
+window.GoogleSheetService = GoogleSheetService;

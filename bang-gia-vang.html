@@ -500,8 +500,8 @@
   </footer>
 
   <!-- Scripts -->
-  <script src="js/defaultData.js?v=60"></script>
-  <script src="js/googleSheetService.js?v=60"></script>
+  <script src="js/defaultData.js?v=61"></script>
+  <script src="js/googleSheetService.js?v=61"></script>
   <script>
     // State
     let goldPrices = [];
@@ -663,7 +663,7 @@
         defaultBan: 6900,
         matcher: (g) => {
           const n = (g.loaiVang || '').toLowerCase();
-          return n.includes('10k ý') || n.includes('ý 10') || (n.includes('10') && n.includes('ý')) || n.includes('10k') || n.includes('10');
+          return (n.includes('10') && (n.includes('ý') || n.includes('y'))) || n.includes('10k ý') || n.includes('ý 10');
         }
       },
       {
@@ -744,14 +744,18 @@
         }
       }
 
-      if (!window.GoogleSheetService || !GoogleSheetService.isConfigured()) return;
+      const gss = window.GoogleSheetService || (typeof GoogleSheetService !== 'undefined' ? GoogleSheetService : null);
+      if (!gss || typeof gss.isConfigured !== 'function' || !gss.isConfigured()) {
+        console.warn('GoogleSheetService chưa sẵn sàng');
+        return;
+      }
 
       isFetchingCloud = true;
       lastCloudFetchStart = now;
       try {
         let prices = null;
-        if (typeof GoogleSheetService.fetchGoldPrices === 'function') {
-          prices = await GoogleSheetService.fetchGoldPrices();
+        if (typeof gss.fetchGoldPrices === 'function') {
+          prices = await gss.fetchGoldPrices();
         }
 
         if (prices && Array.isArray(prices) && prices.length > 0) {
@@ -770,10 +774,10 @@
           }
 
           // Cập nhật thông tin tiệm nếu có thay đổi từ Cloud
-          if (GoogleSheetService.lastFetchedStoreConfig && typeof GoogleSheetService.lastFetchedStoreConfig === 'object') {
-            const newCfgStr = JSON.stringify(GoogleSheetService.lastFetchedStoreConfig);
+          if (gss.lastFetchedStoreConfig && typeof gss.lastFetchedStoreConfig === 'object') {
+            const newCfgStr = JSON.stringify(gss.lastFetchedStoreConfig);
             if (newCfgStr !== JSON.stringify(storeConfig)) {
-              storeConfig = GoogleSheetService.lastFetchedStoreConfig;
+              storeConfig = gss.lastFetchedStoreConfig;
               try { localStorage.setItem(STORAGE_KEY_CONFIG, newCfgStr); } catch(e) {}
               updateStoreInfoUI();
             }
