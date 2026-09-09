@@ -155,25 +155,27 @@ const GoogleSheetService = {
   },
 
   // Tải riêng Bảng Giá Vàng siêu tốc phục vụ hiển thị TV & POS thời gian thực
-  async fetchGoldPrices() {
+  async fetchGoldPrices(externalSignal = null) {
     if (!this.isConfigured()) return null;
 
     let timeoutId = null;
     try {
       const url = this.getUrl();
       const sep = url.includes('?') ? '&' : '?';
-      // Gọi getGoldPrices (chỉ tải riêng giá vàng, phản hồi siêu nhanh 0.1s - 0.5s)
+      // Gọi getGoldPrices (chỉ tải riêng giá vàng, phản hồi siêu nhanh)
       // KHÔNG dùng cache: 'no-store' vì WebKit (iOS Safari) chặn cross-origin 302 redirect khi có no-store
-      const controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+      const controller = (!externalSignal && typeof AbortController !== 'undefined') ? new AbortController() : null;
       timeoutId = controller ? setTimeout(() => {
         try { controller.abort(); } catch (e) {}
-      }, 7000) : null;
+      }, 10000) : null;
+
+      const signal = externalSignal || (controller ? controller.signal : undefined);
 
       const response = await fetch(`${url}${sep}action=getGoldPrices&_t=${Date.now()}`, {
         method: 'GET',
         mode: 'cors',
         redirect: 'follow',
-        signal: controller ? controller.signal : undefined
+        signal: signal
       });
 
       if (timeoutId) {
@@ -181,12 +183,8 @@ const GoogleSheetService = {
         timeoutId = null;
       }
 
-      if (!response.ok) {
-        return null;
-      }
-
       const text = await response.text();
-      let res;
+      let res = null;
       try { res = JSON.parse(text); } catch(e) { res = null; }
       if (res && res.success && res.data) {
         if (res.data.storeConfig && typeof res.data.storeConfig === 'object') {

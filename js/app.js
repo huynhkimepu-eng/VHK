@@ -65,8 +65,11 @@ class GoldApp {
       // 1. Tải GIÁ VÀNG thời gian thực SIÊU TỐC NGAY LẬP TỨC (chỉ 0.2s, chạy ưu tiên cao nhất)
       this.fetchGoldPricesRealtime(true).catch(e => console.warn('Lỗi fetchGoldPricesRealtime khởi động:', e));
 
-      // 2. Chạy vòng lặp đồng bộ giá vàng tuần tự an toàn chống nghẽn mạng trên di động
-      this.startGoldPricesSyncLoop();
+      // 2. Chạy vòng lặp đồng bộ giá vàng mỗi 3.5 giây liên tục
+      if (this.goldSyncInterval) clearInterval(this.goldSyncInterval);
+      this.goldSyncInterval = setInterval(() => {
+        this.fetchGoldPricesRealtime();
+      }, 3500);
 
       // 3. Tự động tải toàn bộ sản phẩm kho và đơn hàng chạy nền (không chặn UI hay chặn giá vàng)
       this.fetchRealTimeData().catch(e => {
@@ -216,12 +219,13 @@ class GoldApp {
   // Cập nhật giá vàng thời gian thực có cơ chế tự giải phóng khóa (Watchdog) chống đơ trên điện thoại
   async fetchGoldPricesRealtime(forceRender = false) {
     const now = Date.now();
-    // Watchdog: Nếu fetch trước quá 10s chưa xong (do kết nối mạng di động chập chờn), tự phá khóa!
+    // Watchdog: Nếu fetch trước quá 9s chưa xong (mạng di động chập chờn), tự phá khóa!
     if (this._isFetchingGoldPrices) {
-      if (now - (this._lastGoldFetchStart || 0) < 10000) {
+      if (now - (this._lastGoldFetchStart || 0) > 9000) {
+        this._isFetchingGoldPrices = false;
+      } else {
         return;
       }
-      console.warn('⚠️ Phát hiện kết nối giá vàng bị treo trên điện thoại -> Tự động giải phóng khóa!');
     }
 
     if (typeof GoogleSheetService === 'undefined' || !GoogleSheetService.isConfigured()) return;
@@ -256,11 +260,7 @@ class GoldApp {
           }
         }
       } else {
-        if (prices === null && (!this.goldPrices || this.goldPrices.length === 0)) {
-          this.updateGoldRatesSyncUI(false);
-        } else {
-          this.updateGoldRatesSyncUI(true);
-        }
+        if (prices !== null) this.updateGoldRatesSyncUI(true);
       }
     } catch (err) {
       console.warn('Lỗi fetchGoldPricesRealtime:', err);
@@ -268,25 +268,6 @@ class GoldApp {
     } finally {
       this._isFetchingGoldPrices = false;
     }
-  }
-
-  // Vòng lặp đồng bộ giá vàng tuần tự: nghỉ giữa các lần gọi, chống nghẽn kết nối và quá tải trên di động
-  startGoldPricesSyncLoop() {
-    if (this._goldPricesLoopTimeout) {
-      clearTimeout(this._goldPricesLoopTimeout);
-      this._goldPricesLoopTimeout = null;
-    }
-
-    const loop = async () => {
-      if (!document.hidden) {
-        try {
-          await this.fetchGoldPricesRealtime();
-        } catch(e) {}
-      }
-      this._goldPricesLoopTimeout = setTimeout(loop, 4500);
-    };
-
-    this._goldPricesLoopTimeout = setTimeout(loop, 4500);
   }
 
   updateGoldRatesSyncUI(isSuccess) {
@@ -5731,18 +5712,15 @@ class GoldApp {
       if (document.visibilityState === 'visible') {
         this._isFetchingGoldPrices = false; // Phá vỡ khóa treo khi mở lại máy
         this.fetchGoldPricesRealtime(true);
-        this.startGoldPricesSyncLoop();
       }
     });
     window.addEventListener('focus', () => {
       this._isFetchingGoldPrices = false;
       this.fetchGoldPricesRealtime(true);
-      this.startGoldPricesSyncLoop();
     });
     window.addEventListener('pageshow', () => {
       this._isFetchingGoldPrices = false;
       this.fetchGoldPricesRealtime(true);
-      this.startGoldPricesSyncLoop();
     });
 
     // 3. Lắng nghe BroadcastChannel để đồng bộ tức thì 0.01 giây giữa các tab/cửa sổ trên cùng thiết bị
