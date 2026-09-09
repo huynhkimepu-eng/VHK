@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>PMQLV - Phần Mềm Quản Lý & Bán Hàng Vàng Bạc Đá Quý</title>
-  <link rel="stylesheet" href="css/style.css?v=65">
+  <link rel="stylesheet" href="css/style.css?v=66">
   <!-- HTML5 QR Code & Barcode Scanner for Camera -->
     <script>
     window.onerror = function(msg, src, line, col, err) {
@@ -258,12 +258,12 @@
                 <span>TỔNG CỘNG:</span>
                 <span id="cartGrandTotal">0 đ</span>
               </div>
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px;">
+              <div class="cart-action-buttons" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px;">
                 <button type="button" class="btn btn-success btn-lg" style="font-weight: 800; font-size: 13.5px; padding: 12px 6px; display: flex; align-items: center; justify-content: center; gap: 5px; border-radius: 8px; box-shadow: 0 2px 6px rgba(16,185,129,0.25);" onclick="app.requestCheckout(false)">
                   <span>💳</span>
                   <span>THANH TOÁN</span>
                 </button>
-                <button type="button" class="btn btn-primary btn-lg" style="font-weight: 800; font-size: 13.5px; padding: 12px 6px; display: flex; align-items: center; justify-content: center; gap: 5px; border-radius: 8px; box-shadow: 0 2px 6px rgba(217,119,6,0.25);" onclick="app.requestCheckout(true)">
+                <button type="button" class="btn btn-primary btn-lg hide-on-mobile btn-print-invoice" style="font-weight: 800; font-size: 13.5px; padding: 12px 6px; display: flex; align-items: center; justify-content: center; gap: 5px; border-radius: 8px; box-shadow: 0 2px 6px rgba(217,119,6,0.25);" onclick="app.requestCheckout(true)">
                   <span>🖨️</span>
                   <span>IN HÓA ĐƠN</span>
                 </button>
@@ -1758,6 +1758,6 @@
   <script src="js/googleSheetService.js?v=53"></script>
   <script src="js/cloudinaryService.js?v=51"></script>
   <script src="js/barcodeLabel.js?v=51"></script>
-  <script src="js/app.js?v=69"></script>
+  <script src="js/app.js?v=70"></script>
 </body>
 </html>

@@ -1566,6 +1566,14 @@ body {
     margin-top: 4px !important;
   }
 
+  /* Ẩn nút In Hóa Đơn và mở rộng nút Thanh Toán trên mobile */
+  .cart-action-buttons {
+    grid-template-columns: 1fr !important;
+  }
+  .cart-action-buttons .btn-print-invoice {
+    display: none !important;
+  }
+
   /* 5. Tab Kho Hàng (Inventory) */
   .card-header {
     padding: 10px 12px !important;
