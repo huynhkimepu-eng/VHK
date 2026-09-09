@@ -728,9 +728,10 @@
       }).join('');
     }
 
-    // 4. Đồng bộ dữ liệu từ Google Sheet liên tục (có Watchdog kép chống treo trên Android TV)
+    // 4. Đồng bộ dữ liệu từ Google Sheet liên tục (có Watchdog kép chống treo trên Android TV / BrowseHere)
     let isFetchingCloud = false;
     let lastCloudFetchStart = 0;
+    let consecutiveCloudFailures = 0;
 
     async function fetchLatestFromCloud() {
       const now = Date.now();
@@ -754,6 +755,7 @@
         }
 
         if (prices && Array.isArray(prices) && prices.length > 0) {
+          consecutiveCloudFailures = 0;
           const currentStr = JSON.stringify(goldPrices);
           const newStr = JSON.stringify(prices);
           if (currentStr !== newStr) {
@@ -780,14 +782,27 @@
           updateLiveStatus(true);
         } else {
           if (prices !== null) {
+            consecutiveCloudFailures = 0;
             updateLiveStatus(true);
           } else {
+            consecutiveCloudFailures++;
             updateLiveStatus(false);
+            // Tự phục hồi: Nếu mất kết nối liên tục hơn 15 lần (khoảng 1.5 phút), tự reload trang để làm mới nhân WebView TV
+            if (consecutiveCloudFailures >= 15) {
+              consecutiveCloudFailures = 0;
+              console.log('🔄 BrowseHere TV: Tự phục hồi kết nối...');
+              window.location.reload();
+            }
           }
         }
       } catch (e) {
         console.warn('TV Cloud Sync warning:', e);
+        consecutiveCloudFailures++;
         updateLiveStatus(false);
+        if (consecutiveCloudFailures >= 15) {
+          consecutiveCloudFailures = 0;
+          window.location.reload();
+        }
       } finally {
         isFetchingCloud = false;
       }
