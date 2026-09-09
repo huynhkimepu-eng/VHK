@@ -1020,6 +1020,62 @@
           </div>
         </div>
 
+        <!-- Cấu hình Gửi Tin Nhắn Zalo Khi Thay Đổi Giá Vàng -->
+        <div class="card" style="border: 1.5px solid #0284C7; background: #F0F9FF;">
+          <div class="card-header" style="background: #E0F2FE; border-bottom: 1px solid #BAE6FD;">
+            <div class="card-title" style="color: #0369A1; display: flex; align-items: center; gap: 8px;">
+              <span>📲</span> Thông Báo Biến Động Giá Vàng Vào Nhóm Zalo Khách Hàng
+            </div>
+          </div>
+          <div class="card-body">
+            <p style="font-size: 13px; color: #0C4A6E; margin-bottom: 14px; line-height: 1.5;">
+              Khi bạn cập nhật hoặc lưu lại giá vàng mới, hệ thống sẽ tự động tạo tin nhắn thông báo định dạng đẹp mắt kèm nút <b>Copy & Mở Zalo</b> để gửi ngay vào các nhóm Zalo khách hàng. Ngoài ra hỗ trợ kết nối <b>Webhook Bot Tự Động</b> (nếu có).
+            </p>
+
+            <div style="margin-bottom: 14px; background: #FFFFFF; padding: 12px 14px; border-radius: 8px; border: 1px solid #BAE6FD;">
+              <label style="font-size: 13.5px; font-weight: 700; color: #0369A1; display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none;">
+                <input type="checkbox" id="cfgZaloNotifyEnabled" style="width: 18px; height: 18px; accent-color: #0284C7;" checked>
+                <span>Bật tính năng Thông Báo Biến Động Giá Vàng vào Nhóm Zalo</span>
+              </label>
+              <small style="color: #64748B; font-size: 11.5px; display: block; margin-top: 4px; margin-left: 28px;">
+                Tắt tùy chọn này nếu bạn không muốn hiện thông báo hoặc gửi tin nhắn mỗi khi cập nhật giá vàng.
+              </small>
+            </div>
+
+            <div style="margin-bottom: 14px;">
+              <label style="font-size: 12.5px; font-weight: bold; color: #1E293B;">
+                Webhook URL Tự Động Gửi (Tùy chọn cho n8n / Chatbot / Server):
+              </label>
+              <input type="url" id="cfgZaloWebhookUrl" class="form-control" placeholder="https://webhook-endpoint-zalo-bot.com/api/send-gold-price (để trống nếu gửi thủ công qua Zalo App)">
+              <small style="color: #64748B; font-size: 11.5px;">Nếu bạn có webhook bot Zalo, hệ thống sẽ tự động gửi payload JSON chứa tin nhắn đến URL này mỗi khi đổi giá vàng.</small>
+            </div>
+
+            <div style="margin-bottom: 12px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                <label style="font-size: 12.5px; font-weight: bold; color: #1E293B;">
+                  Nội Dung Mẫu Tin Nhắn Zalo:
+                </label>
+                <button type="button" class="btn btn-outline btn-xs" onclick="app.resetZaloTemplateToDefault()" style="font-size: 11px;">
+                  🔄 Mẫu mặc định
+                </button>
+              </div>
+              <textarea id="cfgZaloMessageTemplate" class="form-control" rows="8" style="font-family: monospace; font-size: 12.5px; line-height: 1.45;" placeholder="Nhập cấu trúc tin nhắn Zalo..."></textarea>
+              <div style="margin-top: 6px; font-size: 11px; color: #475569; background: #E0F2FE; padding: 6px 10px; border-radius: 6px;">
+                <b>Các thẻ thay thế tự động:</b> <code>{tenTiem}</code>, <code>{thoiGian}</code>, <code>{bangGiaDayDu}</code>, <code>{loaiVang}</code>, <code>{giaMua}</code>, <code>{giaBan}</code>, <code>{hotline}</code>, <code>{diaChi}</code>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 15px;">
+              <button type="button" class="btn btn-primary btn-sm" onclick="app.saveZaloConfig()" style="font-weight: 700;">
+                💾 Lưu Cấu Hình Zalo
+              </button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="app.testZaloNotification()" style="font-weight: 600;">
+                🧪 Xem Thử / Gửi Thử Tin Nhắn
+              </button>
+            </div>
+          </div>
+        </div>
+
         <!-- Quản Trị & Xóa Dữ Liệu An Toàn (Admin Only) -->
         <div class="card admin-only" style="border: 1.5px solid #FCA5A5; background: #FFFDFD;">
           <div class="card-header" style="background: #FEF2F2; border-bottom: 1px solid #FECACA;">
@@ -1723,6 +1779,48 @@
     </div>
   </div>
 
+  <!-- ================= MODAL: THÔNG BÁO BIẾN ĐỘNG GIÁ VÀNG QUA ZALO ================= -->
+  <div class="modal-overlay" id="zaloNotificationModal" style="display: none;">
+    <div class="modal-content" style="max-width: 520px; width: 92%; border-radius: 12px; box-shadow: 0 20px 30px rgba(0,0,0,0.25); overflow: hidden;">
+      <div class="modal-header" style="background: linear-gradient(135deg, #0284C7 0%, #0369A1 100%); color: #FFFFFF; padding: 14px 18px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 20px;">📲</span>
+          <h3 class="modal-title" style="color: #FFFFFF; font-size: 16px; margin: 0;">Thông Báo Giá Vàng Zalo</h3>
+        </div>
+        <button type="button" class="modal-close" onclick="app.closeZaloModal()" style="color: #FFFFFF; opacity: 0.85;">&times;</button>
+      </div>
+      <div class="modal-body" style="padding: 16px 18px; display: flex; flex-direction: column; gap: 12px;">
+        <div style="background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 8px; padding: 10px 12px; font-size: 12.5px; color: #166534; display: flex; align-items: center; gap: 8px;">
+          <span>✅</span>
+          <span id="zaloModalStatusText">Giá vàng đã lưu thành công! Bạn có thể gửi nhanh thông báo này vào các nhóm Zalo khách hàng:</span>
+        </div>
+
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+            <label style="font-size: 12.5px; font-weight: 700; color: #1E293B;">Nội dung tin nhắn:</label>
+            <span style="font-size: 11px; color: #64748B;">(Có thể chỉnh sửa trực tiếp trước khi gửi)</span>
+          </div>
+          <textarea id="zaloPreviewContent" class="form-control" rows="9" style="font-family: monospace; font-size: 13px; line-height: 1.5; color: #0F172A; background: #F8FAFC; border: 1px solid #CBD5E1; border-radius: 8px; padding: 10px;"></textarea>
+        </div>
+
+        <div id="zaloWebhookStatusBadge" style="display: none; font-size: 11.5px; padding: 6px 10px; border-radius: 6px; background: #EFF6FF; color: #1E40AF; border: 1px solid #BFDBFE;">
+          🌐 Đang gửi webhook tự động...
+        </div>
+      </div>
+      <div class="modal-footer" style="background: #F8FAFC; border-top: 1px solid #E2E8F0; padding: 12px 18px; display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap;">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="app.closeZaloModal()">
+          Đóng
+        </button>
+        <button type="button" class="btn btn-outline btn-sm" onclick="app.copyZaloMessage()" style="font-weight: 600;">
+          📋 Copy Tin Nhắn
+        </button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="app.copyAndOpenZalo()" style="background: #0284C7; border-color: #0284C7; font-weight: 700; display: flex; align-items: center; gap: 6px;">
+          <span>🚀 Copy & Mở Zalo</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- ================= PRINTABLE INVOICE (ẨN, CHỈ HIỆN KHI IN) ================= -->
   <div id="printable-invoice">
     <div class="invoice-header">
@@ -1784,10 +1882,10 @@
   </div> <!-- /#appAuthenticatedArea -->
 
   <!-- Scripts -->
-  <script src="js/defaultData.js?v=63"></script>
+  <script src="js/defaultData.js?v=64"></script>
   <script src="js/googleSheetService.js?v=62"></script>
   <script src="js/cloudinaryService.js?v=51"></script>
   <script src="js/barcodeLabel.js?v=51"></script>
-  <script src="js/app.js?v=83"></script>
+  <script src="js/app.js?v=84"></script>
 </body>
 </html>

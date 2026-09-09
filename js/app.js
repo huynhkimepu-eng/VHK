@@ -684,6 +684,20 @@ class GoldApp {
     const lblWeight = document.getElementById('cfgPrintWeight');
     if (lblWeight) lblWeight.checked = cfg.printWeight !== false; // true by default
 
+    // Cấu hình Zalo Thông Báo
+    const chkZalo = document.getElementById('cfgZaloNotifyEnabled');
+    if (chkZalo) chkZalo.checked = cfg.zaloNotifyEnabled !== false;
+
+    const inpZaloUrl = document.getElementById('cfgZaloWebhookUrl');
+    if (inpZaloUrl) inpZaloUrl.value = cfg.zaloWebhookUrl || '';
+
+    const txtZaloTpl = document.getElementById('cfgZaloMessageTemplate');
+    if (txtZaloTpl) {
+      txtZaloTpl.value = cfg.zaloMessageTemplate !== undefined 
+        ? cfg.zaloMessageTemplate 
+        : (typeof DEFAULT_STORE_CONFIG !== 'undefined' ? DEFAULT_STORE_CONFIG.zaloMessageTemplate : '');
+    }
+
     // Cloudinary inputs init
     const inpCloudName = document.getElementById('cfgCloudinaryCloudName');
     if (inpCloudName && typeof CloudinaryService !== 'undefined') {
@@ -2817,11 +2831,11 @@ class GoldApp {
     const giaMua = Number(document.getElementById('goldQuickGiaMua').value) || 0;
     const giaBan = Number(document.getElementById('goldQuickGiaBan').value) || 0;
 
-    this.goldPrices[idx].giaMua = giaMua;
-    this.goldPrices[idx].giaBan = giaBan;
+    const changedItem = this.goldPrices[idx];
+    const changedGoldType = changedItem ? changedItem.loaiVang : null;
 
     this.closeQuickPriceModal();
-    await this.saveGoldPrices();
+    await this.saveGoldPrices(changedGoldType);
   }
 
   openGoldTypeModal(index = -1) {
@@ -2993,7 +3007,7 @@ class GoldApp {
     }
   }
 
-  async saveGoldPrices() {
+  async saveGoldPrices(changedGoldType = null) {
     const isStaff = this.currentUser && (this.currentUser.role === 'nhanvien' || this.currentUser.role === 'staff');
     const isPowerStaff = this.currentUser && this.currentUser.username === 'nhanvien2';
     if (isStaff && !isPowerStaff) {
@@ -3029,6 +3043,15 @@ class GoldApp {
     this.lastGoldSyncTime = new Date();
     this.updateGoldRatesSyncUI(true);
     alert('Đã cập nhật bảng giá vàng thành công!');
+
+    // Tự động kích hoạt thông báo Zalo nếu bật trong Cấu hình
+    try {
+      if (this.storeConfig && this.storeConfig.zaloNotifyEnabled !== false) {
+        this.triggerZaloPriceAlert(changedGoldType);
+      }
+    } catch (zaloErr) {
+      console.warn('Lỗi kích hoạt thông báo Zalo:', zaloErr);
+    }
   }
 
   // ================= 5. BÁO CÁO & THỐNG KÊ (ADMIN) =================
@@ -3725,6 +3748,14 @@ class GoldApp {
     const lblWeight = document.getElementById('cfgPrintWeight');
     if (lblWeight) this.storeConfig.printWeight = lblWeight.checked;
 
+    // Zalo settings save
+    const chkZalo = document.getElementById('cfgZaloNotifyEnabled');
+    if (chkZalo) this.storeConfig.zaloNotifyEnabled = chkZalo.checked;
+    const inpZaloUrl = document.getElementById('cfgZaloWebhookUrl');
+    if (inpZaloUrl) this.storeConfig.zaloWebhookUrl = inpZaloUrl.value.trim();
+    const txtZaloTpl = document.getElementById('cfgZaloMessageTemplate');
+    if (txtZaloTpl) this.storeConfig.zaloMessageTemplate = txtZaloTpl.value;
+
     localStorage.setItem('pmqlv_store_config', JSON.stringify(this.storeConfig));
     this.applyStoreConfig();
 
@@ -3754,6 +3785,253 @@ class GoldApp {
     }
 
     alert('✅ Đã cập nhật cấu hình tiệm vàng & Bảng giá TV thành công!' + cloudMsg);
+  }
+
+  // ================= CẤU HÌNH & THÔNG BÁO GIÁ VÀNG QUA ZALO =================
+  async saveZaloConfig() {
+    const btn = document.querySelector('button[onclick="app.saveZaloConfig()"]');
+    const origText = btn ? btn.textContent : '💾 Lưu Cấu Hình Zalo';
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = '⏳ Đang lưu...';
+    }
+
+    if (!this.storeConfig) this.storeConfig = {};
+    const chk = document.getElementById('cfgZaloNotifyEnabled');
+    const url = document.getElementById('cfgZaloWebhookUrl');
+    const tpl = document.getElementById('cfgZaloMessageTemplate');
+
+    this.storeConfig.zaloNotifyEnabled = chk ? chk.checked : true;
+    this.storeConfig.zaloWebhookUrl = url ? url.value.trim() : '';
+    this.storeConfig.zaloMessageTemplate = tpl ? tpl.value : '';
+
+    localStorage.setItem('pmqlv_store_config', JSON.stringify(this.storeConfig));
+
+    let cloudMsg = '';
+    if (window.GoogleSheetService && GoogleSheetService.isConfigured()) {
+      try {
+        const res = await GoogleSheetService.saveStoreConfig(this.storeConfig);
+        if (res && res.success) {
+          cloudMsg = '\n☁️ Google Sheet: Đã đồng bộ cấu hình Zalo lên đám mây!';
+        } else {
+          cloudMsg = '\n⚠️ Google Sheet: Không thể đồng bộ (' + (res?.message || res?.error || 'Lỗi mạng') + ')';
+        }
+      } catch (err) {
+        cloudMsg = '\n⚠️ Google Sheet: Lỗi kết nối (' + err.message + ')';
+      }
+    }
+
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = origText;
+    }
+
+    alert('✅ Đã lưu cấu hình thông báo Zalo thành công!' + cloudMsg);
+  }
+
+  resetZaloTemplateToDefault() {
+    const tpl = (typeof DEFAULT_STORE_CONFIG !== 'undefined' && DEFAULT_STORE_CONFIG.zaloMessageTemplate) 
+      ? DEFAULT_STORE_CONFIG.zaloMessageTemplate 
+      : `📢 BẢNG GIÁ VÀNG MỚI NHẤT - {tenTiem}\n⏰ Áp dụng từ: {thoiGian}\n\n{bangGiaDayDu}\n\n📍 Địa chỉ: {diaChi}\n☎️ Hotline: {hotline}\n✨ Kính chúc Quý khách Vạn Sự Như Ý - Phát Tài Phát Lộc!`;
+    const txt = document.getElementById('cfgZaloMessageTemplate');
+    if (txt) {
+      txt.value = tpl;
+    }
+    if (this.storeConfig) {
+      this.storeConfig.zaloMessageTemplate = tpl;
+    }
+  }
+
+  generateZaloGoldMessage(changedGoldType = null) {
+    const cfg = this.storeConfig || {};
+    let tpl = cfg.zaloMessageTemplate;
+    if (!tpl) {
+      tpl = (typeof DEFAULT_STORE_CONFIG !== 'undefined' && DEFAULT_STORE_CONFIG.zaloMessageTemplate)
+        ? DEFAULT_STORE_CONFIG.zaloMessageTemplate
+        : `📢 BẢNG GIÁ VÀNG MỚI NHẤT - {tenTiem}\n⏰ Áp dụng từ: {thoiGian}\n\n{bangGiaDayDu}\n\n📍 Địa chỉ: {diaChi}\n☎️ Hotline: {hotline}\n✨ Kính chúc Quý khách Vạn Sự Như Ý - Phát Tài Phát Lộc!`;
+    }
+
+    const now = new Date();
+    const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')} ngày ${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
+    const tenTiem = cfg.storeName || 'TIỆM VÀNG HOÀNG KIM';
+    const diaChi = cfg.address || 'Địa chỉ tiệm vàng';
+    const hotline = cfg.phone || '0988.888.888';
+
+    // Tạo danh sách bảng giá đầy đủ
+    const lines = (this.goldPrices || []).map(item => {
+      const name = item.loaiVang || '';
+      const isBac = /bạc|silver/i.test(name);
+      const icon = isBac ? '⚪' : '🟡';
+      const unit = isBac ? 'lượng' : 'chỉ';
+      const muaVnd = ((item.giaMua || 0) * 1000).toLocaleString('vi-VN');
+      const banVnd = ((item.giaBan || 0) * 1000).toLocaleString('vi-VN');
+      return `${icon} ${name}: Mua ${muaVnd}đ | Bán ${banVnd}đ/${unit}`;
+    });
+    const bangGiaDayDu = lines.join('\n');
+
+    // Thẻ riêng cho 1 loại vàng nếu có
+    let loaiVang = 'Bảng Giá Vàng';
+    let giaMua = '';
+    let giaBan = '';
+    if (changedGoldType && this.goldPrices) {
+      const found = this.goldPrices.find(g => g.loaiVang === changedGoldType);
+      if (found) {
+        loaiVang = found.loaiVang;
+        giaMua = ((found.giaMua || 0) * 1000).toLocaleString('vi-VN') + 'đ';
+        giaBan = ((found.giaBan || 0) * 1000).toLocaleString('vi-VN') + 'đ';
+      }
+    }
+
+    let msg = tpl
+      .replace(/{tenTiem}/g, tenTiem)
+      .replace(/{thoiGian}/g, timeStr)
+      .replace(/{bangGiaDayDu}/g, bangGiaDayDu)
+      .replace(/{loaiVang}/g, loaiVang)
+      .replace(/{giaMua}/g, giaMua)
+      .replace(/{giaBan}/g, giaBan)
+      .replace(/{diaChi}/g, diaChi)
+      .replace(/{hotline}/g, hotline);
+
+    return msg;
+  }
+
+  async triggerZaloPriceAlert(changedGoldType = null) {
+    const cfg = this.storeConfig || {};
+    if (cfg.zaloNotifyEnabled === false) return;
+
+    const message = this.generateZaloGoldMessage(changedGoldType);
+    this.openZaloModal(message, false);
+
+    // Gửi webhook nếu có cấu hình URL hợp lệ
+    if (cfg.zaloWebhookUrl && cfg.zaloWebhookUrl.startsWith('http')) {
+      this.sendZaloWebhook(cfg.zaloWebhookUrl, message);
+    }
+  }
+
+  async sendZaloWebhook(url, message) {
+    const badge = document.getElementById('zaloWebhookStatusBadge');
+    if (badge) {
+      badge.style.display = 'block';
+      badge.style.background = '#EFF6FF';
+      badge.style.color = '#1E40AF';
+      badge.style.borderColor = '#BFDBFE';
+      badge.textContent = '🌐 Đang gửi tin nhắn qua Webhook bot...';
+    }
+    try {
+      const payload = {
+        event: 'GOLD_PRICE_UPDATE',
+        timestamp: new Date().toISOString(),
+        storeName: this.storeConfig?.storeName || 'TIỆM VÀNG HOÀNG KIM',
+        message: message,
+        goldPrices: this.goldPrices || []
+      };
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (response.ok) {
+        if (badge) {
+          badge.style.background = '#F0FDF4';
+          badge.style.color = '#166534';
+          badge.style.borderColor = '#BBF7D0';
+          badge.textContent = '✅ Đã tự động gửi webhook bot Zalo thành công!';
+        }
+      } else {
+        if (badge) {
+          badge.style.background = '#FEF2F2';
+          badge.style.color = '#991B1B';
+          badge.style.borderColor = '#FECACA';
+          badge.textContent = '⚠️ Gửi webhook thất bại (HTTP ' + response.status + ')';
+        }
+      }
+    } catch (err) {
+      console.warn('Lỗi gửi Zalo webhook:', err);
+      if (badge) {
+        badge.style.background = '#FEF2F2';
+        badge.style.color = '#991B1B';
+        badge.style.borderColor = '#FECACA';
+        badge.textContent = '⚠️ Lỗi kết nối Webhook: ' + err.message;
+      }
+    }
+  }
+
+  openZaloModal(message, isTest = false) {
+    const modal = document.getElementById('zaloNotificationModal');
+    if (!modal) return;
+    const txt = document.getElementById('zaloPreviewContent');
+    if (txt) txt.value = message;
+
+    const statusText = document.getElementById('zaloModalStatusText');
+    if (statusText) {
+      statusText.textContent = isTest 
+        ? 'Đây là bản xem thử nội dung tin nhắn sẽ gửi vào nhóm Zalo khách hàng:' 
+        : 'Giá vàng đã lưu thành công! Bạn có thể gửi nhanh thông báo này vào các nhóm Zalo khách hàng:';
+    }
+
+    const badge = document.getElementById('zaloWebhookStatusBadge');
+    if (badge && !this.storeConfig?.zaloWebhookUrl) {
+      badge.style.display = 'none';
+    }
+
+    modal.classList.add('active');
+    modal.style.display = 'flex';
+  }
+
+  closeZaloModal() {
+    const modal = document.getElementById('zaloNotificationModal');
+    if (modal) {
+      modal.classList.remove('active');
+      modal.style.display = 'none';
+    }
+  }
+
+  async copyZaloMessage() {
+    const txt = document.getElementById('zaloPreviewContent');
+    const content = txt ? txt.value : '';
+    if (!content) return;
+
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(content);
+      } else {
+        txt.select();
+        document.execCommand('copy');
+      }
+      this.showToast('✅ Đã sao chép nội dung tin nhắn Zalo!', 'success');
+    } catch (e) {
+      txt.select();
+      document.execCommand('copy');
+      this.showToast('✅ Đã sao chép nội dung tin nhắn Zalo!', 'success');
+    }
+  }
+
+  async copyAndOpenZalo() {
+    await this.copyZaloMessage();
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if (isMobile) {
+      window.location.href = 'zalo://';
+      setTimeout(() => {
+        window.open('https://chat.zalo.me', '_blank');
+      }, 1200);
+    } else {
+      window.open('https://chat.zalo.me', '_blank');
+    }
+    this.showToast('🚀 Đã copy tin nhắn & Mở Zalo! Hãy nhấn Ctrl+V (Dán) vào nhóm.', 'info');
+  }
+
+  testZaloNotification() {
+    const customTpl = document.getElementById('cfgZaloMessageTemplate')?.value;
+    if (customTpl && this.storeConfig) {
+      this.storeConfig.zaloMessageTemplate = customTpl;
+    }
+    const msg = this.generateZaloGoldMessage();
+    this.openZaloModal(msg, true);
+
+    const url = document.getElementById('cfgZaloWebhookUrl')?.value?.trim();
+    if (url && url.startsWith('http')) {
+      this.sendZaloWebhook(url, msg);
+    }
   }
 
   async saveCloudinaryConfig() {

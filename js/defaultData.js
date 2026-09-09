@@ -43,6 +43,9 @@ window.DEFAULT_STORE_CONFIG = {
     showLaborCost: true,
     tagWidthMm: 75,
     tagHeightMm: 11
-  }
+  },
+  zaloNotifyEnabled: true,
+  zaloWebhookUrl: "",
+  zaloMessageTemplate: "\ud83d\udce2 B\u1ea2NG GI\u00c1 V\u00c0NG M\u1edaI C\u1eacP NH\u1eacT - {tenTiem}\n\u23f0 Th\u1eddi gian: {thoiGian}\n\n{bangGiaDayDu}\n\n\ud83d\udccd \u0110\u1ecba ch\u1ec9: {diaChi}\n\u260e\ufe0f Hotline: {hotline}\n\u2728 Ti\u1ec7m V\u00e0ng cam k\u1ebft v\u00e0ng chu\u1ea9n tu\u1ed5i, thu \u0111\u1ed5i uy t\u00edn tr\u1ecdn \u0111\u1eddi!"
 };
 var DEFAULT_STORE_CONFIG = window.DEFAULT_STORE_CONFIG;
