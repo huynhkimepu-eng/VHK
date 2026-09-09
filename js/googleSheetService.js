@@ -476,5 +476,6 @@ var GoogleSheetService = window.GoogleSheetService = {
       console.warn('Lỗi lưu khách hàng lên Google Sheet:', err);
       return { success: false, message: err.toString() };
     }
+  }
 };
 window.GoogleSheetService = GoogleSheetService;
