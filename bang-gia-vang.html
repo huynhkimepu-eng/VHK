@@ -481,8 +481,8 @@
   </div>
 
   <!-- Scripts -->
-  <script src="js/defaultData.js?v=52"></script>
-  <script src="js/googleSheetService.js?v=54"></script>
+  <script src="js/defaultData.js?v=53"></script>
+  <script src="js/googleSheetService.js?v=55"></script>
   <script>
     // State
     let goldPrices = [];
@@ -627,8 +627,8 @@
         sub: 'Chuẩn tuổi 99.99%',
         hamLuongDefault: '99.99%',
         donViDefault: 'chỉ',
-        defaultMua: 7600,
-        defaultBan: 7850,
+        defaultMua: 13600,
+        defaultBan: 14030,
         matcher: (g) => {
           const n = (g.loaiVang || '').toLowerCase();
           return n.includes('24') || n.includes('9999');
@@ -639,11 +639,11 @@
         sub: 'Chuẩn tuổi 95.8%',
         hamLuongDefault: '95.8%',
         donViDefault: 'chỉ',
-        defaultMua: 7200,
-        defaultBan: 7500,
+        defaultMua: 13500,
+        defaultBan: 14000,
         matcher: (g) => {
           const n = (g.loaiVang || '').toLowerCase();
-          return n.includes('23') || n.includes('vang23k');
+          return n.includes('23') || n.includes('vang23k') || n.includes('trang sức 23');
         }
       },
       {
@@ -651,8 +651,8 @@
         sub: 'Chuẩn tuổi 75.0%',
         hamLuongDefault: '75.0%',
         donViDefault: 'chỉ',
-        defaultMua: 5400,
-        defaultBan: 5750,
+        defaultMua: 9000,
+        defaultBan: 12800,
         matcher: (g) => {
           const n = (g.loaiVang || '').toLowerCase();
           return n.includes('18');
@@ -663,8 +663,8 @@
         sub: 'Chuẩn tuổi 41.6%',
         hamLuongDefault: '41.6%',
         donViDefault: 'chỉ',
-        defaultMua: 2850,
-        defaultBan: 3200,
+        defaultMua: 5500,
+        defaultBan: 6900,
         matcher: (g) => {
           const n = (g.loaiVang || '').toLowerCase();
           return n.includes('10k ý') || n.includes('ý 10') || (n.includes('10') && n.includes('ý')) || n.includes('10k') || n.includes('10');
@@ -675,8 +675,8 @@
         sub: 'Chuẩn tuổi 92.5%',
         hamLuongDefault: '92.5%',
         donViDefault: 'chỉ',
-        defaultMua: 90,
-        defaultBan: 140,
+        defaultMua: 120,
+        defaultBan: 250,
         matcher: (g) => {
           const n = (g.loaiVang || '').trim().toLowerCase();
           return n === 'bạc' || n.startsWith('bạc') || n.includes('bac');

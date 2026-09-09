@@ -3,15 +3,18 @@ window.DEFAULT_PRODUCTS = [{"maHang":"I6600001","tenHang":"Vỉ  0.5c","loaiHang
 var DEFAULT_PRODUCTS = window.DEFAULT_PRODUCTS;
 
 window.DEFAULT_GOLD_PRICES = [
-  { loaiVang: "Vàng 24k", hamLuong: "99.99%", giaMua: 7600, giaBan: 7850, donVi: "chỉ" },
-  { loaiVang: "Vàng Trang Sức 23k", hamLuong: "95.8%", giaMua: 7200, giaBan: 7500, donVi: "chỉ" },
-  { loaiVang: "Vàng 18k", hamLuong: "75.0%", giaMua: 5400, giaBan: 5750, donVi: "chỉ" },
-  { loaiVang: "Vàng Ý 10k", hamLuong: "41.6%", giaMua: 2850, giaBan: 3200, donVi: "chỉ" },
-  { loaiVang: "Bạc", hamLuong: "92.5%", giaMua: 90, giaBan: 140, donVi: "chỉ" },
+  { loaiVang: "Vàng 24K 9999", hamLuong: "99.99%", giaMua: 13600, giaBan: 14030, donVi: "chỉ" },
+  { loaiVang: "VANG TRANG SỨC 23k", hamLuong: "95.8%", giaMua: 13500, giaBan: 14000, donVi: "chỉ" },
+  { loaiVang: "Vàng Ý 18K", hamLuong: "75.0%", giaMua: 9000, giaBan: 12800, donVi: "chỉ" },
+  { loaiVang: "Vàng Korea 18k", hamLuong: "75.0%", giaMua: 9000, giaBan: 12800, donVi: "chỉ" },
   { loaiVang: "Vàng 14K", hamLuong: "58.5%", giaMua: 4100, giaBan: 4450, donVi: "chỉ" },
-  { loaiVang: "Vàng 10K", hamLuong: "41.6%", giaMua: 2800, giaBan: 3150, donVi: "chỉ" },
-  { loaiVang: "Bạc Ý", hamLuong: "92.5%", giaMua: 95, giaBan: 150, donVi: "chỉ" },
-  { loaiVang: "Đá Phong Thuỷ", hamLuong: "100%", giaMua: 0, giaBan: 0, donVi: "món" }
+  { loaiVang: "Vàng 10K", hamLuong: "41.6%", giaMua: 5400, giaBan: 6600, donVi: "chỉ" },
+  { loaiVang: "Vàng 10k Ý", hamLuong: "41.6%", giaMua: 5500, giaBan: 6900, donVi: "chỉ" },
+  { loaiVang: "Vàng Korea 10K", hamLuong: "41.6%", giaMua: 2850, giaBan: 3200, donVi: "chỉ" },
+  { loaiVang: "Bạc", hamLuong: "92.5%", giaMua: 120, giaBan: 250, donVi: "chỉ" },
+  { loaiVang: "Bạc Ý", hamLuong: "92.5%", giaMua: 95, giaBan: 0, donVi: "chỉ" },
+  { loaiVang: "Đá Phong Thuỷ", hamLuong: "100%", giaMua: 0, giaBan: 0, donVi: "món" },
+  { loaiVang: "Vàng Vỉ Thương Hiệu", hamLuong: "99.99%", giaMua: 14490, giaBan: 14890, donVi: "chỉ" }
 ];
 var DEFAULT_GOLD_PRICES = window.DEFAULT_GOLD_PRICES;
 

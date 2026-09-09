@@ -161,13 +161,17 @@ const GoogleSheetService = {
     try {
       const url = this.getUrl();
       const sep = url.includes('?') ? '&' : '?';
-      // Gọi getGoldPrices (chỉ tải riêng giá vàng, phản hồi siêu nhanh 0.1s)
+      // Gọi getGoldPrices (chỉ tải riêng giá vàng, phản hồi siêu nhanh 0.1s - 0.5s)
+      // KHÔNG dùng cache: 'no-store' vì WebKit (iOS Safari) chặn cross-origin 302 redirect khi có no-store
+      const controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+      const timeoutId = controller ? setTimeout(() => controller.abort(), 8000) : null;
       const response = await fetch(`${url}${sep}action=getGoldPrices&_t=${Date.now()}`, {
         method: 'GET',
         mode: 'cors',
         redirect: 'follow',
-        cache: 'no-store'
+        signal: controller ? controller.signal : undefined
       });
+      if (timeoutId) clearTimeout(timeoutId);
       const text = await response.text();
       let res;
       try { res = JSON.parse(text); } catch(e) { res = null; }
