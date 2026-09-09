@@ -655,6 +655,16 @@ class GoldApp {
       }
     });
 
+    if (isStaff) {
+      this.isFilteringRecentOnly = false;
+      const statusSelect = document.getElementById('invStatusFilter');
+      if (statusSelect && statusSelect.value && statusSelect.value.startsWith('RECENT_')) {
+        statusSelect.value = 'Còn tồn';
+      }
+      const banner = document.getElementById('recentModifiedBanner');
+      if (banner) banner.style.display = 'none';
+    }
+
     // Cập nhật Branch Selector
     const sel = document.getElementById('globalBranchSelector');
     const optAll = document.getElementById('optAllBranches');
@@ -1651,14 +1661,20 @@ class GoldApp {
     const countBadge = document.getElementById('recentCountBadge');
     if (countBadge) countBadge.textContent = countTotal;
 
+    const isStaff = this.currentUser && (this.currentUser.role === 'nhanvien' || this.currentUser.role === 'staff');
+
     const btnTop = document.getElementById('btnToggleRecentFilter');
     if (btnTop) {
-      if (this.isFilteringRecentOnly) {
+      if (isStaff) {
+        btnTop.style.display = 'none';
+      } else if (this.isFilteringRecentOnly) {
+        btnTop.style.display = '';
         btnTop.innerHTML = `🔙 Xem Toàn Bộ Kho`;
         btnTop.style.background = '#2563EB';
         btnTop.style.color = '#FFF';
         btnTop.style.borderColor = '#1D4ED8';
       } else {
+        btnTop.style.display = '';
         btnTop.innerHTML = `✨ Vừa Thêm/Sửa (<span id="recentCountBadge">${countTotal}</span>)`;
         btnTop.style.background = countTotal > 0 ? '#FEF3C7' : '#F1F5F9';
         btnTop.style.color = countTotal > 0 ? '#92400E' : '#64748B';
@@ -1716,7 +1732,7 @@ class GoldApp {
     if (btnEdit) setActiveStyle(btnEdit, this.recentSubFilter === 'edit', '#D97706', '#FFF', '#B45309');
 
     if (banner) {
-      if (countTotal > 0) {
+      if (countTotal > 0 && !isStaff) {
         banner.style.display = 'flex';
       } else {
         banner.style.display = 'none';

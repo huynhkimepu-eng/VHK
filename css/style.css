@@ -2032,7 +2032,9 @@ body.not-authenticated {
 }
 
 /* Ẩn các thành phần không dành cho tài khoản nhân viên */
-body.role-staff .not-for-staff {
+body.role-staff .not-for-staff,
+body.role-staff #recentModifiedBanner,
+body.role-staff #btnToggleRecentFilter {
   display: none !important;
 }
 

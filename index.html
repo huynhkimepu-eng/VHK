@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>PMQLV - Phần Mềm Quản Lý & Bán Hàng Vàng Bạc Đá Quý</title>
-  <link rel="stylesheet" href="css/style.css?v=64">
+  <link rel="stylesheet" href="css/style.css?v=65">
   <!-- HTML5 QR Code & Barcode Scanner for Camera -->
     <script>
     window.onerror = function(msg, src, line, col, err) {
@@ -293,7 +293,7 @@
               📥 Nhập từ Excel
             </button>
             <input type="file" id="importExcelInput" accept=".xlsx, .xls, .csv" style="display: none;" onchange="app.handleImportExcel(event)">
-            <button id="btnToggleRecentFilter" class="btn btn-sm hide-on-mobile" onclick="app.toggleRecentFilter()" style="background: #FEF3C7; color: #92400E; border: 1px solid #F59E0B; font-weight: 700;" title="Bật/tắt chỉ xem các mặt hàng vừa thêm mới hoặc sửa để in tem">
+            <button id="btnToggleRecentFilter" class="btn btn-sm hide-on-mobile not-for-staff" onclick="app.toggleRecentFilter()" style="background: #FEF3C7; color: #92400E; border: 1px solid #F59E0B; font-weight: 700;" title="Bật/tắt chỉ xem các mặt hàng vừa thêm mới hoặc sửa để in tem">
               ✨ Vừa Thêm/Sửa (<span id="recentCountBadge">0</span>)
             </button>
             <button class="btn btn-dark btn-sm hide-on-mobile" onclick="app.printSelectedTags()">
@@ -354,15 +354,15 @@
                 <option value="ALL">Tất cả</option>
                 <option value="Còn tồn" selected>Còn tồn trong kho</option>
                 <option value="Đã bán">Đã bán</option>
-                <option value="RECENT_ALL">✨ Tất cả vừa thêm & sửa</option>
-                <option value="RECENT_NEW">🆕 Chỉ hàng mới thêm</option>
-                <option value="RECENT_EDIT">✏️ Chỉ hàng vừa sửa</option>
+                <option value="RECENT_ALL" class="not-for-staff">✨ Tất cả vừa thêm & sửa</option>
+                <option value="RECENT_NEW" class="not-for-staff">🆕 Chỉ hàng mới thêm</option>
+                <option value="RECENT_EDIT" class="not-for-staff">✏️ Chỉ hàng vừa sửa</option>
               </select>
             </div>
           </div>
 
           <!-- Banner Mặt Hàng Vừa Thêm Mới / Vừa Sửa (Đồng Bộ Đám Mây Mọi Máy) -->
-          <div id="recentModifiedBanner" style="display: none; background: linear-gradient(135deg, #EFF6FF, #DBEAFE); border: 1.5px solid #3B82F6; border-radius: 8px; padding: 12px 16px; margin-bottom: 14px; flex-direction: column; gap: 10px; box-shadow: 0 2px 6px rgba(59, 130, 246, 0.12);">
+          <div id="recentModifiedBanner" class="not-for-staff" style="display: none; background: linear-gradient(135deg, #EFF6FF, #DBEAFE); border: 1.5px solid #3B82F6; border-radius: 8px; padding: 12px 16px; margin-bottom: 14px; flex-direction: column; gap: 10px; box-shadow: 0 2px 6px rgba(59, 130, 246, 0.12);">
             <!-- Dòng 1: Tiêu đề & Thông báo đồng bộ mọi máy -->
             <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
               <div style="display: flex; align-items: center; gap: 10px;">
@@ -1758,6 +1758,6 @@
   <script src="js/googleSheetService.js?v=53"></script>
   <script src="js/cloudinaryService.js?v=51"></script>
   <script src="js/barcodeLabel.js?v=51"></script>
-  <script src="js/app.js?v=68"></script>
+  <script src="js/app.js?v=69"></script>
 </body>
 </html>
