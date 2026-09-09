@@ -348,9 +348,15 @@ class GoldApp {
         const existing = loadedUsers.find(u => String(u.username || '').toLowerCase() === def.username.toLowerCase());
         if (!existing) {
           loadedUsers.push(def);
-        } else if (def.role === 'nhanvien' && existing.role !== 'nhanvien') {
-          existing.role = 'nhanvien';
-          existing.fullName = def.fullName;
+        } else {
+          if (def.username === 'nhanvien2') {
+            existing.chiNhanh = 'ALL';
+            existing.fullName = def.fullName || 'Nhân Viên Chi Nhánh 2';
+          }
+          if (def.role === 'nhanvien' && existing.role !== 'nhanvien') {
+            existing.role = 'nhanvien';
+            existing.fullName = def.fullName;
+          }
         }
       });
     }
@@ -373,6 +379,10 @@ class GoldApp {
       } catch (e) {
         authenticatedUser = null;
       }
+    }
+    if (authenticatedUser && authenticatedUser.username === 'nhanvien2') {
+      authenticatedUser.chiNhanh = 'ALL';
+      localStorage.setItem('pmqlv_current_user', JSON.stringify(authenticatedUser));
     }
     this.currentUser = authenticatedUser;
 
@@ -708,15 +718,21 @@ class GoldApp {
     if (pPhone) pPhone.textContent = 'Hotline: ' + (cfg.phone || '');
   }
 
-  // Phân quyền giao diện (Admin vs Quản lý Chi nhánh)
+  // Phân quyền giao diện (Admin vs Quản lý Chi nhánh vs Nhân viên)
   updateUserRoleUI() {
     const u = this.currentUser || { username: 'admin', role: 'admin', fullName: 'Quản Lý Chung' };
     const isAdmin = (u.role === 'admin');
     const isBranch = (u.role === 'chinhanh');
+    const isPowerStaff = (u.username === 'nhanvien2');
+    const isStaff = (u.role === 'nhanvien' || u.role === 'staff');
+    const isRestrictedStaff = isStaff && !isPowerStaff;
+    const isAllBranches = isAdmin || isPowerStaff || (u.chiNhanh === 'ALL');
+    const isDesktop = window.innerWidth > 768;
 
     const roleText = document.getElementById('userRoleText');
     if (roleText) {
       if (isAdmin) roleText.textContent = 'Admin';
+      else if (isPowerStaff) roleText.textContent = 'Quản Lý 2 Kho (nhanvien2)';
       else if (isBranch) roleText.textContent = u.chiNhanh ? u.chiNhanh.replace('Chi nhánh ', 'Kho ') : 'Chi Nhánh';
       else roleText.textContent = 'Nhân Viên';
     }
@@ -724,9 +740,11 @@ class GoldApp {
     const nameText = document.getElementById('userFullName');
     if (nameText) nameText.textContent = u.fullName || u.username;
 
-    const isStaff = (u.role === 'nhanvien' || u.role === 'staff');
     document.body.classList.toggle('role-staff', isStaff);
+    document.body.classList.toggle('role-restricted-staff', isRestrictedStaff);
+    document.body.classList.toggle('role-power-staff', isPowerStaff);
     document.body.classList.toggle('role-admin', isAdmin);
+    document.body.classList.toggle('allow-desktop-tag', isPowerStaff || isDesktop);
 
     // Ẩn/Hiện các thành phần chỉ dành riêng cho Admin
     const adminElements = document.querySelectorAll('.admin-only');
@@ -734,17 +752,43 @@ class GoldApp {
       el.style.display = isAdmin ? '' : 'none';
     });
 
-    // Ẩn các thành phần không dành cho tài khoản Nhân viên
+    // 1. Phân quyền Thêm sản phẩm mới (Admin + nhanvien2)
+    const canAddProduct = isAdmin || isPowerStaff;
+    document.querySelectorAll('.btn-add-prod-main').forEach(btn => {
+      btn.style.display = canAddProduct ? '' : 'none';
+    });
+
+    // 2. Phân quyền Chuyển kho (Admin + nhanvien2 quản lý cả 2 chi nhánh)
+    const btnTransfer = document.getElementById('btnTransferProducts');
+    if (btnTransfer) {
+      btnTransfer.style.display = isAllBranches ? '' : 'none';
+    }
+
+    // 3. Phân quyền Bảng giá vàng (Admin + nhanvien2)
+    const canEditGoldRates = isAdmin || isPowerStaff;
+    const goldHeader = document.getElementById('goldRatesCardHeader');
+    if (goldHeader) goldHeader.style.display = canEditGoldRates ? 'flex' : 'none';
+    const btnAddGold = document.getElementById('btnAddGoldType');
+    if (btnAddGold) btnAddGold.style.display = canEditGoldRates ? 'inline-flex' : 'none';
+    const btnSaveGold = document.getElementById('saveGoldPricesBtn');
+    if (btnSaveGold) btnSaveGold.style.display = canEditGoldRates ? 'inline-flex' : 'none';
+    const goldIntro = document.getElementById('goldRatesIntroText');
+    if (goldIntro) goldIntro.style.display = canEditGoldRates ? 'block' : 'none';
+    const goldActionTh = document.getElementById('goldRatesActionHeader');
+    if (goldActionTh) goldActionTh.style.display = canEditGoldRates ? '' : 'none';
+
+    // 4. Ẩn các thành phần không dành cho tài khoản Nhân viên hạn chế trên di động
     const notForStaffElements = document.querySelectorAll('.not-for-staff');
     notForStaffElements.forEach(el => {
-      if (isStaff) {
+      if (isRestrictedStaff && !isDesktop) {
         el.style.display = 'none';
-      } else if (!el.classList.contains('admin-only') || isAdmin) {
+      } else if (!el.classList.contains('admin-only') || isAdmin || isPowerStaff) {
         el.style.display = '';
       }
     });
 
-    if (isStaff) {
+    // 5. Quản lý trạng thái xem hàng vừa thêm sửa và banner in tem
+    if (isRestrictedStaff && !isDesktop) {
       this.isFilteringRecentOnly = false;
       const statusSelect = document.getElementById('invStatusFilter');
       if (statusSelect && statusSelect.value && statusSelect.value.startsWith('RECENT_')) {
@@ -758,7 +802,7 @@ class GoldApp {
     const sel = document.getElementById('globalBranchSelector');
     const optAll = document.getElementById('optAllBranches');
     if (sel) {
-      if (isAdmin) {
+      if (isAllBranches) {
         sel.disabled = false;
         if (optAll) optAll.style.display = '';
         if (!this.currentBranch) this.currentBranch = sel.value || 'ALL';
@@ -925,7 +969,8 @@ class GoldApp {
       const isConTon = (!p.trangThai || p.trangThai === 'Còn tồn');
       
       // 2. Check Chi nhánh
-      const branchMatch = (activeBranch === 'ALL' && isAdmin) || (p.chiNhanh === activeBranch) || (!p.chiNhanh && activeBranch === 'Chi nhánh 1');
+      const isAllBranches = (isAdmin || (this.currentUser && (this.currentUser.username === 'nhanvien2' || this.currentUser.chiNhanh === 'ALL')));
+      const branchMatch = (activeBranch === 'ALL' && isAllBranches) || (p.chiNhanh === activeBranch) || (!p.chiNhanh && activeBranch === 'Chi nhánh 1');
       if (!isConTon || !branchMatch) return false;
 
       // Lọc theo loại vàng (hỗ trợ so khớp thông minh)
@@ -1754,11 +1799,15 @@ class GoldApp {
     const countBadge = document.getElementById('recentCountBadge');
     if (countBadge) countBadge.textContent = countTotal;
 
-    const isStaff = this.currentUser && (this.currentUser.role === 'nhanvien' || this.currentUser.role === 'staff');
+    const isDesktop = window.innerWidth > 768;
+    const u = this.currentUser;
+    const isPowerStaff = (u && u.username === 'nhanvien2');
+    const isRestrictedStaff = u && (u.role === 'nhanvien' || u.role === 'staff') && !isPowerStaff;
+    const canViewRecent = isPowerStaff || !isRestrictedStaff || isDesktop;
 
     const btnTop = document.getElementById('btnToggleRecentFilter');
     if (btnTop) {
-      if (isStaff) {
+      if (!canViewRecent) {
         btnTop.style.display = 'none';
       } else if (this.isFilteringRecentOnly) {
         btnTop.style.display = '';
@@ -1825,7 +1874,7 @@ class GoldApp {
     if (btnEdit) setActiveStyle(btnEdit, this.recentSubFilter === 'edit', '#D97706', '#FFF', '#B45309');
 
     if (banner) {
-      if (countTotal > 0 && !isStaff) {
+      if (countTotal > 0 && canViewRecent) {
         banner.style.display = 'flex';
       } else {
         banner.style.display = 'none';
@@ -1907,7 +1956,8 @@ class GoldApp {
         if (!recentMaMap.has(p.maHang)) return false;
       } else {
         // Check branch
-        const branchMatch = (activeBranch === 'ALL' && isAdmin) || (p.chiNhanh === activeBranch) || (!p.chiNhanh && activeBranch === 'Chi nhánh 1');
+        const isAllBranches = isAdmin || (this.currentUser && (this.currentUser.username === 'nhanvien2' || this.currentUser.chiNhanh === 'ALL'));
+        const branchMatch = (activeBranch === 'ALL' && isAllBranches) || (p.chiNhanh === activeBranch) || (!p.chiNhanh && activeBranch === 'Chi nhánh 1');
         if (!branchMatch) return false;
 
         // Lọc trạng thái
@@ -2129,7 +2179,8 @@ class GoldApp {
       if (isFilteringRecent) {
         if (!recentMaMap.has(p.maHang)) return false;
       } else {
-        const branchMatch = (activeBranch === 'ALL' && isAdmin) || (p.chiNhanh === activeBranch) || (!p.chiNhanh && activeBranch === 'Chi nhánh 1');
+        const isAllBranches = isAdmin || (this.currentUser && (this.currentUser.username === 'nhanvien2' || this.currentUser.chiNhanh === 'ALL'));
+        const branchMatch = (activeBranch === 'ALL' && isAllBranches) || (p.chiNhanh === activeBranch) || (!p.chiNhanh && activeBranch === 'Chi nhánh 1');
         if (!branchMatch) return false;
         if (status !== 'ALL' && p.trangThai !== status) return false;
       }
@@ -2576,6 +2627,8 @@ class GoldApp {
     const multiplier = this.storeConfig.currencyUnitMultiplier || 1000;
     const u = this.currentUser || {};
     const isAdmin = (u.role === 'admin');
+    const isPowerStaff = (u.username === 'nhanvien2');
+    const canEditPrices = isAdmin || isPowerStaff;
     const isStaff = (u.role === 'nhanvien' || u.role === 'staff');
 
     tbody.innerHTML = this.goldPrices.map((g, idx) => {
@@ -2589,7 +2642,7 @@ class GoldApp {
           <td style="padding: 13px 18px; vertical-align: middle;">
             <div style="display: flex; align-items: center; gap: 9px;">
               <span style="display: inline-block; width: 8px; height: 8px; background: linear-gradient(135deg, #D97706, #B45309); border-radius: 2px; transform: rotate(45deg); flex-shrink: 0;"></span>
-              ${isAdmin ? `
+              ${canEditPrices ? `
                 <a href="javascript:void(0)" onclick="app.openQuickPriceModal(${idx})" class="gold-name-btn" style="font-weight: 800; font-size: 14.5px; color: #0F172A; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;" title="Click để nhập nhanh Giá Mua / Giá Bán">
                   <span>${g.loaiVang}</span>
                   <span style="font-size: 12px; opacity: 0.65;">✏️</span>
@@ -2602,7 +2655,7 @@ class GoldApp {
 
           <!-- Cột 2: Giá Mua Vào (Nổi bật xanh ngọc emerald) -->
           <td style="text-align: right; padding: 10px 18px; vertical-align: middle;">
-            ${isAdmin ? `
+            ${canEditPrices ? `
               <div style="display: flex; justify-content: flex-end;">
                 <input type="number" class="form-control" 
                   style="text-align: right; width: 138px; font-weight: 800; font-size: 15.5px; color: #047857; background: #ECFDF5; border: 1.5px solid #6EE7B7; border-radius: 8px; padding: 6px 10px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.03);" 
@@ -2619,7 +2672,7 @@ class GoldApp {
 
           <!-- Cột 3: Giá Bán Ra (Nổi bật vàng kim hổ phách) -->
           <td style="text-align: right; padding: 10px 18px; vertical-align: middle;">
-            ${isAdmin ? `
+            ${canEditPrices ? `
               <div style="display: flex; justify-content: flex-end;">
                 <input type="number" class="form-control" 
                   style="text-align: right; width: 138px; font-weight: 800; font-size: 15.5px; color: #B45309; background: #FFFBEB; border: 1.5px solid #FCD34D; border-radius: 8px; padding: 6px 10px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.03);" 
@@ -2648,13 +2701,13 @@ class GoldApp {
             </span>
           </td>
 
-          <!-- Cột 6: Thao Tác (Admin) -->
-          ${isAdmin ? `
+          <!-- Cột 6: Thao Tác (Admin + nhanvien2) -->
+          ${canEditPrices ? `
             <td style="text-align: center; white-space: nowrap; padding: 10px 14px; vertical-align: middle;">
-              <button type="button" class="btn btn-outline btn-xs admin-only" onclick="app.openGoldTypeModal(${idx})" title="Sửa tên loại vàng" style="padding: 4px 10px; font-size: 12px; margin-right: 4px; border-radius: 6px; font-weight: 600;">
+              <button type="button" class="btn btn-outline btn-xs" onclick="app.openGoldTypeModal(${idx})" title="Sửa tên loại vàng" style="padding: 4px 10px; font-size: 12px; margin-right: 4px; border-radius: 6px; font-weight: 600;">
                 ✏️ Sửa Tên
               </button>
-              <button type="button" class="btn btn-danger btn-xs admin-only" onclick="app.deleteGoldType(${idx})" title="Xóa loại vàng này" style="padding: 4px 10px; font-size: 12px; border-radius: 6px; font-weight: 600;">
+              <button type="button" class="btn btn-danger btn-xs" onclick="app.deleteGoldType(${idx})" title="Xóa loại vàng này" style="padding: 4px 10px; font-size: 12px; border-radius: 6px; font-weight: 600;">
                 🗑️ Xóa
               </button>
             </td>
@@ -2701,7 +2754,8 @@ class GoldApp {
 
   async saveQuickPrice() {
     const isStaff = this.currentUser && (this.currentUser.role === 'nhanvien' || this.currentUser.role === 'staff');
-    if (isStaff) {
+    const isPowerStaff = this.currentUser && this.currentUser.username === 'nhanvien2';
+    if (isStaff && !isPowerStaff) {
       alert('Tài khoản nhân viên không có quyền thay đổi giá vàng!');
       this.closeQuickPriceModal();
       return;
@@ -2720,7 +2774,8 @@ class GoldApp {
 
   openGoldTypeModal(index = -1) {
     const isStaff = this.currentUser && (this.currentUser.role === 'nhanvien' || this.currentUser.role === 'staff');
-    if (isStaff) {
+    const isPowerStaff = this.currentUser && this.currentUser.username === 'nhanvien2';
+    if (isStaff && !isPowerStaff) {
       alert('Tài khoản nhân viên không có quyền thao tác quản lý loại vàng!');
       return;
     }
@@ -2756,7 +2811,8 @@ class GoldApp {
 
   async saveGoldType() {
     const isStaff = this.currentUser && (this.currentUser.role === 'nhanvien' || this.currentUser.role === 'staff');
-    if (isStaff) {
+    const isPowerStaff = this.currentUser && this.currentUser.username === 'nhanvien2';
+    if (isStaff && !isPowerStaff) {
       alert('Tài khoản nhân viên không có quyền lưu loại vàng!');
       return;
     }
@@ -2815,7 +2871,8 @@ class GoldApp {
 
   async deleteGoldType(index) {
     const isStaff = this.currentUser && (this.currentUser.role === 'nhanvien' || this.currentUser.role === 'staff');
-    if (isStaff) {
+    const isPowerStaff = this.currentUser && this.currentUser.username === 'nhanvien2';
+    if (isStaff && !isPowerStaff) {
       alert('Tài khoản nhân viên không có quyền xóa loại vàng!');
       return;
     }
@@ -2886,7 +2943,8 @@ class GoldApp {
 
   async saveGoldPrices() {
     const isStaff = this.currentUser && (this.currentUser.role === 'nhanvien' || this.currentUser.role === 'staff');
-    if (isStaff) {
+    const isPowerStaff = this.currentUser && this.currentUser.username === 'nhanvien2';
+    if (isStaff && !isPowerStaff) {
       alert('Tài khoản nhân viên không có quyền thay đổi bảng giá vàng!');
       return;
     }
@@ -4135,7 +4193,8 @@ class GoldApp {
 
   openAddProductModal() {
     const isStaff = this.currentUser && (this.currentUser.role === 'nhanvien' || this.currentUser.role === 'staff');
-    if (isStaff) {
+    const isPowerStaff = this.currentUser && this.currentUser.username === 'nhanvien2';
+    if (isStaff && !isPowerStaff) {
       alert('Tài khoản nhân viên chỉ có quyền sửa Tên, Ảnh và Video của sản phẩm đã có sẵn trong kho, không có quyền thêm mới sản phẩm!');
       return;
     }
@@ -4217,8 +4276,10 @@ class GoldApp {
     if (!p) return;
 
     const isStaff = this.currentUser && (this.currentUser.role === 'nhanvien' || this.currentUser.role === 'staff');
+    const isPowerStaff = this.currentUser && this.currentUser.username === 'nhanvien2';
+    const isRestrictedStaff = isStaff && !isPowerStaff;
     const staffNotice = document.getElementById('modalStaffNotice');
-    if (staffNotice) staffNotice.style.display = isStaff ? 'block' : 'none';
+    if (staffNotice) staffNotice.style.display = isRestrictedStaff ? 'block' : 'none';
 
     // Khóa/mở khóa các trường dữ liệu theo phân quyền nhân viên
     const lockedFieldIds = [
@@ -4231,12 +4292,12 @@ class GoldApp {
       const el = document.getElementById(id);
       if (el) {
         if (el.tagName === 'SELECT') {
-          el.disabled = isStaff;
+          el.disabled = isRestrictedStaff;
         } else {
-          el.readOnly = isStaff;
+          el.readOnly = isRestrictedStaff;
         }
-        el.style.backgroundColor = isStaff ? '#F1F5F9' : '';
-        el.style.cursor = isStaff ? 'not-allowed' : '';
+        el.style.backgroundColor = isRestrictedStaff ? '#F1F5F9' : '';
+        el.style.cursor = isRestrictedStaff ? 'not-allowed' : '';
       }
     });
 
@@ -4889,9 +4950,11 @@ class GoldApp {
       }
 
       const isStaff = this.currentUser && (this.currentUser.role === 'nhanvien' || this.currentUser.role === 'staff');
+      const isPowerStaff = this.currentUser && this.currentUser.username === 'nhanvien2';
+      const isRestrictedStaff = isStaff && !isPowerStaff;
       const existingIndex = this.products.findIndex(p => p.maHang === maHang);
 
-      if (isStaff && existingIndex < 0) {
+      if (isRestrictedStaff && existingIndex < 0) {
         alert('Tài khoản nhân viên chỉ có quyền sửa Tên, Ảnh và Video của sản phẩm đã có sẵn trong kho, không có quyền thêm mới sản phẩm!');
         return;
       }
@@ -4929,9 +4992,9 @@ class GoldApp {
         productData.trangThai = this.products[existingIndex].trangThai || 'Còn tồn';
         productData.ngayNhap = this.products[existingIndex].ngayNhap || productData.ngayNhap;
 
-        // BẢO VỆ DỮ LIỆU: Nếu là tài khoản Nhân viên, chỉ cho phép cập nhật tên hàng, ảnh, video.
+        // BẢO VỆ DỮ LIỆU: Nếu là tài khoản Nhân viên thường, chỉ cho phép cập nhật tên hàng, ảnh, video.
         // Giữ nguyên 100% các thông số kỹ thuật, trọng lượng vàng, nhà cung cấp, chi nhánh và giá tiền gốc
-        if (isStaff) {
+        if (isRestrictedStaff) {
           const orig = this.products[existingIndex];
           productData.loaiHang = orig.loaiHang || productData.loaiHang;
           productData.loaiVang = orig.loaiVang;

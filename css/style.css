@@ -1308,11 +1308,11 @@ body {
     overflow-x: hidden !important;
   }
 
-  /* Ẩn hoàn toàn phần đầu trang trên điện thoại cho tài khoản nhân viên */
-  body.role-staff .app-header {
+  /* Ẩn hoàn toàn phần đầu trang trên điện thoại cho tài khoản nhân viên hạn chế */
+  body.role-restricted-staff .app-header {
     display: none !important;
   }
-  body.role-staff .main-wrapper {
+  body.role-restricted-staff .main-wrapper {
     padding-top: max(8px, env(safe-area-inset-top, 8px)) !important;
   }
 
@@ -2039,11 +2039,17 @@ body.not-authenticated {
   color: #B45309;
 }
 
-/* Ẩn các thành phần không dành cho tài khoản nhân viên */
-body.role-staff .not-for-staff,
-body.role-staff #recentModifiedBanner,
-body.role-staff #btnToggleRecentFilter {
+/* Ẩn các thành phần không dành cho tài khoản nhân viên hạn chế */
+body.role-restricted-staff:not(.allow-desktop-tag) .not-for-staff {
   display: none !important;
+}
+
+/* Trên màn hình nhỏ (mobile), ẩn banner và nút xem hàng vừa sửa nếu là nhân viên hạn chế */
+@media (max-width: 768px) {
+  body.role-restricted-staff #recentModifiedBanner,
+  body.role-restricted-staff #btnToggleRecentFilter {
+    display: none !important;
+  }
 }
 
 

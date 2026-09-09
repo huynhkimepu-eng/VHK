@@ -24,7 +24,7 @@ window.DEFAULT_USERS = [
   { username: "chinhanh2", password: "123", fullName: "Quản Lý Chi Nhánh 2", role: "chinhanh", phone: "0922.222.222", chiNhanh: "Chi nhánh 2" },
   { username: "nhanvien", password: "123", fullName: "Nhân Viên Bán Hàng", role: "nhanvien", phone: "0933.333.333", chiNhanh: "Chi nhánh 1" },
   { username: "nhanvien1", password: "123", fullName: "Nhân Viên Chi Nhánh 1", role: "nhanvien", phone: "0911.111.111", chiNhanh: "Chi nhánh 1" },
-  { username: "nhanvien2", password: "123", fullName: "Nhân Viên Chi Nhánh 2", role: "nhanvien", phone: "0922.222.222", chiNhanh: "Chi nhánh 2" }
+  { username: "nhanvien2", password: "123", fullName: "Nhân Viên Chi Nhánh 2", role: "nhanvien", phone: "0922.222.222", chiNhanh: "ALL" }
 ];
 var DEFAULT_USERS = window.DEFAULT_USERS;
 
