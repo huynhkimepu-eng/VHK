@@ -278,13 +278,6 @@ class GoldApp {
         }
         this.lastGoldSyncTime = new Date();
         this.updateGoldRatesSyncUI(true);
-        if (forceRender) {
-          if (hasChanged) {
-            this.showToast('✅ Đã cập nhật bảng giá vàng mới nhất từ Google Sheet!', 'success');
-          } else {
-            this.showToast('✅ Bảng giá vàng đang là mới nhất từ máy chủ!', 'info');
-          }
-        }
       } else {
         if (prices !== null) this.updateGoldRatesSyncUI(true);
       }
